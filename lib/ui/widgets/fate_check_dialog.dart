@@ -33,14 +33,14 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          ...FateCheck.likelihoods.entries.map((entry) {
-            final isSelected = _selectedLikelihood == entry.key;
-            final modifierText = entry.value >= 0 ? '+${entry.value}' : '${entry.value}';
+          ...FateCheck.likelihoods.map((likelihood) {
+            final isSelected = _selectedLikelihood == likelihood;
+            final description = _getLikelihoodDescription(likelihood);
 
             return RadioListTile<String>(
-              title: Text(entry.key),
-              subtitle: Text('Modifier: $modifierText'),
-              value: entry.key,
+              title: Text(likelihood),
+              subtitle: Text(description),
+              value: likelihood,
               groupValue: _selectedLikelihood,
               onChanged: (value) {
                 if (value != null) {
@@ -51,6 +51,15 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               selected: isSelected,
             );
           }),
+          const SizedBox(height: 12),
+          const Text(
+            'Rolls 2dF + 1d6 Intensity',
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+              color: Colors.grey,
+            ),
+          ),
         ],
       ),
       actions: [
@@ -65,6 +74,18 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
         ),
       ],
     );
+  }
+
+  String _getLikelihoodDescription(String likelihood) {
+    switch (likelihood) {
+      case 'Unlikely':
+        return 'Shifts mixed results toward No';
+      case 'Likely':
+        return 'Shifts mixed results toward Yes';
+      case 'Even Odds':
+      default:
+        return '50/50 chance';
+    }
   }
 
   void _performCheck() {

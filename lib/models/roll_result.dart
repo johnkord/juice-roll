@@ -1,16 +1,37 @@
 /// Types of rolls that can be performed.
 enum RollType {
+  // Basic dice
   standard,
   fate,
   advantage,
   disadvantage,
   skewed,
   tableLookup,
+  
+  // Core Oracle
   fateCheck,
   nextScene,
   randomEvent,
+  discoverMeaning,
+  
+  // NPC & Dialog
+  npcAction,
+  
+  // Plot & Story
+  payThePrice,
+  quest,
+  interruptPlotPoint,
+  
+  // Exploration
   weather,
   encounter,
+  
+  // Generation
+  settlement,
+  objectTreasure,
+  challenge,
+  details,
+  immersion,
 }
 
 /// Represents the result of any roll.

@@ -1,150 +1,165 @@
 import '../core/roll_engine.dart';
-import '../core/table_lookup.dart';
 import '../models/roll_result.dart';
 
 /// Next Scene preset for the Juice Oracle.
-/// Determines what type of scene comes next in the narrative.
+/// Uses the Next Scene column from the Fate Check table (2dF).
+/// Determines if the next scene proceeds normally, is altered, or is interrupted.
 class NextScene {
   final RollEngine _rollEngine;
 
-  /// Scene types table based on 2d6.
-  static final LookupTable<SceneType> _sceneTable = LookupTable(
-    name: 'Next Scene',
-    entries: [
-      const TableEntry(minValue: 2, maxValue: 2, result: SceneType.dramaticTwist),
-      const TableEntry(minValue: 3, maxValue: 4, result: SceneType.complication),
-      const TableEntry(minValue: 5, maxValue: 5, result: SceneType.delay),
-      const TableEntry(minValue: 6, maxValue: 8, result: SceneType.expected),
-      const TableEntry(minValue: 9, maxValue: 9, result: SceneType.advantage),
-      const TableEntry(minValue: 10, maxValue: 11, result: SceneType.opportunity),
-      const TableEntry(minValue: 12, maxValue: 12, result: SceneType.revelation),
-    ],
-  );
-
-  /// Chaos factor modifiers for scene checks.
-  static const Map<String, int> chaosLevels = {
-    'Controlled': -2,
-    'Stable': -1,
-    'Normal': 0,
-    'Unstable': 1,
-    'Chaotic': 2,
-  };
-
-  NextScene([RollEngine? rollEngine]) 
+  NextScene([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
 
-  /// Determine the next scene type.
-  NextSceneResult determineScene({String chaosLevel = 'Normal'}) {
-    final modifier = chaosLevels[chaosLevel] ?? 0;
-    final dice = _rollEngine.rollDice(2, 6);
-    final sum = dice.reduce((a, b) => a + b);
-    final modifiedSum = (sum + modifier).clamp(2, 12);
-    
-    final sceneType = _sceneTable.lookup(modifiedSum) ?? SceneType.expected;
-    
-    // Check for doubles (indicates interrupt/random event)
-    final isDoubles = dice.length >= 2 && dice[0] == dice[1];
+  /// Determine the next scene type using 2dF.
+  NextSceneResult determineScene() {
+    // Roll 2 Fate dice (ordered)
+    final fateDice = _rollEngine.rollFateDice(2);
+    final leftDie = fateDice[0];
+    final rightDie = fateDice[1];
+    final fateSum = leftDie + rightDie;
+
+    // Determine scene outcome based on Fate Check Next Scene column
+    final sceneType = _interpretFateDice(leftDie, rightDie);
 
     return NextSceneResult(
-      chaosLevel: chaosLevel,
-      modifier: modifier,
-      diceResults: dice,
-      rawTotal: sum,
-      modifiedTotal: modifiedSum,
+      fateDice: fateDice,
+      fateSum: fateSum,
       sceneType: sceneType,
-      isInterrupt: isDoubles,
     );
+  }
+
+  /// Interpret the Fate dice for Next Scene.
+  /// Based on fate-check.md Next Scene column.
+  SceneType _interpretFateDice(int left, int right) {
+    // + + = Alter (Add)
+    if (left == 1 && right == 1) {
+      return SceneType.alterAdd;
+    }
+    // + - = Alter (Remove)
+    if (left == 1 && right == -1) {
+      return SceneType.alterRemove;
+    }
+    // - + = Interrupt (Favorable)
+    if (left == -1 && right == 1) {
+      return SceneType.interruptFavorable;
+    }
+    // - - = Interrupt (Unfavorable)
+    if (left == -1 && right == -1) {
+      return SceneType.interruptUnfavorable;
+    }
+    // All other combinations = Normal
+    return SceneType.normal;
   }
 }
 
-/// Types of scenes that can occur.
+/// Types of scene transitions from the Juice Oracle.
 enum SceneType {
-  dramaticTwist,
-  complication,
-  delay,
-  expected,
-  advantage,
-  opportunity,
-  revelation,
+  normal,
+  alterAdd,
+  alterRemove,
+  interruptFavorable,
+  interruptUnfavorable,
 }
 
 /// Extension to provide display text and descriptions for scene types.
 extension SceneTypeDisplay on SceneType {
   String get displayText {
     switch (this) {
-      case SceneType.dramaticTwist:
-        return 'Dramatic Twist';
-      case SceneType.complication:
-        return 'Complication';
-      case SceneType.delay:
-        return 'Delay';
-      case SceneType.expected:
-        return 'Expected';
-      case SceneType.advantage:
-        return 'Advantage';
-      case SceneType.opportunity:
-        return 'Opportunity';
-      case SceneType.revelation:
-        return 'Revelation';
+      case SceneType.normal:
+        return 'Normal';
+      case SceneType.alterAdd:
+        return 'Alter (Add)';
+      case SceneType.alterRemove:
+        return 'Alter (Remove)';
+      case SceneType.interruptFavorable:
+        return 'Interrupt (Favorable)';
+      case SceneType.interruptUnfavorable:
+        return 'Interrupt (Unfavorable)';
     }
   }
 
   String get description {
     switch (this) {
-      case SceneType.dramaticTwist:
-        return 'Something completely unexpected happens that changes everything.';
-      case SceneType.complication:
-        return 'The situation becomes more complex or difficult.';
-      case SceneType.delay:
-        return 'Progress is hindered or slowed.';
-      case SceneType.expected:
-        return 'The scene proceeds as anticipated.';
-      case SceneType.advantage:
-        return 'A small benefit or edge presents itself.';
-      case SceneType.opportunity:
-        return 'A significant chance for advancement appears.';
-      case SceneType.revelation:
-        return 'Important information or truth is revealed.';
+      case SceneType.normal:
+        return 'The scene proceeds as expected.';
+      case SceneType.alterAdd:
+        return 'The scene is modified - add an element. Roll Modifier + Idea.';
+      case SceneType.alterRemove:
+        return 'The scene is modified - remove an element. Roll Modifier + Idea.';
+      case SceneType.interruptFavorable:
+        return 'The scene is replaced by something favorable. Roll Random Event.';
+      case SceneType.interruptUnfavorable:
+        return 'The scene is replaced by something unfavorable. Roll Random Event.';
+    }
+  }
+
+  /// Whether this result requires a follow-up roll.
+  bool get requiresFollowUp {
+    return this != SceneType.normal;
+  }
+
+  /// What type of follow-up roll is needed.
+  String? get followUpRoll {
+    switch (this) {
+      case SceneType.normal:
+        return null;
+      case SceneType.alterAdd:
+      case SceneType.alterRemove:
+        return 'Modifier + Idea';
+      case SceneType.interruptFavorable:
+      case SceneType.interruptUnfavorable:
+        return 'Random Event';
     }
   }
 }
 
 /// Result of a Next Scene roll.
 class NextSceneResult extends RollResult {
-  final String chaosLevel;
-  final int modifier;
-  final int rawTotal;
-  final int modifiedTotal;
+  final List<int> fateDice;
+  final int fateSum;
   final SceneType sceneType;
-  final bool isInterrupt;
 
   NextSceneResult({
-    required this.chaosLevel,
-    required this.modifier,
-    required List<int> diceResults,
-    required this.rawTotal,
-    required this.modifiedTotal,
+    required this.fateDice,
+    required this.fateSum,
     required this.sceneType,
-    required this.isInterrupt,
   }) : super(
           type: RollType.nextScene,
-          description: 'Next Scene ($chaosLevel)',
-          diceResults: diceResults,
-          total: modifiedTotal,
-          interpretation: '${sceneType.displayText}${isInterrupt ? ' + INTERRUPT!' : ''}',
+          description: 'Next Scene',
+          diceResults: fateDice,
+          total: fateSum,
+          interpretation: sceneType.displayText,
           metadata: {
-            'chaosLevel': chaosLevel,
-            'modifier': modifier,
-            'rawTotal': rawTotal,
             'sceneType': sceneType.name,
-            'isInterrupt': isInterrupt,
+            'requiresFollowUp': sceneType.requiresFollowUp,
+            'followUpRoll': sceneType.followUpRoll,
           },
         );
 
+  /// Get symbolic representation of the Fate dice.
+  String get fateSymbols {
+    return fateDice.map((d) {
+      switch (d) {
+        case -1:
+          return '−';
+        case 0:
+          return '○';
+        case 1:
+          return '+';
+        default:
+          return '?';
+      }
+    }).join(' ');
+  }
+
   @override
   String toString() {
-    final modStr = modifier >= 0 ? '+$modifier' : '$modifier';
-    final interruptStr = isInterrupt ? ' [INTERRUPT - Random Event!]' : '';
-    return 'Next Scene ($chaosLevel): ${diceResults.join('+')}$modStr = $modifiedTotal → ${sceneType.displayText}$interruptStr';
+    final buffer = StringBuffer();
+    buffer.writeln('Next Scene: [$fateSymbols]');
+    buffer.writeln('  Result: ${sceneType.displayText}');
+    if (sceneType.requiresFollowUp) {
+      buffer.write('  Follow-up: ${sceneType.followUpRoll}');
+    }
+    return buffer.toString();
   }
 }

@@ -18,8 +18,6 @@ class NextSceneDialog extends StatefulWidget {
 }
 
 class _NextSceneDialogState extends State<NextSceneDialog> {
-  String _selectedChaosLevel = 'Normal';
-
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -29,31 +27,30 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Current chaos level:',
+            'Roll 2dF to determine scene transition:',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          ...NextScene.chaosLevels.entries.map((entry) {
-            final isSelected = _selectedChaosLevel == entry.key;
-            final modifierText = entry.value >= 0 ? '+${entry.value}' : '${entry.value}';
-
-            return RadioListTile<String>(
-              title: Text(entry.key),
-              subtitle: Text('Modifier: $modifierText'),
-              value: entry.key,
-              groupValue: _selectedChaosLevel,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedChaosLevel = value);
-                }
-              },
-              dense: true,
-              selected: isSelected,
-            );
-          }),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('+ + = Alter (Add element)', style: TextStyle(fontSize: 12)),
+                Text('+ − = Alter (Remove element)', style: TextStyle(fontSize: 12)),
+                Text('− + = Interrupt (Favorable)', style: TextStyle(fontSize: 12)),
+                Text('− − = Interrupt (Unfavorable)', style: TextStyle(fontSize: 12)),
+                Text('Other = Normal scene', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           const Text(
-            'Rolling doubles triggers a Random Event!',
+            'Alter/Interrupt scenes require follow-up rolls.',
             style: TextStyle(
               fontSize: 12,
               fontStyle: FontStyle.italic,
@@ -77,7 +74,7 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
   }
 
   void _determineScene() {
-    final result = widget.nextScene.determineScene(chaosLevel: _selectedChaosLevel);
+    final result = widget.nextScene.determineScene();
     widget.onRoll(result);
     Navigator.pop(context);
   }

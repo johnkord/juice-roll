@@ -20,8 +20,35 @@ class JuiceRollApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const PhoneFrame(child: HomeScreen()),
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+/// Wraps the app in a phone-sized frame for web/desktop.
+class PhoneFrame extends StatelessWidget {
+  final Widget child;
+  
+  const PhoneFrame({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: 430, // iPhone 14 Pro Max width
+          maxHeight: 932, // iPhone 14 Pro Max height
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade800, width: 2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        ),
+      ),
     );
   }
 }

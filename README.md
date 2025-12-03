@@ -56,7 +56,6 @@ For wilderness and dungeon adventures:
 
 ### Prerequisites
 - Flutter SDK 3.0.0 or higher
-- Xcode (for iOS development)
 
 ### Installation
 
@@ -71,16 +70,35 @@ cd juice-roll
 flutter pub get
 ```
 
-3. Run the app:
+3. Add web platform support (if not already configured):
 ```bash
-flutter run
+flutter create --platforms=web .
 ```
 
+4. Run the app in web mode:
+```bash
+flutter run -d web-server --web-port=8080
+```
+
+5. Open your browser to `http://localhost:8080`
+
+The app displays in a phone-sized frame (430×932px) to simulate the mobile experience.
+
 ### Building for iOS
+
+iOS development requires a Mac with Xcode installed.
 
 ```bash
 flutter build ios
 ```
+
+### Building for Web
+
+```bash
+flutter build web
+```
+
+The built files will be in `build/web/`.
 
 ## Project Structure
 

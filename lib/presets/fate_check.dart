@@ -3,70 +3,147 @@ import '../core/table_lookup.dart';
 import '../models/roll_result.dart';
 
 /// Fate Check preset for the Juice Oracle.
-/// Answers yes/no questions with varying degrees of certainty.
+/// Uses 2dF (Fate dice) + 1d6 (Intensity) to answer yes/no questions.
+/// 
+/// The Juice Oracle Fate Check uses ordered Fate dice:
+/// - Left die (primary) and Right die (secondary)
+/// - Double blanks trigger special events based on which die is "primary"
 class FateCheck {
   final RollEngine _rollEngine;
 
-  /// Likelihood modifiers for the Fate Check.
-  static const Map<String, int> likelihoods = {
-    'Impossible': -4,
-    'No Way': -3,
-    'Very Unlikely': -2,
-    'Unlikely': -1,
-    'Even Odds': 0,
-    'Likely': 1,
-    'Very Likely': 2,
-    'Near Sure Thing': 3,
-    'A Sure Thing': 4,
-  };
-
-  /// Fate Check result table based on 2d6 + modifier.
-  static final LookupTable<FateCheckOutcome> _outcomeTable = LookupTable(
-    name: 'Fate Check',
-    entries: [
-      const TableEntry(minValue: -100, maxValue: 2, result: FateCheckOutcome.extremeNo),
-      const TableEntry(minValue: 3, maxValue: 4, result: FateCheckOutcome.no),
-      const TableEntry(minValue: 5, maxValue: 6, result: FateCheckOutcome.noAnd),
-      const TableEntry(minValue: 7, maxValue: 7, result: FateCheckOutcome.noBut),
-      const TableEntry(minValue: 8, maxValue: 8, result: FateCheckOutcome.yesBut),
-      const TableEntry(minValue: 9, maxValue: 10, result: FateCheckOutcome.yesAnd),
-      const TableEntry(minValue: 11, maxValue: 12, result: FateCheckOutcome.yes),
-      const TableEntry(minValue: 13, maxValue: 100, result: FateCheckOutcome.extremeYes),
-    ],
-  );
+  /// Likelihood modes for the Fate Check.
+  /// These shift interpretation rather than modifying dice.
+  static const List<String> likelihoods = [
+    'Unlikely',
+    'Even Odds',
+    'Likely',
+  ];
 
   FateCheck([RollEngine? rollEngine]) 
       : _rollEngine = rollEngine ?? RollEngine();
 
   /// Perform a Fate Check with the given likelihood.
+  /// 
+  /// Rolls 2dF (ordered) + 1d6 Intensity, then interprets the result.
   FateCheckResult check({String likelihood = 'Even Odds'}) {
-    final modifier = likelihoods[likelihood] ?? 0;
-    final dice = _rollEngine.rollDice(2, 6);
-    final sum = dice.reduce((a, b) => a + b);
-    final modifiedSum = sum + modifier;
+    // Roll 2 Fate dice (ordered: left is primary, right is secondary)
+    final fateDice = _rollEngine.rollFateDice(2);
+    final leftDie = fateDice[0];   // Primary die
+    final rightDie = fateDice[1];  // Secondary die
+    final fateSum = leftDie + rightDie;
     
-    final outcome = _outcomeTable.lookup(modifiedSum) ?? FateCheckOutcome.noBut;
+    // Roll Intensity die (1d6)
+    final intensity = _rollEngine.rollDie(6);
+    
+    // Check for special triggers (double blanks)
+    final isDoubleBlanks = leftDie == 0 && rightDie == 0;
+    SpecialTrigger? specialTrigger;
+    
+    if (isDoubleBlanks) {
+      // In Juice Oracle, primary die position determines the trigger:
+      // - Primary on left (default) → Random Event
+      // - Primary on right → Invalid Assumption
+      // Since we always treat left as primary, we use intensity to determine:
+      // - Intensity 1-3: Random Event (left-weighted)
+      // - Intensity 4-6: Invalid Assumption (right-weighted)
+      specialTrigger = intensity <= 3 
+          ? SpecialTrigger.randomEvent 
+          : SpecialTrigger.invalidAssumption;
+    }
+    
+    // Determine base outcome from Fate dice sum
+    final baseOutcome = _interpretFateSum(fateSum);
+    
+    // Apply likelihood shift
+    final outcome = _applyLikelihood(baseOutcome, likelihood);
 
     return FateCheckResult(
       likelihood: likelihood,
-      modifier: modifier,
-      diceResults: dice,
-      rawTotal: sum,
-      modifiedTotal: modifiedSum,
+      fateDice: fateDice,
+      fateSum: fateSum,
+      intensity: intensity,
       outcome: outcome,
+      specialTrigger: specialTrigger,
     );
+  }
+
+  /// Interpret the sum of 2dF into a base outcome.
+  /// Range is -2 to +2.
+  FateCheckOutcome _interpretFateSum(int sum) {
+    switch (sum) {
+      case -2:
+        return FateCheckOutcome.extremeNo;
+      case -1:
+        return FateCheckOutcome.noAnd;
+      case 0:
+        return FateCheckOutcome.mixed; // Could go either way
+      case 1:
+        return FateCheckOutcome.yesAnd;
+      case 2:
+        return FateCheckOutcome.extremeYes;
+      default:
+        return FateCheckOutcome.mixed;
+    }
+  }
+
+  /// Apply likelihood to shift ambiguous results.
+  FateCheckOutcome _applyLikelihood(FateCheckOutcome base, String likelihood) {
+    // Only shift "mixed" results (sum of 0)
+    if (base != FateCheckOutcome.mixed) {
+      return base;
+    }
+    
+    switch (likelihood) {
+      case 'Unlikely':
+        return FateCheckOutcome.noBut;
+      case 'Likely':
+        return FateCheckOutcome.yesBut;
+      case 'Even Odds':
+      default:
+        // For even odds on mixed, lean slightly toward "yes but" (Ironsworn weak-hit vibe)
+        return FateCheckOutcome.yesBut;
+    }
+  }
+}
+
+/// Special triggers from double blanks on Fate dice.
+enum SpecialTrigger {
+  /// Something unexpected happens - roll on Random Event tables.
+  randomEvent,
+  
+  /// Your assumption about the situation was wrong.
+  /// Re-examine what you thought was true.
+  invalidAssumption,
+}
+
+extension SpecialTriggerDisplay on SpecialTrigger {
+  String get displayText {
+    switch (this) {
+      case SpecialTrigger.randomEvent:
+        return 'Random Event!';
+      case SpecialTrigger.invalidAssumption:
+        return 'Invalid Assumption!';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case SpecialTrigger.randomEvent:
+        return 'Something unexpected happens. Roll on the Random Event tables.';
+      case SpecialTrigger.invalidAssumption:
+        return 'Your assumption about the situation was wrong. Re-examine what you thought was true.';
+    }
   }
 }
 
 /// Possible outcomes from a Fate Check.
 enum FateCheckOutcome {
   extremeNo,
-  no,
   noAnd,
   noBut,
+  mixed,      // Ambiguous - resolved by likelihood
   yesBut,
   yesAnd,
-  yes,
   extremeYes,
 }
 
@@ -76,55 +153,131 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
     switch (this) {
       case FateCheckOutcome.extremeNo:
         return 'Extreme No!';
-      case FateCheckOutcome.no:
-        return 'No';
       case FateCheckOutcome.noAnd:
         return 'No, and...';
       case FateCheckOutcome.noBut:
         return 'No, but...';
+      case FateCheckOutcome.mixed:
+        return 'Mixed';
       case FateCheckOutcome.yesBut:
         return 'Yes, but...';
       case FateCheckOutcome.yesAnd:
         return 'Yes, and...';
-      case FateCheckOutcome.yes:
-        return 'Yes';
       case FateCheckOutcome.extremeYes:
         return 'Extreme Yes!';
     }
+  }
+
+  /// Whether this is fundamentally a "yes" answer.
+  bool get isYes {
+    return this == FateCheckOutcome.yesBut ||
+           this == FateCheckOutcome.yesAnd ||
+           this == FateCheckOutcome.extremeYes;
+  }
+
+  /// Whether this is fundamentally a "no" answer.
+  bool get isNo {
+    return this == FateCheckOutcome.noBut ||
+           this == FateCheckOutcome.noAnd ||
+           this == FateCheckOutcome.extremeNo;
   }
 }
 
 /// Result of a Fate Check.
 class FateCheckResult extends RollResult {
   final String likelihood;
-  final int modifier;
-  final int rawTotal;
-  final int modifiedTotal;
+  final List<int> fateDice;
+  final int fateSum;
+  final int intensity;
   final FateCheckOutcome outcome;
+  final SpecialTrigger? specialTrigger;
 
   FateCheckResult({
     required this.likelihood,
-    required this.modifier,
-    required List<int> diceResults,
-    required this.rawTotal,
-    required this.modifiedTotal,
+    required this.fateDice,
+    required this.fateSum,
+    required this.intensity,
     required this.outcome,
+    this.specialTrigger,
   }) : super(
           type: RollType.fateCheck,
           description: 'Fate Check ($likelihood)',
-          diceResults: diceResults,
-          total: modifiedTotal,
-          interpretation: outcome.displayText,
+          diceResults: [...fateDice, intensity],
+          total: fateSum,
+          interpretation: _buildInterpretation(outcome, intensity, specialTrigger),
           metadata: {
             'likelihood': likelihood,
-            'modifier': modifier,
-            'rawTotal': rawTotal,
+            'fateDice': fateDice,
+            'fateSum': fateSum,
+            'intensity': intensity,
+            'outcome': outcome.name,
+            'specialTrigger': specialTrigger?.name,
           },
         );
 
+  static String _buildInterpretation(
+    FateCheckOutcome outcome,
+    int intensity,
+    SpecialTrigger? trigger,
+  ) {
+    final parts = <String>[outcome.displayText];
+    
+    if (trigger != null) {
+      parts.add(trigger.displayText);
+    }
+    
+    return parts.join(' + ');
+  }
+
+  /// Get symbolic representation of the Fate dice.
+  String get fateSymbols {
+    return fateDice.map((d) {
+      switch (d) {
+        case -1:
+          return '−';
+        case 0:
+          return '○';
+        case 1:
+          return '+';
+        default:
+          return '?';
+      }
+    }).join(' ');
+  }
+
+  /// Whether this result triggered a special event.
+  bool get hasSpecialTrigger => specialTrigger != null;
+
+  /// Intensity description based on the d6 value.
+  String get intensityDescription {
+    switch (intensity) {
+      case 1:
+        return 'Minimal';
+      case 2:
+        return 'Weak';
+      case 3:
+        return 'Moderate';
+      case 4:
+        return 'Strong';
+      case 5:
+        return 'Powerful';
+      case 6:
+        return 'Extreme';
+      default:
+        return 'Unknown';
+    }
+  }
+
   @override
   String toString() {
-    final modStr = modifier >= 0 ? '+$modifier' : '$modifier';
-    return 'Fate Check ($likelihood): ${diceResults.join('+')}$modStr = $modifiedTotal → ${outcome.displayText}';
+    final buffer = StringBuffer();
+    buffer.writeln('Fate Check ($likelihood):');
+    buffer.writeln('  Fate: [$fateSymbols] = $fateSum');
+    buffer.writeln('  Intensity: $intensity ($intensityDescription)');
+    buffer.write('  Result: ${outcome.displayText}');
+    if (specialTrigger != null) {
+      buffer.write(' + ${specialTrigger!.displayText}');
+    }
+    return buffer.toString();
   }
 }

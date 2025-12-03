@@ -1,0 +1,394 @@
+# Juice Oracle Dice Roller – Design Doc
+
+## 1. Overview
+
+### What is Juice Oracle?
+
+Juice Oracle is a portable solo-GM in a pocketfold: a dense set of tables and procedures that replace a human GM, so you can run RPGs (or improv stories) by yourself or with a GM who wants extra inspiration.
+
+**Core mechanics inherited from Mythic GME:**
+- **Fate Questions** – Yes/no questions with nuanced answers (Yes/No + And/But, Random Event, Invalid Assumption)
+- **Discover Meaning** – Roll word pairs from meaning tables for open questions
+- **Random Events** – Triggered events that pull from your Threads, Characters, Events, and Locations lists
+- **Scene Transitions** – Roll to see if your next scene expectation is altered or interrupted
+
+**What Juice adds:**
+- A streamlined **Fate Check** using 2dF + 1d6 for more granular answers with a "yes-but" skew
+- **Invalid Assumption** mechanic alongside Random Events
+- **Intensity die** (1d6) indicating how significant the outcome is
+- No Chaos Factor—pacing handled via scene transitions and random events
+- Compact Wilderness, Dungeon, Encounter, and Treasure generators
+
+### App Goal
+
+Build a small iPhone app that rolls dice **in the ways the Juice Oracle uses them**, with presets for common Juice rolls.
+
+- **Target:** iOS 17+
+- **Dev platforms:** Windows / Linux (macOS only needed for signing & App Store builds)
+
+### Reference Tables
+
+All original Juice Oracle tables are in [`/reference/juice-oracle-text-tables/`](../reference/juice-oracle-text-tables/):
+
+| File | Contents |
+|------|----------|
+| `fate-check.md` | Core 2dF+1d6 resolution table |
+| `expectation-behavior-intensity-scale.md` | Intensity and scale modifiers |
+| `random-event-challenge.md` | Random Event types, Physical/Mental challenges |
+| `random-tables.md` | Modifier + Idea tables (RE/Alter) |
+| `meaning-name-generator.md` | Discover Meaning words, Name Generator |
+| `quest.md` | Quest generator tables |
+| `npc-action.md` | NPC behavior determination |
+| `pay-the-price.md` | Consequence tables |
+| `interrupt-plot-point.md` | Interrupt and plot twist tables |
+| `wilderness-table.md` | Environment, Weather, Monster formulas |
+| `wilderness-monster-encounter.md` | Monster encounter details |
+| `dungeon-generator.md` | Dungeon area generation |
+| `dungeon-encounter.md` | Dungeon encounter tables |
+| `settlement.md` | Settlement generation |
+| `location.md` | Location details |
+| `object-treasure.md` | Object and treasure properties |
+| `natural-hazard-feature-dungeon.md` | Hazards and features |
+| `dialog.md` | NPC dialog generation |
+| `extended-npc-conversation.md` | Extended NPC interaction |
+| `details.md` | Miscellaneous detail tables |
+| `immersion.md` | Immersion and atmosphere |
+
+---
+
+## 2. Scenarios & Use Cases
+
+Based on all the Juice Oracle tables, the following scenarios represent the complete set of rolling use cases the app should support:
+
+### 2.1 Core Oracle Mechanics
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Fate Check** | `fate-check.md` | 2dF + 1d6 | Yes/No questions with likelihood modifier (Unlikely/Even/Likely). Produces answers from "Yes And" to "No And" with Random Event or Invalid Assumption triggers on double blanks. |
+| **Next Scene** | `fate-check.md` (Next Scene column) | 2dF | Determines if next scene proceeds normally, is altered (add/remove element), or is interrupted (favorable/unfavorable). |
+| **Random Event** | `random-event-challenge.md`, `random-tables.md` | 3d10 | Generates story prompts: Event Type (Advance Time, Close Thread, NPC Action, etc.) + Modifier + Idea word pair. |
+| **Discover Meaning** | `meaning-name-generator.md` | 2d20 | Two-word prompts for open interpretation (e.g., "Dangerous Trust", "Reveal Shadow"). |
+| **Expectation Check** | `expectation-behavior-intensity-scale.md` | 2dF + 1d6 | General behavior/outcome determination: Expected, Favorable, Unfavorable, Opposite, etc. with intensity. |
+
+### 2.2 Character & NPC Interactions
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **NPC Action** | `npc-action.md` | d10 | Determines what an NPC does: Talks, Continues, Act (PC Interest), Act (Self Interest), Enter Combat, etc. |
+| **NPC Personality** | `npc-action.md` | d10 | Generates NPC traits: Cautious, Curious, Organized, Compassionate, etc. |
+| **NPC Need** | `npc-action.md` | d10 | What the NPC wants: Sustenance, Shelter, Security, Recognition, Fulfillment, etc. |
+| **NPC Motive/Topic** | `npc-action.md` | d10 | What drives conversation: History, Family, Reputation, Wealth, Treasure, etc. |
+| **NPC Combat Action** | `npc-action.md` | d10 | Combat behavior: Defend, Shift Focus, Seize, Intimidate, Coordinate, etc. |
+| **Dialog Generation** | `dialog.md` | 2d10 | Direction (Neutral/Defensive/Aggressive/Helpful) + Tone (Them/Me/You/Us) → Subject matrix. Doubles end conversation. |
+| **Extended NPC Info Type** | `extended-npc-conversation.md` | d100 | Type of plot knowledge an NPC can share (connections, boons, losses, insights, etc.). |
+| **Extended NPC Info Topic** | `extended-npc-conversation.md` | d100 | Topic of information (antagonists, locations, artifacts, allies, enemies, etc.). |
+| **Companion Response** | `extended-npc-conversation.md` | d100 | How a companion reacts to a proposal (from refusal to enthusiastic agreement). |
+| **Extended Dialog Topic** | `extended-npc-conversation.md` | d100 | Deep conversation subjects for extended NPC interactions. |
+
+### 2.3 Plot & Story Development
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Pay the Price** | `pay-the-price.md` | d10 | Consequences on failure: Unintended Effect, Situation Worsens, Delayed, New Danger, etc. |
+| **Major Plot Twist** | `pay-the-price.md` | d10 | Major twists on critical fail: Actions Benefit Enemy, Assumption False, Dark Secret Revealed, etc. |
+| **Interrupt/Plot Point** | `interrupt-plot-point.md` | 2d10 | Category (Action/Tension/Mystery/Social/Personal) + Specific event (Abduction, Chase, Revelation, etc.). |
+| **Quest Generator** | `quest.md` | 5d10 | Full quest: Objective (Attain/Destroy/Protect) + Description + Focus + Preposition + Location. |
+
+### 2.4 Exploration & Wilderness
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Environment Type** | `wilderness-table.md` | 2dF | Determine biome: Arctic, Mountains, Grassland, Forest, Swamp, Desert, etc. |
+| **Weather** | `wilderness-table.md` | 1d6@skew | Environment-modified weather: Blizzard to Scorching Heat based on terrain. |
+| **Wilderness Encounter** | `wilderness-table.md` | d10 | What happens: Natural Hazard, Monster, Weather, Challenge, Dungeon, River/Road, Feature, Settlement, Plot Advance. |
+| **Monster Encounter** | `wilderness-monster-encounter.md` | formula-based | Environment-specific formula (e.g., +3@-) to determine creature type and difficulty. |
+| **Tracks** | `wilderness-monster-encounter.md` | 1d6-1@ | What creature tracks are found. |
+| **Natural Hazard** | `natural-hazard-feature-dungeon.md` | d10 | Hazards: Creature Tracks, Dust Storm, Flood, Fog, Rockslide, Crevice, River Crossing, etc. |
+| **Wilderness Feature** | `natural-hazard-feature-dungeon.md` | d10 | Landmarks: Bones, Cairn, Chasm, Circle, Spring, Grave, Monument, Tower, Tree, Well. |
+
+### 2.5 Dungeon Exploration
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Dungeon Name** | `natural-hazard-feature-dungeon.md` | 2d10 | Description (Bloodstained, Chaotic, Fallen, etc.) + Subject (Blades, Blight, Darkness, etc.). |
+| **Dungeon Next Area** | `dungeon-generator.md` | 1d10@- / 1d10@+ | Stateful: Roll @- until doubles, then @+. Results: Passage, Chamber, Lock, Exit, etc. |
+| **Passage Type** | `dungeon-generator.md` | d10 | Passage details: Dead End, Narrow Crawlspace, Bridge, Intersection, etc. |
+| **Room Condition** | `dungeon-generator.md` | d10 | State of area: Collapsed, Flooded, Burned, Pristine, Converted, etc. |
+| **Dungeon Encounter** | `dungeon-encounter.md` | d10 | What's in the room: Monster, Natural Hazard, Challenge, Immersion, Safety, Trap, Feature, Key, Treasure. |
+| **Monster Traits** | `dungeon-encounter.md` | 2d10 | Appearance (Agile, Beast, Elemental, etc.) + Ability (Climb, Drain, Magic, etc.). |
+| **Trap Type** | `dungeon-encounter.md` | 2d10 | Purpose (Ambush, Collapse, Lure, etc.) + Mechanism (Alarm, Decay, Fire, Poison, etc.). |
+| **Dungeon Feature** | `dungeon-encounter.md` | d10 | Room features: Library, Mural, Mushrooms, Prison, Runes, Shrine, Vault, Well, Workshop. |
+
+### 2.6 Settlements & Locations
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Settlement Name** | `settlement.md` | 2d10 | Prefix (Frost, High, Raven, Storm, etc.) + Suffix (Barrow, Brook, Haven, River, etc.). |
+| **Establishment** | `settlement.md` | d10 | What's available: Stable, Tavern, Inn, Temple, Guild Hall, Magic Shop, etc. |
+| **Artisan** | `settlement.md` | d10 | Craftspeople: Artist, Baker, Tailor, Blacksmith, Carpenter, Apothecary, Jeweler, etc. |
+| **Settlement News** | `settlement.md` | d10 | Current events: War, Sickness, Natural Disaster, Crime, Celebration, etc. |
+| **Location (Grid)** | `location.md` | d100 | 5×5 grid position for directional placement (North/South/East/West/Center). |
+
+### 2.7 Objects & Treasure
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Treasure Type** | `object-treasure.md` | d6 | Category: Trinket, Treasure, Document, Accessory, Weapon, Armor. |
+| **Trinket** | `object-treasure.md` | 3d6 | Quality + Material (Wood/Bone/Leather/Silver/Gold/Gem) + Type (Toy/Bottle/Charm/Key). |
+| **Treasure Container** | `object-treasure.md` | 3d6 | Quality + Container (None/Pouch/Box/Chest) + Contents (Food/Art/Coins/Gems). |
+| **Document** | `object-treasure.md` | 3d6 | Type (Song/Letter/Scroll/Book) + Content (Lewd/Map/Arcane/Forbidden) + Subject. |
+| **Accessory** | `object-treasure.md` | 3d6 | Quality + Material + Type (Headpiece/Emblem/Earring/Bracelet/Ring). |
+| **Weapon** | `object-treasure.md` | 3d6 | Quality + Material (Steel/Silver/Mithral/Adamantine) + Type. |
+| **Armor** | `object-treasure.md` | 3d6 | Quality + Material + Type (Headpiece/Gloves/Boots/Shield). |
+
+### 2.8 Challenges & Skills
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Quick DC** | `random-event-challenge.md` | 2d6+6 | Quick difficulty class generation (8-17). |
+| **Physical Challenge** | `random-event-challenge.md` | d10 | Skill type: Medicine, Survival, Animal Handling, Perception, Stealth, Athletics, etc. |
+| **Mental Challenge** | `random-event-challenge.md` | d10 | Skill type: Tool, Nature, Investigate, Persuasion, Deception, Arcana, History, etc. |
+
+### 2.9 Names & Details
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Name Generator** | `meaning-name-generator.md` | 3d20 | Fantasy name from syllable tables (M@-/F@+). |
+| **Color** | `details.md` | d10 | Object color: Black, Brown, Yellow, Green, Blue, Red, Violet, Silver, Gold, White. |
+| **Property** | `details.md` | d10 + d6 | Object property: Age, Durability, Power, Quality, Rarity, Size, Style, Value, Weight. |
+| **Detail** | `details.md` | d10 | Emotional/contextual detail: Negative Emotion, Favors/Disfavors PC/NPC/Thread, etc. |
+| **History** | `details.md` | d10 | Temporal context: Backstory, Past/Previous/Current Thread, Scene, or Action. |
+
+### 2.10 Immersion & Atmosphere
+
+| Scenario | Tables Used | Dice | Description |
+|----------|-------------|------|-------------|
+| **Sensory Detail** | `immersion.md` | 2d10 | Sense (See/Hear/Smell/Feel) + Detail (Broken, Dripping, Decay, Cold, etc.). |
+| **Emotional Atmosphere** | `immersion.md` | 2d10 | Where? (Above, Behind, Shadows, etc.) + Emotion pair (Despair↔Hope, Fear↔Courage, etc.) + Cause. |
+
+### 2.11 Summary: Preset Priority
+
+Based on table complexity and usage frequency, recommended implementation order:
+
+**Phase 1 - Core (Done)**
+1. ✅ Fate Check (2dF + 1d6)
+2. ✅ Next Scene (2dF)
+3. ✅ Random Event (3d10)
+4. ✅ Exploration (Weather/Encounter)
+
+**Phase 2 - Essential**
+5. Discover Meaning (2d20)
+6. NPC Action (d10 multi-column)
+7. Pay the Price (d10)
+8. Quest Generator (5d10)
+
+**Phase 3 - Extended**
+9. Dungeon Next Area (stateful 1d10@±)
+10. Dungeon Encounter (d10 + sub-tables)
+11. Settlement Generator (2d10 + sub-tables)
+12. Object/Treasure (d6 + 3d6)
+
+**Phase 4 - Deep**
+13. Dialog Generator (2d10 matrix)
+14. Interrupt/Plot Point (2d10 matrix)
+15. Monster Encounter (formula parsing)
+16. Extended NPC Conversation (d100 tables)
+17. Immersion/Senses (5d10)
+18. Details (d10 + d6)
+19. Name Generator (3d20 syllables)
+20. Location Grid (d100 → 5×5)
+
+---
+
+## 3. Tech Stack
+
+- **Framework:** Flutter (Dart)
+  - Cross-platform development on Windows/Linux
+  - iOS builds via CI (GitHub Actions with Mac runner)
+
+- **Architecture:** Simple MVVM
+  - **Core roll engine** as pure functions (no UI dependencies, fully testable)
+  - Thin UI layer for buttons, presets, and history
+
+- **State & Storage**
+  - In-memory state for current roll & session
+  - `shared_preferences` for persistence (presets, settings, history)
+
+- **Random Number Generation**
+  - Platform PRNG via `dart:math`
+  - Seed override for reproducible testing/sessions
+
+---
+
+## 4. Core Functional Requirements
+
+### 4.1 Dice Primitives
+
+| Primitive | Description |
+|-----------|-------------|
+| **NdX standard dice** | d4, d6, d8, d10, d12, d20, d100 with optional modifier |
+| **Fate dice (dF)** | Values in {-1, 0, +1}. Ordered results for Random Event vs Invalid Assumption |
+| **Advantage/Disadvantage** | Roll twice, keep higher (adv) or lower (dis) |
+| **Skewed d6** | `1d6@+` = advantage, `1d6@-` = disadvantage |
+
+### 4.2 Fate Check
+
+The core Juice mechanic. See [`fate-check.md`](../reference/juice-oracle-text-tables/fate-check.md) for full table.
+
+**Implementation:** 2dF (Fate dice) + 1d6 (Intensity)
+
+- **Fate Dice:** Each shows `−` (-1), `○` (0), or `+` (+1). Sum ranges -2 to +2.
+- **Intensity:** 1d6 indicating magnitude (Minimal → Extreme)
+- **Likelihood:** Unlikely / Even Odds / Likely shifts ambiguous results
+- **Special Triggers:** Double blanks (`○○`) trigger Random Event or Invalid Assumption
+
+### 4.3 Next Scene
+
+Determines scene transitions. Uses the Next Scene column from the Fate Check table.
+
+- **Normal** – Scene proceeds as expected
+- **Alter (Add/Remove)** – Scene is modified
+- **Interrupt (Favorable/Unfavorable)** – Scene is replaced
+
+### 4.4 Random Event
+
+See [`random-event-challenge.md`](../reference/juice-oracle-text-tables/random-event-challenge.md) and [`random-tables.md`](../reference/juice-oracle-text-tables/random-tables.md).
+
+Generates story prompts via:
+1. **Event Type** (d10): Advance Time, Close Thread, NPC Action, etc.
+2. **Modifier + Idea** (d10 + d10): Word pair from tables
+
+### 4.5 Discover Meaning
+
+See [`meaning-name-generator.md`](../reference/juice-oracle-text-tables/meaning-name-generator.md).
+
+Two-word prompts for open interpretation: Adjective + Noun (e.g., "Dangerous Trust").
+
+### 4.6 Exploration
+
+See [`wilderness-table.md`](../reference/juice-oracle-text-tables/wilderness-table.md) and [`dungeon-generator.md`](../reference/juice-oracle-text-tables/dungeon-generator.md).
+
+- **Weather:** 1d6@Environment + Type offset
+- **Encounters:** Environment-specific monster formulas (e.g., `+3@-`)
+- **Dungeon Areas:** Phase-based generation
+
+---
+
+## 5. Preset Roll Types
+
+| Preset | Dice | Reference |
+|--------|------|-----------|
+| **Fate Check** | 2dF + 1d6 | `fate-check.md` |
+| **Random Event** | d10 + d10 + d10 | `random-event-challenge.md`, `random-tables.md` |
+| **Discover Meaning** | d20 + d20 | `meaning-name-generator.md` |
+| **Quest** | d10 × 5 columns | `quest.md` |
+| **Weather** | 1d6@skew | `wilderness-table.md` |
+| **Wilderness Encounter** | formula-based | `wilderness-monster-encounter.md` |
+| **Dungeon Encounter** | d10 | `dungeon-encounter.md` |
+| **NPC Action** | d10 | `npc-action.md` |
+| **Pay the Price** | d10 | `pay-the-price.md` |
+| **Generic Roll** | NdX ± mod | — |
+
+---
+
+## 6. UI Structure
+
+### Home Screen
+- Grid of preset buttons
+- Quick access to most-used rolls
+
+### Roll Result Panel
+- Preset name
+- Raw dice with Fate symbols (+/−/○)
+- Interpretation text
+- Sub-roll details (expandable)
+
+### History Screen
+- Scrollable log with timestamps
+- Tap to expand details
+- Copy/share functionality
+
+### Custom Roll Builder
+- Die count, type, modifier
+- Advantage/disadvantage toggle
+- Save as preset option
+
+---
+
+## 7. Non-Functional Requirements
+
+| Requirement | Details |
+|-------------|---------|
+| **Offline-first** | All tables bundled locally. No network dependency. |
+| **Performance** | Roll + UI update < 50ms. |
+| **Testability** | Roll engine in separate module with unit tests. |
+| **Extensibility** | Tables loaded from reference files. |
+
+---
+
+## 8. Implementation Status
+
+### ✅ Completed
+- [x] Project setup (Flutter)
+- [x] Core roll engine (`RollEngine` class)
+  - Standard dice, Fate dice, advantage/disadvantage, skewed d6
+- [x] Table lookup system (`LookupTable<T>`)
+- [x] Fate Check preset (2dF + Intensity)
+  - Fate dice with symbols, intensity descriptions
+  - Random Event / Invalid Assumption triggers
+- [x] Next Scene preset
+- [x] Random Event preset (Focus + Action/Subject)
+- [x] Exploration preset (Weather, encounters)
+- [x] Result models with metadata
+- [x] Unit tests
+
+### 🔲 Remaining
+- [ ] Discover Meaning preset
+- [ ] Quest generator preset
+- [ ] NPC Action preset
+- [ ] Pay the Price preset
+- [ ] Dungeon Next Area (stateful)
+- [ ] Monster encounter with formula parsing
+- [ ] History persistence
+- [ ] UI polish (haptics, animations)
+- [ ] CI pipeline (GitHub Actions)
+- [ ] iOS build and signing
+
+---
+
+## 9. File Structure
+
+```
+lib/
+├── main.dart
+├── core/
+│   ├── roll_engine.dart      # Dice primitives
+│   └── table_lookup.dart     # Generic lookup table
+├── models/
+│   └── roll_result.dart      # Base result class
+├── presets/
+│   ├── fate_check.dart       # Fate Check
+│   ├── next_scene.dart       # Scene transitions
+│   ├── random_event.dart     # Action/Subject generation
+│   └── exploration.dart      # Weather & encounters
+└── ui/
+    ├── home_screen.dart
+    └── widgets/
+        ├── dice_roll_dialog.dart
+        ├── exploration_dialog.dart
+        ├── fate_check_dialog.dart
+        ├── next_scene_dialog.dart
+        └── roll_history.dart
+
+reference/
+└── juice-oracle-text-tables/  # Source tables from PDF
+    ├── fate-check.md
+    ├── random-tables.md
+    └── ...
+
+test/
+├── roll_engine_test.dart
+├── table_lookup_test.dart
+├── presets_test.dart
+└── test_utils.dart
+```

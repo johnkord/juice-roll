@@ -4,6 +4,16 @@ import '../../presets/fate_check.dart';
 import '../../presets/next_scene.dart';
 import '../../presets/random_event.dart';
 import '../../presets/exploration.dart';
+import '../../presets/discover_meaning.dart';
+import '../../presets/npc_action.dart';
+import '../../presets/pay_the_price.dart';
+import '../../presets/quest.dart';
+import '../../presets/interrupt_plot_point.dart';
+import '../../presets/settlement.dart';
+import '../../presets/object_treasure.dart';
+import '../../presets/challenge.dart';
+import '../../presets/details.dart';
+import '../../presets/immersion.dart';
 
 /// Scrollable roll history widget.
 class RollHistory extends StatelessWidget {
@@ -32,7 +42,7 @@ class _RollHistoryCard extends StatelessWidget {
   final RollResult result;
   final int index;
 
-  const _RollHistoryCard({required this.result, required this.index});
+  const _RollHistoryCard({super.key, required this.result, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +104,26 @@ class _RollHistoryCard extends StatelessWidget {
         icon = Icons.flash_on;
         color = Colors.amber;
         break;
+      case RollType.discoverMeaning:
+        icon = Icons.lightbulb_outline;
+        color = Colors.orange;
+        break;
+      case RollType.npcAction:
+        icon = Icons.person;
+        color = Colors.teal;
+        break;
+      case RollType.payThePrice:
+        icon = Icons.warning;
+        color = Colors.red;
+        break;
+      case RollType.quest:
+        icon = Icons.map;
+        color = Colors.brown;
+        break;
+      case RollType.interruptPlotPoint:
+        icon = Icons.bolt;
+        color = Colors.deepPurple;
+        break;
       case RollType.weather:
         icon = Icons.wb_sunny;
         color = Colors.cyan;
@@ -101,6 +131,26 @@ class _RollHistoryCard extends StatelessWidget {
       case RollType.encounter:
         icon = Icons.explore;
         color = Colors.green;
+        break;
+      case RollType.settlement:
+        icon = Icons.location_city;
+        color = Colors.blueGrey;
+        break;
+      case RollType.objectTreasure:
+        icon = Icons.diamond;
+        color = Colors.amber;
+        break;
+      case RollType.challenge:
+        icon = Icons.fitness_center;
+        color = Colors.indigo;
+        break;
+      case RollType.details:
+        icon = Icons.palette;
+        color = Colors.pink;
+        break;
+      case RollType.immersion:
+        icon = Icons.visibility;
+        color = Colors.deepOrange;
         break;
       case RollType.fate:
         icon = Icons.auto_awesome;
@@ -124,10 +174,42 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildRandomEventDisplay(result as RandomEventResult, theme);
     } else if (result is IdeaResult) {
       return _buildIdeaDisplay(result as IdeaResult, theme);
+    } else if (result is DiscoverMeaningResult) {
+      return _buildDiscoverMeaningDisplay(result as DiscoverMeaningResult, theme);
+    } else if (result is NpcActionResult) {
+      return _buildNpcActionDisplay(result as NpcActionResult, theme);
+    } else if (result is NpcProfileResult) {
+      return _buildNpcProfileDisplay(result as NpcProfileResult, theme);
+    } else if (result is PayThePriceResult) {
+      return _buildPayThePriceDisplay(result as PayThePriceResult, theme);
+    } else if (result is QuestResult) {
+      return _buildQuestDisplay(result as QuestResult, theme);
+    } else if (result is InterruptPlotPointResult) {
+      return _buildInterruptDisplay(result as InterruptPlotPointResult, theme);
     } else if (result is WeatherResult) {
       return _buildWeatherDisplay(result as WeatherResult, theme);
     } else if (result is EncounterResult) {
       return _buildEncounterDisplay(result as EncounterResult, theme);
+    } else if (result is SettlementNameResult) {
+      return _buildSettlementNameDisplay(result as SettlementNameResult, theme);
+    } else if (result is FullSettlementResult) {
+      return _buildFullSettlementDisplay(result as FullSettlementResult, theme);
+    } else if (result is ObjectTreasureResult) {
+      return _buildObjectTreasureDisplay(result as ObjectTreasureResult, theme);
+    } else if (result is ChallengeSkillResult) {
+      return _buildChallengeSkillDisplay(result as ChallengeSkillResult, theme);
+    } else if (result is QuickDcResult) {
+      return _buildQuickDcDisplay(result as QuickDcResult, theme);
+    } else if (result is SensoryDetailResult) {
+      return _buildSensoryDetailDisplay(result as SensoryDetailResult, theme);
+    } else if (result is EmotionalAtmosphereResult) {
+      return _buildEmotionalAtmosphereDisplay(result as EmotionalAtmosphereResult, theme);
+    } else if (result is FullImmersionResult) {
+      return _buildFullImmersionDisplay(result as FullImmersionResult, theme);
+    } else if (result is PropertyResult) {
+      return _buildPropertyResultDisplay(result as PropertyResult, theme);
+    } else if (result is DetailResult) {
+      return _buildDetailResultDisplay(result as DetailResult, theme);
     } else if (result is FateRollResult) {
       return _buildFateRollDisplay(result as FateRollResult, theme);
     }
@@ -150,13 +232,16 @@ class _RollHistoryCard extends StatelessWidget {
         ),
         if (result.interpretation != null) ...[
           const Spacer(),
-          Chip(
-            label: Text(
-              result.interpretation!,
-              style: const TextStyle(fontSize: 12),
+          Flexible(
+            child: Chip(
+              label: Text(
+                result.interpretation!,
+                style: const TextStyle(fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
             ),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
           ),
         ],
       ],
@@ -164,50 +249,124 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
-    final isPositive = result.outcome == FateCheckOutcome.yes ||
-        result.outcome == FateCheckOutcome.yesAnd ||
-        result.outcome == FateCheckOutcome.yesBut ||
-        result.outcome == FateCheckOutcome.extremeYes;
+    final isPositive = result.outcome.isYes;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '[${result.diceResults.join('+')}]',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontFamily: 'monospace',
-          ),
+        Row(
+          children: [
+            // Fate dice symbols
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                result.fateSymbols,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Intensity die
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.purple.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.flash_on, size: 14, color: Colors.purple),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${result.intensity}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            // Outcome chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: isPositive ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isPositive ? Colors.green : Colors.red,
+                ),
+              ),
+              child: Text(
+                result.outcome.displayText,
+                style: TextStyle(
+                  color: isPositive ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
-        if (result.modifier != 0)
-          Text(
-            result.modifier >= 0 ? '+${result.modifier}' : '${result.modifier}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              color: Colors.grey,
+        // Special trigger (Random Event / Invalid Assumption)
+        if (result.hasSpecialTrigger) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: result.specialTrigger == SpecialTrigger.randomEvent
+                  ? Colors.amber.withOpacity(0.2)
+                  : Colors.deepPurple.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: result.specialTrigger == SpecialTrigger.randomEvent
+                    ? Colors.amber
+                    : Colors.deepPurple,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  result.specialTrigger == SpecialTrigger.randomEvent
+                      ? Icons.flash_on
+                      : Icons.warning_amber,
+                  size: 16,
+                  color: result.specialTrigger == SpecialTrigger.randomEvent
+                      ? Colors.amber
+                      : Colors.deepPurple,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  result.specialTrigger!.displayText,
+                  style: TextStyle(
+                    color: result.specialTrigger == SpecialTrigger.randomEvent
+                        ? Colors.amber.shade800
+                        : Colors.deepPurple,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
-        const SizedBox(width: 8),
+        ],
+        // Intensity description
+        const SizedBox(height: 4),
         Text(
-          '= ${result.modifiedTotal}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: isPositive ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isPositive ? Colors.green : Colors.red,
-            ),
-          ),
-          child: Text(
-            result.outcome.displayText,
-            style: TextStyle(
-              color: isPositive ? Colors.green : Colors.red,
-              fontWeight: FontWeight.bold,
-            ),
+          'Intensity: ${result.intensityDescription}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
           ),
         ),
       ],
@@ -215,43 +374,61 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildNextSceneDisplay(NextSceneResult result, ThemeData theme) {
+    Color chipColor;
+    switch (result.sceneType) {
+      case SceneType.normal:
+        chipColor = Colors.green;
+        break;
+      case SceneType.alterAdd:
+      case SceneType.alterRemove:
+        chipColor = Colors.amber;
+        break;
+      case SceneType.interruptFavorable:
+        chipColor = Colors.blue;
+        break;
+      case SceneType.interruptUnfavorable:
+        chipColor = Colors.red;
+        break;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text(
-              '[${result.diceResults.join('+')}]',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontFamily: 'monospace',
+            // Fate dice symbols
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                result.fateSymbols,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Chip(
               label: Text(result.sceneType.displayText),
-              backgroundColor: Colors.blue.withOpacity(0.2),
-              side: const BorderSide(color: Colors.blue),
+              backgroundColor: chipColor.withOpacity(0.2),
+              side: BorderSide(color: chipColor),
               padding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
             ),
           ],
         ),
-        if (result.isInterrupt) ...[
+        if (result.sceneType.requiresFollowUp) ...[
           const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange),
-            ),
-            child: const Text(
-              '⚡ INTERRUPT - Random Event!',
-              style: TextStyle(
-                color: Colors.orange,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+          Text(
+            '→ Roll ${result.sceneType.followUpRoll}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.grey,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],
@@ -264,7 +441,7 @@ class _RollHistoryCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Chip(
-          label: Text(result.focus.displayText),
+          label: Text(result.focus),
           backgroundColor: Colors.amber.withOpacity(0.2),
           side: const BorderSide(color: Colors.amber),
           padding: EdgeInsets.zero,
@@ -272,7 +449,7 @@ class _RollHistoryCard extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${result.action} / ${result.subject}',
+          '${result.modifier} ${result.idea}',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             fontStyle: FontStyle.italic,
@@ -284,11 +461,261 @@ class _RollHistoryCard extends StatelessWidget {
 
   Widget _buildIdeaDisplay(IdeaResult result, ThemeData theme) {
     return Text(
-      '${result.action} / ${result.subject}',
+      '${result.modifier} ${result.idea}',
       style: theme.textTheme.titleMedium?.copyWith(
         fontWeight: FontWeight.bold,
         fontStyle: FontStyle.italic,
       ),
+    );
+  }
+
+  Widget _buildDiscoverMeaningDisplay(DiscoverMeaningResult result, ThemeData theme) {
+    return Text(
+      result.meaning,
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        fontStyle: FontStyle.italic,
+        color: Colors.orange,
+      ),
+    );
+  }
+
+  Widget _buildNpcActionDisplay(NpcActionResult result, ThemeData theme) {
+    return Row(
+      children: [
+        Chip(
+          label: Text(result.column.displayText),
+          backgroundColor: Colors.teal.withOpacity(0.2),
+          side: const BorderSide(color: Colors.teal),
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          result.result,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNpcProfileDisplay(NpcProfileResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          result.personality,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Needs ${result.need}, motivated by ${result.motive}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.grey,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPayThePriceDisplay(PayThePriceResult result, ThemeData theme) {
+    final color = result.isMajorTwist ? Colors.red : Colors.orange;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (result.isMajorTwist)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            margin: const EdgeInsets.only(bottom: 4),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.red),
+            ),
+            child: const Text(
+              '⚠️ MAJOR PLOT TWIST',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        Text(
+          result.result,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuestDisplay(QuestResult result, ThemeData theme) {
+    return Text(
+      result.questSentence,
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        fontStyle: FontStyle.italic,
+      ),
+    );
+  }
+
+  Widget _buildInterruptDisplay(InterruptPlotPointResult result, ThemeData theme) {
+    return Row(
+      children: [
+        Chip(
+          label: Text(result.category),
+          backgroundColor: Colors.deepPurple.withOpacity(0.2),
+          side: const BorderSide(color: Colors.deepPurple),
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            result.event,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettlementNameDisplay(SettlementNameResult result, ThemeData theme) {
+    return Text(
+      result.name,
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildFullSettlementDisplay(FullSettlementResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          result.name.name,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Has: ${result.establishment.result}',
+          style: theme.textTheme.bodySmall,
+        ),
+        Text(
+          'News: ${result.news.result}',
+          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildObjectTreasureDisplay(ObjectTreasureResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Chip(
+          label: Text(result.category),
+          backgroundColor: Colors.amber.withOpacity(0.2),
+          side: const BorderSide(color: Colors.amber),
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          result.fullDescription,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChallengeSkillDisplay(ChallengeSkillResult result, ThemeData theme) {
+    return Row(
+      children: [
+        Chip(
+          label: Text(result.challengeType.displayText),
+          backgroundColor: Colors.indigo.withOpacity(0.2),
+          side: const BorderSide(color: Colors.indigo),
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${result.skill} (DC ${result.suggestedDc})',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickDcDisplay(QuickDcResult result, ThemeData theme) {
+    return Row(
+      children: [
+        Text(
+          'DC',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${result.dc}',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.indigo,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSensoryDetailDisplay(SensoryDetailResult result, ThemeData theme) {
+    return Text(
+      'You ${result.sense.toLowerCase()} something ${result.detail.toLowerCase()}',
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontStyle: FontStyle.italic,
+      ),
+    );
+  }
+
+  Widget _buildEmotionalAtmosphereDisplay(EmotionalAtmosphereResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          result.where,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          '${result.negativeEmotion} ↔ ${result.positiveEmotion}',
+          style: theme.textTheme.bodyMedium,
+        ),
+        Text(
+          'because ${result.cause}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
     );
   }
 
@@ -447,6 +874,70 @@ class _RollHistoryCard extends StatelessWidget {
                 : result.total < 0
                     ? Colors.red
                     : Colors.grey,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'You ${result.sensory.sense.toLowerCase()} something ${result.sensory.detail.toLowerCase()}',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${result.emotional.where}: ${result.emotional.negativeEmotion} ↔ ${result.emotional.positiveEmotion}',
+          style: theme.textTheme.bodyMedium,
+        ),
+        Text(
+          'because ${result.emotional.cause}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
+    return Row(
+      children: [
+        Chip(
+          label: Text(result.property),
+          backgroundColor: Colors.pink.withOpacity(0.2),
+          side: const BorderSide(color: Colors.pink),
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          result.intensityDescription,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailResultDisplay(DetailResult result, ThemeData theme) {
+    return Row(
+      children: [
+        if (result.emoji != null) ...[
+          Text(result.emoji!, style: const TextStyle(fontSize: 20)),
+          const SizedBox(width: 8),
+        ],
+        Text(
+          result.result,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],

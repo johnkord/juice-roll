@@ -1,224 +1,245 @@
 import '../core/roll_engine.dart';
-import '../core/table_lookup.dart';
 import '../models/roll_result.dart';
 
 /// Random Event preset for the Juice Oracle.
-/// Generates random events using modifier + idea (action + subject) tables.
+/// Generates random events using the tables from random-event-challenge.md and random-tables.md.
+/// Uses 3d10: Event Focus + Modifier + Idea.
 class RandomEvent {
   final RollEngine _rollEngine;
 
-  /// Event focus table (what the event is about) - 2d6.
-  static final LookupTable<EventFocus> _focusTable = LookupTable(
-    name: 'Event Focus',
-    entries: [
-      const TableEntry(minValue: 2, maxValue: 3, result: EventFocus.pc),
-      const TableEntry(minValue: 4, maxValue: 5, result: EventFocus.npc),
-      const TableEntry(minValue: 6, maxValue: 8, result: EventFocus.current),
-      const TableEntry(minValue: 9, maxValue: 10, result: EventFocus.remote),
-      const TableEntry(minValue: 11, maxValue: 12, result: EventFocus.thread),
-    ],
-  );
-
-  /// Action words for idea generation.
-  static const List<String> actionWords = [
-    'Attainment', 'Starting', 'Neglect', 'Fight', 'Recruit',
-    'Triumph', 'Violate', 'Oppose', 'Malice', 'Communicate',
-    'Persecute', 'Increase', 'Decrease', 'Abandon', 'Gratify',
-    'Inquire', 'Antagonize', 'Move', 'Waste', 'Truce',
-    'Release', 'Befriend', 'Judge', 'Desert', 'Dominate',
-    'Procrastinate', 'Praise', 'Separate', 'Take', 'Break',
-    'Heal', 'Delay', 'Stop', 'Lie', 'Return',
-    'Immitate', 'Struggle', 'Inform', 'Bestow', 'Postpone',
-    'Expose', 'Haggle', 'Imprison', 'Release', 'Celebrate',
-    'Develop', 'Travel', 'Block', 'Harm', 'Debase',
-    'Overindulge', 'Adjourn', 'Adversity', 'Kill', 'Disrupt',
-    'Usurp', 'Create', 'Betray', 'Agree', 'Abuse',
-    'Oppress', 'Inspect', 'Ambush', 'Spy', 'Attach',
-    'Carry', 'Open', 'Carelessness', 'Ruin', 'Extravagance',
-    'Trick', 'Arrive', 'Propose', 'Divide', 'Refuse',
-    'Mistrust', 'Deceive', 'Cruelty', 'Intolerance', 'Trust',
-    'Excitement', 'Activity', 'Assist', 'Care', 'Negligence',
-    'Passion', 'Work', 'Control', 'Attract', 'Failure',
-    'Pursue', 'Vengeance', 'Proceedings', 'Dispute', 'Punish',
-    'Guide', 'Transform', 'Overthrow', 'Oppress', 'Change',
+  /// Event focus types - d10 (from random-event-challenge.md)
+  static const List<String> eventFocusTypes = [
+    'Advance Time',    // 1
+    'Close Thread',    // 2
+    'Converge Thread', // 3
+    'Diverge Thread',  // 4
+    'Immersion',       // 5
+    'Keyed Event',     // 6
+    'New Character',   // 7
+    'NPC Action',      // 8
+    'Plot Armor',      // 9
+    'Remote Event',    // 0/10
   ];
 
-  /// Subject words for idea generation.
-  static const List<String> subjectWords = [
-    'Goals', 'Dreams', 'Environment', 'Outside', 'Inside',
-    'Reality', 'Allies', 'Enemies', 'Evil', 'Good',
-    'Emotions', 'Opposition', 'War', 'Peace', 'Innocent',
-    'Love', 'Spirit', 'Intellect', 'Ideas', 'Joy',
-    'Messages', 'Energy', 'Balance', 'Tension', 'Friendship',
-    'Physical', 'Project', 'Pleasures', 'Pain', 'Possessions',
-    'Status', 'Revenge', 'Illness', 'Food', 'Attention',
-    'Success', 'Failure', 'Travel', 'Jealousy', 'Dispute',
-    'Home', 'Investment', 'Suffering', 'Wishes', 'Tactics',
-    'Stalemate', 'Randomness', 'Misfortune', 'Death', 'Disruption',
-    'Power', 'Burden', 'Intrigues', 'Fears', 'Ambush',
-    'Rumor', 'Wounds', 'Extravagance', 'Representative', 'Adversities',
-    'Opulence', 'Liberty', 'Military', 'Mundane', 'Trials',
-    'Masses', 'Vehicle', 'Art', 'Victory', 'Dispute',
-    'Riches', 'Normal', 'Technology', 'Hope', 'Magic',
-    'Illusions', 'Portals', 'Danger', 'Weapons', 'Animals',
-    'Weather', 'Elements', 'Nature', 'Masses', 'Leadership',
-    'Fame', 'Anger', 'Information', 'Bureaucracy', 'Business',
-    'Path', 'News', 'Exterior', 'Advice', 'Plot',
-    'Competition', 'Prison', 'Allies', 'Stranger', 'Benefits',
+  /// Modifier words - d10 (from random-tables.md)
+  static const List<String> modifierWords = [
+    'Change',     // 1
+    'Continue',   // 2
+    'Decrease',   // 3
+    'Extra',      // 4
+    'Increase',   // 5
+    'Mundane',    // 6
+    'Mysterious', // 7
+    'Start',      // 8
+    'Stop',       // 9
+    'Strange',    // 0/10
   ];
 
-  RandomEvent([RollEngine? rollEngine]) 
+  /// Idea words (1-3) - d10
+  static const List<String> ideaWords = [
+    'Attention',     // 1
+    'Communication', // 2
+    'Danger',        // 3
+    'Element',       // 4
+    'Food',          // 5
+    'Home',          // 6
+    'Resource',      // 7
+    'Rumor',         // 8
+    'Secret',        // 9
+    'Vow',           // 0/10
+  ];
+
+  /// Event words (4-6) - d10
+  static const List<String> eventWords = [
+    'Ambush',    // 1
+    'Anomaly',   // 2
+    'Blessing',  // 3
+    'Caravan',   // 4
+    'Curse',     // 5
+    'Discovery', // 6
+    'Escape',    // 7
+    'Journey',   // 8
+    'Prophecy',  // 9
+    'Ritual',    // 0/10
+  ];
+
+  /// Person words (7-8) - d10
+  static const List<String> personWords = [
+    'Criminal',    // 1
+    'Entertainer', // 2
+    'Expert',      // 3
+    'Mage',        // 4
+    'Mercenary',   // 5
+    'Noble',       // 6
+    'Priest',      // 7
+    'Ranger',      // 8
+    'Soldier',     // 9
+    'Transporter', // 0/10
+  ];
+
+  /// Object words (9-0) - d10
+  static const List<String> objectWords = [
+    'Arrow',     // 1
+    'Candle',    // 2
+    'Cauldron',  // 3
+    'Chain',     // 4
+    'Claw',      // 5
+    'Hook',      // 6
+    'Hourglass', // 7
+    'Quill',     // 8
+    'Rose',      // 9
+    'Skull',     // 0/10
+  ];
+
+  RandomEvent([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
 
-  /// Generate a random event.
+  /// Generate a random event (3d10).
   RandomEventResult generate() {
-    // Roll for focus (2d6)
-    final focusDice = _rollEngine.rollDice(2, 6);
-    final focusSum = focusDice.reduce((a, b) => a + b);
-    final focus = _focusTable.lookup(focusSum) ?? EventFocus.current;
+    // Roll for focus type (d10)
+    final focusRoll = _rollEngine.rollDie(10);
+    final focusIndex = focusRoll == 10 ? 9 : focusRoll - 1;
+    final focus = eventFocusTypes[focusIndex];
 
-    // Roll for action (d100)
-    final actionRoll = _rollEngine.rollDie(100);
-    final action = actionWords[(actionRoll - 1) % actionWords.length];
+    // Roll for modifier (d10)
+    final modifierRoll = _rollEngine.rollDie(10);
+    final modifierIndex = modifierRoll == 10 ? 9 : modifierRoll - 1;
+    final modifier = modifierWords[modifierIndex];
 
-    // Roll for subject (d100)
-    final subjectRoll = _rollEngine.rollDie(100);
-    final subject = subjectWords[(subjectRoll - 1) % subjectWords.length];
+    // Roll for idea category and word (d10)
+    final ideaRoll = _rollEngine.rollDie(10);
+    final ideaIndex = ideaRoll == 10 ? 9 : ideaRoll - 1;
+    
+    // Determine which idea list based on the roll
+    String idea;
+    String ideaCategory;
+    if (ideaRoll >= 1 && ideaRoll <= 3) {
+      idea = ideaWords[ideaIndex];
+      ideaCategory = 'Idea';
+    } else if (ideaRoll >= 4 && ideaRoll <= 6) {
+      idea = eventWords[ideaIndex];
+      ideaCategory = 'Event';
+    } else if (ideaRoll >= 7 && ideaRoll <= 8) {
+      idea = personWords[ideaIndex];
+      ideaCategory = 'Person';
+    } else {
+      idea = objectWords[ideaIndex];
+      ideaCategory = 'Object';
+    }
 
     return RandomEventResult(
-      focusDice: focusDice,
-      focusTotal: focusSum,
+      focusRoll: focusRoll,
       focus: focus,
-      actionRoll: actionRoll,
-      action: action,
-      subjectRoll: subjectRoll,
-      subject: subject,
+      modifierRoll: modifierRoll,
+      modifier: modifier,
+      ideaRoll: ideaRoll,
+      idea: idea,
+      ideaCategory: ideaCategory,
     );
   }
 
-  /// Generate just an idea (action + subject) without focus.
+  /// Generate just a modifier + idea pair (for Alter Scene).
   IdeaResult generateIdea() {
-    final actionRoll = _rollEngine.rollDie(100);
-    final action = actionWords[(actionRoll - 1) % actionWords.length];
+    final modifierRoll = _rollEngine.rollDie(10);
+    final modifierIndex = modifierRoll == 10 ? 9 : modifierRoll - 1;
+    final modifier = modifierWords[modifierIndex];
 
-    final subjectRoll = _rollEngine.rollDie(100);
-    final subject = subjectWords[(subjectRoll - 1) % subjectWords.length];
+    final ideaRoll = _rollEngine.rollDie(10);
+    final ideaIndex = ideaRoll == 10 ? 9 : ideaRoll - 1;
+    
+    String idea;
+    String ideaCategory;
+    if (ideaRoll >= 1 && ideaRoll <= 3) {
+      idea = ideaWords[ideaIndex];
+      ideaCategory = 'Idea';
+    } else if (ideaRoll >= 4 && ideaRoll <= 6) {
+      idea = eventWords[ideaIndex];
+      ideaCategory = 'Event';
+    } else if (ideaRoll >= 7 && ideaRoll <= 8) {
+      idea = personWords[ideaIndex];
+      ideaCategory = 'Person';
+    } else {
+      idea = objectWords[ideaIndex];
+      ideaCategory = 'Object';
+    }
 
     return IdeaResult(
-      actionRoll: actionRoll,
-      action: action,
-      subjectRoll: subjectRoll,
-      subject: subject,
+      modifierRoll: modifierRoll,
+      modifier: modifier,
+      ideaRoll: ideaRoll,
+      idea: idea,
+      ideaCategory: ideaCategory,
     );
-  }
-}
-
-/// What the random event focuses on.
-enum EventFocus {
-  pc,       // Player character related
-  npc,      // Non-player character related
-  current,  // Current scene/situation
-  remote,   // Something happening elsewhere
-  thread,   // Related to an ongoing plot thread
-}
-
-extension EventFocusDisplay on EventFocus {
-  String get displayText {
-    switch (this) {
-      case EventFocus.pc:
-        return 'PC Focus';
-      case EventFocus.npc:
-        return 'NPC Focus';
-      case EventFocus.current:
-        return 'Current Scene';
-      case EventFocus.remote:
-        return 'Remote Event';
-      case EventFocus.thread:
-        return 'Plot Thread';
-    }
-  }
-
-  String get description {
-    switch (this) {
-      case EventFocus.pc:
-        return 'The event directly involves a player character.';
-      case EventFocus.npc:
-        return 'The event involves an NPC from the story.';
-      case EventFocus.current:
-        return 'The event relates to the current scene or situation.';
-      case EventFocus.remote:
-        return 'Something is happening somewhere else that affects the story.';
-      case EventFocus.thread:
-        return 'The event connects to an ongoing plot or storyline.';
-    }
   }
 }
 
 /// Result of a Random Event generation.
 class RandomEventResult extends RollResult {
-  final List<int> focusDice;
-  final int focusTotal;
-  final EventFocus focus;
-  final int actionRoll;
-  final String action;
-  final int subjectRoll;
-  final String subject;
+  final int focusRoll;
+  final String focus;
+  final int modifierRoll;
+  final String modifier;
+  final int ideaRoll;
+  final String idea;
+  final String ideaCategory;
 
   RandomEventResult({
-    required this.focusDice,
-    required this.focusTotal,
+    required this.focusRoll,
     required this.focus,
-    required this.actionRoll,
-    required this.action,
-    required this.subjectRoll,
-    required this.subject,
+    required this.modifierRoll,
+    required this.modifier,
+    required this.ideaRoll,
+    required this.idea,
+    required this.ideaCategory,
   }) : super(
           type: RollType.randomEvent,
           description: 'Random Event',
-          diceResults: [...focusDice, actionRoll, subjectRoll],
-          total: focusTotal,
-          interpretation: '$action / $subject (${focus.displayText})',
+          diceResults: [focusRoll, modifierRoll, ideaRoll],
+          total: focusRoll + modifierRoll + ideaRoll,
+          interpretation: '$focus: $modifier $idea',
           metadata: {
-            'focus': focus.name,
-            'action': action,
-            'subject': subject,
+            'focus': focus,
+            'modifier': modifier,
+            'idea': idea,
+            'ideaCategory': ideaCategory,
           },
         );
 
-  String get idea => '$action / $subject';
+  String get eventPhrase => '$modifier $idea';
 
   @override
-  String toString() {
-    return 'Random Event:\n  Focus: ${focus.displayText}\n  Idea: $action / $subject';
-  }
+  String toString() => 'Random Event: $focus - $modifier $idea';
 }
 
-/// Result of an Idea generation (just action + subject).
+/// Result of an Idea generation (modifier + idea).
 class IdeaResult extends RollResult {
-  final int actionRoll;
-  final String action;
-  final int subjectRoll;
-  final String subject;
+  final int modifierRoll;
+  final String modifier;
+  final int ideaRoll;
+  final String idea;
+  final String ideaCategory;
 
   IdeaResult({
-    required this.actionRoll,
-    required this.action,
-    required this.subjectRoll,
-    required this.subject,
+    required this.modifierRoll,
+    required this.modifier,
+    required this.ideaRoll,
+    required this.idea,
+    required this.ideaCategory,
   }) : super(
           type: RollType.randomEvent,
           description: 'Idea',
-          diceResults: [actionRoll, subjectRoll],
-          total: actionRoll + subjectRoll,
-          interpretation: '$action / $subject',
+          diceResults: [modifierRoll, ideaRoll],
+          total: modifierRoll + ideaRoll,
+          interpretation: '$modifier $idea',
           metadata: {
-            'action': action,
-            'subject': subject,
+            'modifier': modifier,
+            'idea': idea,
+            'ideaCategory': ideaCategory,
           },
         );
 
-  String get idea => '$action / $subject';
+  String get phrase => '$modifier $idea';
 
   @override
-  String toString() => 'Idea: $action / $subject';
+  String toString() => 'Idea: $modifier $idea';
 }
