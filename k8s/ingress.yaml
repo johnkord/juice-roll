@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: juice-roll-ingress
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options SAMEORIGIN;
+      add_header X-Content-Type-Options nosniff;
+      add_header Referrer-Policy no-referrer;
+      add_header Strict-Transport-Security "max-age=63072000";
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - juice.curlyquote.com
+    secretName: juice-curlyquote-tls
+  rules:
+  - host: juice.curlyquote.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: juice-roll-service
+            port:
+              number: 80
