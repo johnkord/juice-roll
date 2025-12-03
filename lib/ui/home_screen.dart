@@ -101,31 +101,35 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         actions: [
           if (_history.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep),
-              tooltip: 'Clear History',
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Clear History?'),
-                    content: const Text('This will remove all roll history.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          _clearHistory();
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Clear'),
-                      ),
-                    ],
-                  ),
-                );
-              },
+            Semantics(
+              label: 'Clear roll history',
+              button: true,
+              child: IconButton(
+                icon: const Icon(Icons.delete_sweep),
+                tooltip: 'Clear History',
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Clear History?'),
+                      content: const Text('This will remove all roll history.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _clearHistory();
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Clear'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
         ],
       ),

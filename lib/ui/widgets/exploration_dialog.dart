@@ -202,7 +202,7 @@ class _ExplorationDialogState extends State<ExplorationDialog> with SingleTicker
             style: TextStyle(
               fontSize: 12,
               fontStyle: FontStyle.italic,
-              color: Colors.grey.shade400,
+              color: Colors.grey.shade300,
             ),
           ),
         ],

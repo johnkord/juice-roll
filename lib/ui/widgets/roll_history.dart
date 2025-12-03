@@ -18,7 +18,11 @@ class RollHistory extends StatelessWidget {
       itemCount: history.length,
       itemBuilder: (context, index) {
         final result = history[index];
-        return _RollHistoryCard(result: result, index: index);
+        return _RollHistoryCard(
+          key: ValueKey('${result.timestamp.millisecondsSinceEpoch}_$index'),
+          result: result,
+          index: index,
+        );
       },
     );
   }
@@ -388,7 +392,7 @@ class _RollHistoryCard extends StatelessWidget {
       case EncounterType.trap:
         return Colors.deepOrange;
       case EncounterType.obstacle:
-        return Colors.brown;
+        return Colors.blueGrey;
       case EncounterType.nothing:
         return Colors.grey;
       case EncounterType.clue:
