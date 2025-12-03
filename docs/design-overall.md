@@ -1,6 +1,47 @@
 # Juice Oracle Dice Roller – Design Doc
 
-## 1. Overview
+## 1. Physical Table Card Reference
+
+The Juice Oracle table card has the following layout:
+
+### Front Page
+- **Details**: Color (d10), Property (d10+d6), Detail (d10), History (d10)
+- **Immersion**: Sensory, Emotional Atmosphere
+
+### First Inside Page (while folded)
+- **Fate Check**: Result, Likely, Unlikely, Next Scene
+- **Expectation/Behavior/Intensity/Scale**: Result, Intensity, 2dF + 1d6, Scale
+- **Interrupt / Plot Point**: Action, Tension, Mystery, Social, Personal
+
+### Second Inside Page (while folded)
+- **Meaning Tables / Name Generator**: Discover Meaning (2d20), *, Name Generator (3d20)
+- **Random Tables**: Modifier (d10), Idea (d10), Event (d10), Person (d10), Object (d10)
+
+### Back Page
+- **Quest**: Objective, Description, Focus, Preposition, Location
+- **Random Event / Challenge**: Random Event (d10), Physical Challenge (d10), Mental Challenge (d10), DC, %
+- **Pay the Price**: Pay the Price (d10), Major Plot Twist (d10)
+
+### First Inside Page (while unfolded)
+- **Wilderness**: Type, Environment, Encounter, Weather, Monster
+- **Wilderness Monster Encounter**: Tracks (1d6-1@), 1-4 Easy, 5-8 Medium, 9-0 Hard, Doubles Boss (1)
+
+### Second Inside Page (while unfolded)
+- **NPC / Action**: Personality, Need, Motive/Topic, Action, Combat
+- **Dialog**: Direction × Tone matrix (2d10)
+- **Settlement**: Settlement Name, Establishment, Artisan, News
+
+### Third Inside Page (while unfolded)
+- **Object / Treasure**: Trinket, Treasure, Document, Accessory, Weapon, Armor (each with Quality, Material/Container, Type columns)
+
+### Fourth Inside Page (while unfolded)
+- **Dungeon Generator**: Next Area, Passage, Condition
+- **Dungeon Encounter**: Encounter, Monster, Trap, Feature
+- **Location**: 1d100 grid (5×5)
+
+---
+
+## 2. Overview
 
 ### What is Juice Oracle?
 
@@ -53,6 +94,330 @@ All original Juice Oracle tables are in [`/reference/juice-oracle-text-tables/`]
 | `extended-npc-conversation.md` | Extended NPC interaction |
 | `details.md` | Miscellaneous detail tables |
 | `immersion.md` | Immersion and atmosphere |
+
+### Implementation Status
+
+Based on the physical card orientation above, here is the current button/feature coverage:
+
+| Card Section | Table/Column | Button? | Notes |
+|-------------|-------------|---------|-------|
+| **Front Page** | | | |
+| Details | Color | ✅ | Details dialog |
+| Details | Property | ✅ | Details dialog (with intensity) |
+| Details | Detail | ✅ | Details dialog |
+| Details | History | ✅ | Details dialog |
+| Immersion | Sensory | ✅ | Immerse dialog |
+| Immersion | Emotional | ✅ | Immerse dialog |
+| **First Inside (folded)** | | | |
+| Fate Check | Result | ✅ | Fate button |
+| Fate Check | Likely | ✅ | Fate dialog option |
+| Fate Check | Unlikely | ✅ | Fate dialog option |
+| Fate Check | Next Scene | ✅ | Scene button |
+| Expectation | Result | ✅ | Expect button |
+| Expectation | Intensity | ✅ | Included in roll |
+| Expectation | Scale | ✅ | Scale button |
+| Interrupt/Plot Point | Action | ✅ | Interrupt button |
+| Interrupt/Plot Point | Tension | ✅ | Included in Interrupt |
+| Interrupt/Plot Point | Mystery | ✅ | Included in Interrupt |
+| Interrupt/Plot Point | Social | ✅ | Included in Interrupt |
+| Interrupt/Plot Point | Personal | ✅ | Included in Interrupt |
+| **Second Inside (folded)** | | | |
+| Meaning Tables | Discover Meaning | ✅ | Meaning button |
+| Meaning Tables | * (asterisk col) | ❓ | What is this column? |
+| Name Generator | Name Generator | ✅ | Name button |
+| Random Tables | Modifier | ✅ | Part of Event roll |
+| Random Tables | Idea | ✅ | Part of Event roll |
+| Random Tables | Event | ✅ | Part of Event roll |
+| Random Tables | Person | ✅ | Part of Event roll |
+| Random Tables | Object | ✅ | Part of Event roll |
+| **Back Page** | | | |
+| Quest | Objective | ✅ | Quest button |
+| Quest | Description | ✅ | Included in Quest |
+| Quest | Focus | ✅ | Included in Quest |
+| Quest | Preposition | ✅ | Included in Quest |
+| Quest | Location | ✅ | Included in Quest |
+| Random Event | Random Event | ✅ | Event button |
+| Challenge | Physical Challenge | ✅ | Challenge dialog |
+| Challenge | Mental Challenge | ✅ | Challenge dialog |
+| Challenge | DC | ✅ | Challenge dialog (Quick DC) |
+| Challenge | % | ✅ | Challenge dialog (% Chance) |
+| Pay the Price | Pay the Price | ✅ | Price dialog |
+| Pay the Price | Major Plot Twist | ✅ | Price dialog option |
+| **First Inside (unfolded)** | | | |
+| Wilderness | Type | ❌ | **MISSING** - Environment type modifier |
+| Wilderness | Environment | ❌ | **MISSING** - Terrain type |
+| Wilderness | Encounter | ⚠️ | Partial - Explore dialog has wilderness encounter but different structure |
+| Wilderness | Weather | ✅ | Explore dialog |
+| Wilderness | Monster | ❌ | **MISSING** - Monster formula (+X@Y) |
+| Monster Encounter | Tracks (1d6-1@) | ❌ | **MISSING** - Track detection |
+| Monster Encounter | Easy/Medium/Hard | ❌ | **MISSING** - Difficulty-based monster lookup |
+| Monster Encounter | Doubles Boss | ❌ | **MISSING** - Boss encounter on doubles |
+| **Second Inside (unfolded)** | | | |
+| NPC/Action | Personality | ✅ | NPC dialog |
+| NPC/Action | Need | ✅ | NPC dialog (part of profile) |
+| NPC/Action | Motive/Topic | ✅ | NPC dialog |
+| NPC/Action | Action | ✅ | NPC dialog |
+| NPC/Action | Combat | ✅ | NPC dialog |
+| Dialog | Direction × Tone | ✅ | Dialog button |
+| Settlement | Settlement Name | ✅ | Settle dialog |
+| Settlement | Establishment | ✅ | Settle dialog |
+| Settlement | Artisan | ✅ | Settle dialog (sub-roll of Establishment) |
+| Settlement | News | ✅ | Settle dialog |
+| **Third Inside (unfolded)** | | | |
+| Object/Treasure | Trinket | ✅ | Treasure dialog |
+| Object/Treasure | Treasure | ✅ | Treasure dialog |
+| Object/Treasure | Document | ✅ | Treasure dialog |
+| Object/Treasure | Accessory | ✅ | Treasure dialog |
+| Object/Treasure | Weapon | ✅ | Treasure dialog |
+| Object/Treasure | Armor | ✅ | Treasure dialog |
+| **Fourth Inside (unfolded)** | | | |
+| Dungeon Generator | Next Area | ✅ | Dungeon dialog |
+| Dungeon Generator | Passage | ✅ | Dungeon dialog |
+| Dungeon Generator | Condition | ✅ | Dungeon dialog |
+| Dungeon Encounter | Encounter | ⚠️ | Partial - Explore dialog has dungeon encounter but different structure |
+| Dungeon Encounter | Monster | ❌ | **MISSING** - Monster descriptor columns |
+| Dungeon Encounter | Trap | ❌ | **MISSING** - Trap type columns |
+| Dungeon Encounter | Feature | ❌ | **MISSING** - Feature column |
+| Location | 1d100 grid | ❌ | **MISSING** - Grid location lookup |
+
+### Missing Features Summary
+
+**Wilderness Tables:**
+1. **Wilderness Type/Environment** - The complex wilderness generation formula (2dF Env → 1dF Type)
+2. **Monster Formula** - The +X@Y monster level calculation
+3. **Monster Encounter Table** - Tracks, difficulty-based monsters, boss on doubles
+
+**Dungeon Encounter:**
+4. **Monster Descriptors** - Agile, Beast, Clothed, etc. columns
+5. **Trap Table** - Trap type and trap trigger columns  
+6. **Feature Table** - Library, Mural, Shrine, etc.
+
+**Other:**
+7. **Location Grid** - 1d100 → 5×5 grid position lookup
+
+---
+
+## 2.5 Wilderness Implementation Analysis
+
+The current `wilderness.dart` implementation has significant gaps compared to the Juice Oracle instructions. This section documents the correct mechanics and implementation approach.
+
+### Current vs Required Implementation
+
+| Feature | Current Implementation | Required per Instructions |
+|---------|----------------------|--------------------------|
+| **Environment Selection** | Random d10 | 2dF offset from CURRENT environment (stateful) |
+| **Type Selection** | Random d10 | 1dF offset from environment row (clamped at edges) |
+| **Environment State** | None | Must track current environment row (1-10) |
+| **Lost/Found State** | None | d10 normally, d6 when lost; roll 6 = found again |
+| **Encounter Skew** | None | Disadvantage for dangerous terrain; Advantage with map/guide |
+| **Weather Calculation** | Random d10 | 1d6 @ environment_skew + type_modifier |
+
+### Correct Mechanics
+
+#### Environment Transitions (2dF Offset)
+
+When moving to a new hex, roll 2dF and sum them:
+- Sum ranges from -2 to +2
+- Apply as offset to current environment row
+- Clamp result to 1-10 (table wraps naturally for most transitions)
+
+**Example:** Currently in Forest (row 6). Roll 2dF → (0, +) → +1. New environment = row 7 = Swamp.
+
+The 2dF creates a bell curve centered at 0:
+- Most common: Same environment (0) or adjacent (±1)
+- Less common: Two steps away (±2)
+
+The table order creates natural biome transitions:
+```
+Arctic → Mountains → Cavern → Hills → Grassland → Forest → Swamp → Water → Coast → Desert
+```
+
+#### Type Selection (1dF Offset)
+
+After determining the environment, roll 1dF for type:
+- Type row = environment row + 1dF result
+- **Important:** Does NOT wrap at edges
+  - Arctic (row 1) + (-1) = Snowy (row 1), not Arid
+  - Desert (row 10) + (+1) = Arid (row 10), not Snowy
+
+Each environment naturally pairs with 3 types:
+- Forest (6): Scrub (5), Tropical (6), Dark (7)
+- Arctic (1): Snowy (1), Snowy (1), Rocky (2)
+
+#### Lost/Found Cycle
+
+The encounter table die changes based on orientation state:
+
+| State | Encounter Die | Notes |
+|-------|---------------|-------|
+| **Oriented (normal)** | d10 | Full range of encounters |
+| **Lost** | d6 | Restricted to rows 1-6 (more dangerous) |
+
+**Transitions:**
+- **Become Lost:** Roll 10 (Destination/Lost) when you have no destination → switch to d6
+- **Become Found:** Roll 6 (Road/River) while lost → switch back to d10
+
+This creates natural exploration pacing without a "death spiral."
+
+#### Encounter Skew
+
+| Condition | Skew |
+|-----------|------|
+| Dangerous territory / difficult terrain | Disadvantage |
+| Have detailed map or guide | Advantage |
+| Both (guide in dangerous area) | Straight (cancel out) |
+
+**Effect of Advantage with map/guide:**
+- More likely to find Road/River (row 6) → reorient faster if lost
+- More likely to reach Destination (row 10) → shorter journeys
+- Less likely to hit Natural Hazard/Monster (rows 1-2)
+
+#### Weather Calculation
+
+Weather is NOT a random d10. It's composed from environment and type:
+
+```
+Weather = 1d6 @ environment_skew + type_modifier
+```
+
+1. Look up environment row → get skew symbol (-, 0, +)
+   - `-` = Disadvantage (colder results)
+   - `0` = Straight roll
+   - `+` = Advantage (warmer results)
+
+2. Look up type row → get modifier (+0 to +4)
+
+3. Roll 1d6 with the skew, add modifier
+
+4. Result (clamped 1-10) gives weather:
+   - 1 = Blizzard, 2 = Snow Flurries, 3 = Freezing Cold
+   - 4 = Thunder Storm, 5 = Heavy Rain, 6 = Light Rain
+   - 7 = Heavy Clouds, 8 = High Winds, 9 = Clear Skies, 10 = Scorching Heat
+
+**Example:** Rocky Arctic (Type row 2, Env row 1)
+- Environment row 1 has skew `-` (Disadvantage)
+- Type row 2 has modifier +2
+- Roll 1d6@Disadvantage → result 2 → +2 = 4 (Thunder Storm)
+- But skewed toward cold, so more likely 3 (Freezing Cold) or less
+
+**Example:** Sandy Coast (Type row 9, Env row 9)
+- Environment row 9 has skew `0` (Straight)
+- Type row 9 has modifier +4
+- Roll 1d6 → result 3 → +4 = 7 (Heavy Clouds)
+- Range: 5-10 (Heavy Rain to Scorching Heat), never snows on Sandy Coast
+
+### State Model
+
+The Wilderness system requires persistent state:
+
+```dart
+class WildernessState {
+  int environmentRow;     // 1-10, current environment
+  int typeRow;            // 1-10, current type
+  bool isLost;            // d6 vs d10 for encounters
+  
+  // Derived
+  String get environment => environments[environmentRow - 1];
+  String get typeName => types[typeRow - 1]['name'];
+  int get typeModifier => types[typeRow - 1]['modifier'];
+  String get environmentSkew => types[environmentRow - 1]['fateMod'];
+}
+```
+
+### Implementation Approach
+
+1. **Add state tracking** to `Wilderness` class
+2. **New method:** `transition()` - Uses 2dF + 1dF for environment/type change
+3. **Update** `rollEncounter()` - Use d10/d6 based on `isLost`, check for Lost/Found transitions
+4. **Update** `rollWeather()` - Use proper formula: 1d6@skew + modifier
+5. **Add skew parameter** to encounter methods for terrain/guide modifiers
+
+### Implemented: Position Management for Hex Generation
+
+#### Problem Statement
+
+Users need to generate adjacent hexes from previous positions, not just the current one. Use cases:
+1. Generate a starting hex, then generate the 6 adjacent hexes around it
+2. Generate one hex, do other activities, then return to generate more adjacent hexes
+3. Start from a known location in an existing world (no roll history)
+
+#### Chosen Solution
+
+A hybrid approach combining **roll history integration** with **manual position setting**:
+
+##### 1. Set Position from Roll History (Primary Method)
+
+When viewing a `WildernessAreaResult` in the roll history detail sheet, users can tap **"Set as Current Position"** to make that hex the active position for future transitions.
+
+**Flow:**
+1. User taps a wilderness result in history
+2. Detail sheet opens with a "Set as Current Position" button
+3. Tapping the button sets that hex as the current wilderness state
+4. User opens Wilderness dialog → shows the selected position
+5. "Transition to Next Hex" generates from that position
+
+**Implementation:**
+```dart
+// In RollHistory widget
+onSetWildernessPosition: (envRow, typeRow) {
+  wilderness.initializeAt(envRow, typeRow: typeRow);
+}
+```
+
+##### 2. Manual Environment Picker (Secondary Method)
+
+For users without roll history (new session, existing world, migrating from paper):
+
+**In the Wilderness dialog:**
+- "Set Known Position..." option expands to show an environment dropdown
+- Dropdown lists all 10 Type+Environment combinations
+- "Set Position" button activates the selected environment
+
+**UI:**
+```
+┌─────────────────────────────────────┐
+│ Environment: [▼ Tropical Forest ]   │
+│                                     │
+│ [📍 Set Position]                   │
+└─────────────────────────────────────┘
+```
+
+**Implementation:**
+```dart
+// Dropdown with 10 options
+List.generate(10, (i) {
+  final env = Wilderness.environments[i];
+  final type = Wilderness.types[i]['name'];
+  return DropdownMenuItem(value: i + 1, child: Text('$type $env'));
+})
+
+// Set position
+wilderness.initializeAt(selectedEnvironment, typeRow: selectedEnvironment);
+```
+
+#### Why This Approach?
+
+| Alternative Considered | Why Not Chosen |
+|----------------------|----------------|
+| Named position stack | Added complexity; roll history already tracks positions |
+| Clipboard/paste model | Poor mobile UX; volatile |
+| Single bookmark slot | Too limiting for multiple branch points |
+| Undo/redo stack | Confusing for branching; not intuitive |
+
+**Benefits of chosen approach:**
+- Zero new data structures (uses existing roll history)
+- Discoverable UX (natural "tap to see details" → "set position")
+- Covers both use cases (history users + fresh start users)
+- Minimal code changes
+
+#### Future Enhancements (Not Implemented)
+
+If more sophisticated hex mapping is needed later:
+
+1. **Starred positions** - Mark important hexes for quick access
+2. **Direction tracking** - Record which direction each transition went
+3. **Visual hex map** - Render explored hexes spatially
+4. **Persistence** - Save wilderness state across sessions
 
 ---
 
@@ -636,7 +1001,7 @@ See [`wilderness-table.md`](../reference/juice-oracle-text-tables/wilderness-tab
   - Random Event / Invalid Assumption triggers
 - [x] Next Scene preset
 - [x] Random Event preset (Focus + Action/Subject)
-- [x] Exploration preset (Weather, encounters)
+- [x] Wilderness preset (Weather, encounters, monsters)
 - [x] Result models with metadata
 - [x] Unit tests
 
@@ -668,12 +1033,11 @@ lib/
 │   ├── fate_check.dart       # Fate Check
 │   ├── next_scene.dart       # Scene transitions
 │   ├── random_event.dart     # Action/Subject generation
-│   └── exploration.dart      # Weather & encounters
+│   └── wilderness.dart       # Weather, encounter & monster tables
 └── ui/
     ├── home_screen.dart
     └── widgets/
         ├── dice_roll_dialog.dart
-        ├── exploration_dialog.dart
         ├── fate_check_dialog.dart
         ├── next_scene_dialog.dart
         └── roll_history.dart

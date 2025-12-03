@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:juice_roll/presets/fate_check.dart';
 import 'package:juice_roll/presets/next_scene.dart';
 import 'package:juice_roll/presets/random_event.dart';
-import 'package:juice_roll/presets/exploration.dart';
 import 'package:juice_roll/presets/discover_meaning.dart';
 import 'package:juice_roll/presets/npc_action.dart';
 import 'package:juice_roll/presets/pay_the_price.dart';
@@ -114,7 +113,8 @@ void main() {
 
     test('isYes and isNo are mutually exclusive', () {
       for (final outcome in FateCheckOutcome.values) {
-        if (outcome == FateCheckOutcome.mixed) continue;
+        // Skip contextual outcomes (favorable/unfavorable are neither yes nor no)
+        if (outcome.isContextual) continue;
         expect(outcome.isYes != outcome.isNo, isTrue,
             reason: '$outcome should be yes XOR no');
       }
@@ -183,125 +183,6 @@ void main() {
 
     test('eventFocusTypes list has 10 entries', () {
       expect(RandomEvent.eventFocusTypes.length, equals(10));
-    });
-  });
-
-  group('Exploration', () {
-    group('Weather', () {
-      test('rollWeather returns valid weather', () {
-        final exploration = Exploration(RollEngine(SeededRandom(42)));
-        final result = exploration.rollWeather();
-
-        expect(result.diceResults.length, equals(2));
-        expect(Weather.values, contains(result.weather));
-      });
-
-      test('season modifier affects result', () {
-        final exploration = Exploration(RollEngine(SeededRandom(42)));
-        final springResult = exploration.rollWeather(season: 'Spring');
-        
-        final exploration2 = Exploration(RollEngine(SeededRandom(42)));
-        final winterResult = exploration2.rollWeather(season: 'Winter');
-
-        expect(springResult.rawTotal, equals(winterResult.rawTotal));
-        expect(springResult.modifier, greaterThan(winterResult.modifier));
-      });
-
-      test('climate modifier affects result', () {
-        final exploration = Exploration(RollEngine(SeededRandom(42)));
-        final temperateResult = exploration.rollWeather(climate: 'Temperate');
-        
-        final exploration2 = Exploration(RollEngine(SeededRandom(42)));
-        final arcticResult = exploration2.rollWeather(climate: 'Arctic');
-
-        expect(temperateResult.rawTotal, equals(arcticResult.rawTotal));
-        expect(temperateResult.modifier, greaterThan(arcticResult.modifier));
-      });
-
-      test('all weather types have display text and description', () {
-        for (final weather in Weather.values) {
-          expect(weather.displayText.isNotEmpty, isTrue);
-          expect(weather.description.isNotEmpty, isTrue);
-        }
-      });
-    });
-
-    group('Encounters', () {
-      test('checkWildernessEncounter returns valid encounter', () {
-        final exploration = Exploration(RollEngine(SeededRandom(42)));
-        final result = exploration.checkWildernessEncounter();
-
-        expect(result.diceResults.length, equals(2));
-        expect(EncounterType.values, contains(result.encounterType));
-        expect(result.locationType, equals('Wilderness'));
-      });
-
-      test('checkDungeonEncounter returns valid encounter', () {
-        final exploration = Exploration(RollEngine(SeededRandom(42)));
-        final result = exploration.checkDungeonEncounter();
-
-        expect(result.diceResults.length, equals(2));
-        expect(EncounterType.values, contains(result.encounterType));
-        expect(result.locationType, equals('Dungeon'));
-      });
-
-      test('threat encounters include distance and disposition', () {
-        // Find a seed that produces a threat encounter
-        for (int seed = 0; seed < 1000; seed++) {
-          final exploration = Exploration(RollEngine(SeededRandom(seed)));
-          final result = exploration.checkWildernessEncounter(dangerLevel: 4);
-          
-          if (result.encounterType == EncounterType.majorThreat ||
-              result.encounterType == EncounterType.minorThreat) {
-            expect(result.distance, isNotNull);
-            expect(result.disposition, isNotNull);
-            return;
-          }
-        }
-        fail('Should find a threat encounter within 1000 seeds');
-      });
-
-      test('danger level affects encounter probability', () {
-        int threatsWithHighDanger = 0;
-        int threatsWithLowDanger = 0;
-
-        for (int i = 0; i < 500; i++) {
-          final highDanger = Exploration(RollEngine(SeededRandom(i)));
-          final lowDanger = Exploration(RollEngine(SeededRandom(i)));
-
-          final highResult = highDanger.checkWildernessEncounter(dangerLevel: 3);
-          final lowResult = lowDanger.checkWildernessEncounter(dangerLevel: -2);
-
-          if (highResult.encounterType == EncounterType.majorThreat ||
-              highResult.encounterType == EncounterType.minorThreat) {
-            threatsWithHighDanger++;
-          }
-          if (lowResult.encounterType == EncounterType.majorThreat ||
-              lowResult.encounterType == EncounterType.minorThreat) {
-            threatsWithLowDanger++;
-          }
-        }
-
-        expect(threatsWithHighDanger, greaterThan(threatsWithLowDanger));
-      });
-
-      test('all encounter types have display text', () {
-        for (final type in EncounterType.values) {
-          expect(type.displayText.isNotEmpty, isTrue);
-        }
-      });
-
-      test('all distances have display text', () {
-        for (final distance in EncounterDistance.values) {
-          expect(distance.displayText.isNotEmpty, isTrue);
-        }
-      });
-
-      test('all dispositions have display text', () {
-        for (final disposition in Disposition.values) {
-          expect(disposition.displayText.isNotEmpty, isTrue);
-        }
-      });
     });
   });
 

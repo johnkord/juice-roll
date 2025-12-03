@@ -172,11 +172,18 @@ class Immersion {
     );
   }
 
-  /// Generate an emotional atmosphere (2d10 + cause).
+  /// Generate an emotional atmosphere (3d10 + 1dF).
+  /// Rolls Where, Emotion, Cause, and a Fate die to select positive/negative.
   EmotionalAtmosphereResult generateEmotionalAtmosphere() {
     final whereRoll = _rollEngine.rollDie(10);
     final emotionRoll = _rollEngine.rollDie(10);
     final causeRoll = _rollEngine.rollDie(10);
+    
+    // Roll 1dF to determine emotion polarity:
+    // - or blank (1-4) = negative emotion
+    // + (5-6) = positive emotion
+    final fateDieRoll = _rollEngine.rollFateDie();
+    final isPositive = fateDieRoll == 1; // + result
 
     final whereIndex = whereRoll == 10 ? 9 : whereRoll - 1;
     final emotionIndex = emotionRoll == 10 ? 9 : emotionRoll - 1;
@@ -186,6 +193,7 @@ class Immersion {
     final negativeEmotion = negativeEmotions[emotionIndex];
     final positiveEmotion = positiveEmotions[emotionIndex];
     final cause = causes[causeIndex];
+    final selectedEmotion = isPositive ? positiveEmotion : negativeEmotion;
 
     return EmotionalAtmosphereResult(
       whereRoll: whereRoll,
@@ -193,6 +201,8 @@ class Immersion {
       emotionRoll: emotionRoll,
       negativeEmotion: negativeEmotion,
       positiveEmotion: positiveEmotion,
+      selectedEmotion: selectedEmotion,
+      isPositive: isPositive,
       causeRoll: causeRoll,
       cause: cause,
     );
@@ -245,6 +255,8 @@ class EmotionalAtmosphereResult extends RollResult {
   final int emotionRoll;
   final String negativeEmotion;
   final String positiveEmotion;
+  final String selectedEmotion;
+  final bool isPositive;
   final int causeRoll;
   final String cause;
 
@@ -254,6 +266,8 @@ class EmotionalAtmosphereResult extends RollResult {
     required this.emotionRoll,
     required this.negativeEmotion,
     required this.positiveEmotion,
+    required this.selectedEmotion,
+    required this.isPositive,
     required this.causeRoll,
     required this.cause,
   }) : super(
@@ -261,18 +275,20 @@ class EmotionalAtmosphereResult extends RollResult {
           description: 'Emotional Atmosphere',
           diceResults: [whereRoll, emotionRoll, causeRoll],
           total: whereRoll + emotionRoll + causeRoll,
-          interpretation: '$where, $negativeEmotion or $positiveEmotion, because $cause',
+          interpretation: '$where: $selectedEmotion, because $cause',
           metadata: {
             'where': where,
             'negativeEmotion': negativeEmotion,
             'positiveEmotion': positiveEmotion,
+            'selectedEmotion': selectedEmotion,
+            'isPositive': isPositive,
             'cause': cause,
           },
         );
 
   @override
   String toString() =>
-      'Atmosphere: $where, $negativeEmotion/$positiveEmotion, because $cause';
+      'Atmosphere: $where, $selectedEmotion (${isPositive ? '+' : '-'}), because $cause';
 }
 
 /// Result of full immersion generation.

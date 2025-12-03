@@ -215,15 +215,15 @@ class PropertyResult extends RollResult {
       case 1:
         return 'Minimal';
       case 2:
-        return 'Minor';
+        return 'Mundane';
       case 3:
-        return 'Moderate';
+        return 'Minor';
       case 4:
-        return 'Major';
+        return 'Moderate';
       case 5:
-        return 'Maximum';
+        return 'Major';
       case 6:
-        return 'Extreme';
+        return 'Massive';
       default:
         return 'Unknown';
     }

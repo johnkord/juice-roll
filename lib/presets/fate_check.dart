@@ -1,18 +1,30 @@
 import '../core/roll_engine.dart';
-import '../core/table_lookup.dart';
 import '../models/roll_result.dart';
 
 /// Fate Check preset for the Juice Oracle.
 /// Uses 2dF (Fate dice) + 1d6 (Intensity) to answer yes/no questions.
 /// 
 /// The Juice Oracle Fate Check uses ordered Fate dice:
-/// - Left die (primary) and Right die (secondary)
-/// - Double blanks trigger special events based on which die is "primary"
+/// - Primary die (tracked by color/position) determines base answer
+/// - Secondary die modifies the answer (And/But)
+/// - Double blanks: position determines Random Event vs Invalid Assumption
+/// 
+/// Primary interpretation:
+/// - + = Yes-like result
+/// - - = No-like result  
+/// - 0 = Look to secondary (Favorable/Unfavorable)
+/// 
+/// Secondary modifies:
+/// - ++ = Yes And, +- = Yes But
+/// - -- = No And, -+ = No But
+/// - 0+ = Favorable, 0- = Unfavorable
+/// - 00 (primary left) = Random Event, 00 (primary right) = Invalid Assumption
 class FateCheck {
   final RollEngine _rollEngine;
 
   /// Likelihood modes for the Fate Check.
-  /// These shift interpretation rather than modifying dice.
+  /// Likely: If either die is +, result is Yes-like
+  /// Unlikely: If either die is -, result is No-like
   static const List<String> likelihoods = [
     'Unlikely',
     'Even Odds',
@@ -25,93 +37,117 @@ class FateCheck {
   /// Perform a Fate Check with the given likelihood.
   /// 
   /// Rolls 2dF (ordered) + 1d6 Intensity, then interprets the result.
-  FateCheckResult check({String likelihood = 'Even Odds'}) {
-    // Roll 2 Fate dice (ordered: left is primary, right is secondary)
+  /// [primaryOnLeft] simulates which die is "primary" for double-blank handling.
+  FateCheckResult check({
+    String likelihood = 'Even Odds',
+    bool? primaryOnLeft,
+  }) {
+    // Roll 2 Fate dice (ordered)
     final fateDice = _rollEngine.rollFateDice(2);
-    final leftDie = fateDice[0];   // Primary die
-    final rightDie = fateDice[1];  // Secondary die
-    final fateSum = leftDie + rightDie;
+    final primary = fateDice[0];   // Primary die
+    final secondary = fateDice[1]; // Secondary die
     
     // Roll Intensity die (1d6)
     final intensity = _rollEngine.rollDie(6);
     
+    // Simulate position: if not specified, 50/50 chance for double blanks
+    final isPrimaryLeft = primaryOnLeft ?? (_rollEngine.rollDie(2) == 1);
+    
     // Check for special triggers (double blanks)
-    final isDoubleBlanks = leftDie == 0 && rightDie == 0;
+    final isDoubleBlanks = primary == 0 && secondary == 0;
     SpecialTrigger? specialTrigger;
     
     if (isDoubleBlanks) {
-      // In Juice Oracle, primary die position determines the trigger:
-      // - Primary on left (default) → Random Event
-      // - Primary on right → Invalid Assumption
-      // Since we always treat left as primary, we use intensity to determine:
-      // - Intensity 1-3: Random Event (left-weighted)
-      // - Intensity 4-6: Invalid Assumption (right-weighted)
-      specialTrigger = intensity <= 3 
+      // Primary on left → Random Event (answer is "Yes But")
+      // Primary on right → Invalid Assumption
+      specialTrigger = isPrimaryLeft 
           ? SpecialTrigger.randomEvent 
           : SpecialTrigger.invalidAssumption;
     }
     
-    // Determine base outcome from Fate dice sum
-    final baseOutcome = _interpretFateSum(fateSum);
-    
-    // Apply likelihood shift
-    final outcome = _applyLikelihood(baseOutcome, likelihood);
+    // Determine outcome based on Juice Oracle rules
+    final outcome = _interpretDice(primary, secondary, likelihood, isDoubleBlanks);
 
     return FateCheckResult(
       likelihood: likelihood,
       fateDice: fateDice,
-      fateSum: fateSum,
+      fateSum: primary + secondary,
       intensity: intensity,
       outcome: outcome,
       specialTrigger: specialTrigger,
+      primaryOnLeft: isPrimaryLeft,
     );
   }
 
-  /// Interpret the sum of 2dF into a base outcome.
-  /// Range is -2 to +2.
-  FateCheckOutcome _interpretFateSum(int sum) {
-    switch (sum) {
-      case -2:
-        return FateCheckOutcome.extremeNo;
-      case -1:
-        return FateCheckOutcome.noAnd;
-      case 0:
-        return FateCheckOutcome.mixed; // Could go either way
-      case 1:
-        return FateCheckOutcome.yesAnd;
-      case 2:
-        return FateCheckOutcome.extremeYes;
-      default:
-        return FateCheckOutcome.mixed;
-    }
-  }
-
-  /// Apply likelihood to shift ambiguous results.
-  FateCheckOutcome _applyLikelihood(FateCheckOutcome base, String likelihood) {
-    // Only shift "mixed" results (sum of 0)
-    if (base != FateCheckOutcome.mixed) {
-      return base;
+  /// Interpret dice according to Juice Oracle Fate Check rules.
+  FateCheckOutcome _interpretDice(
+    int primary, 
+    int secondary, 
+    String likelihood,
+    bool isDoubleBlanks,
+  ) {
+    // Handle likelihood modifiers first
+    if (likelihood == 'Likely') {
+      // If either die is +, result is Yes-like
+      if (primary == 1 || secondary == 1) {
+        if (primary == 1 && secondary == 1) return FateCheckOutcome.yesAnd;
+        if (primary == 1 && secondary == -1) return FateCheckOutcome.yesBut;
+        if (primary == 0 && secondary == 1) return FateCheckOutcome.yesBut;
+        if (primary == -1 && secondary == 1) return FateCheckOutcome.yesBut;
+        if (primary == 1 && secondary == 0) return FateCheckOutcome.yesBut;
+      }
     }
     
-    switch (likelihood) {
-      case 'Unlikely':
-        return FateCheckOutcome.noBut;
-      case 'Likely':
-        return FateCheckOutcome.yesBut;
-      case 'Even Odds':
-      default:
-        // For even odds on mixed, lean slightly toward "yes but" (Ironsworn weak-hit vibe)
-        return FateCheckOutcome.yesBut;
+    if (likelihood == 'Unlikely') {
+      // If either die is -, result is No-like
+      if (primary == -1 || secondary == -1) {
+        if (primary == -1 && secondary == -1) return FateCheckOutcome.noAnd;
+        if (primary == -1 && secondary == 1) return FateCheckOutcome.noBut;
+        if (primary == 0 && secondary == -1) return FateCheckOutcome.noBut;
+        if (primary == 1 && secondary == -1) return FateCheckOutcome.noBut;
+        if (primary == -1 && secondary == 0) return FateCheckOutcome.noBut;
+      }
     }
+    
+    // Standard interpretation (Even Odds or after likelihood check)
+    
+    // Double blanks special case
+    if (isDoubleBlanks) {
+      return FateCheckOutcome.yesBut; // Random Event answer is "Yes But"
+    }
+    
+    // Primary + = Yes-like
+    if (primary == 1) {
+      if (secondary == 1) return FateCheckOutcome.yesAnd;
+      if (secondary == -1) return FateCheckOutcome.yesBut;
+      return FateCheckOutcome.yesBut; // secondary is 0
+    }
+    
+    // Primary - = No-like
+    if (primary == -1) {
+      if (secondary == -1) return FateCheckOutcome.noAnd;
+      if (secondary == 1) return FateCheckOutcome.noBut;
+      return FateCheckOutcome.noBut; // secondary is 0
+    }
+    
+    // Primary 0 = look to secondary
+    if (secondary == 1) return FateCheckOutcome.favorable;
+    if (secondary == -1) return FateCheckOutcome.unfavorable;
+    
+    // Should not reach here (double blanks handled above)
+    return FateCheckOutcome.favorable;
   }
 }
 
 /// Special triggers from double blanks on Fate dice.
 enum SpecialTrigger {
   /// Something unexpected happens - roll on Random Event tables.
+  /// Triggered when primary die is on the LEFT.
+  /// Answer is "Yes But".
   randomEvent,
   
   /// Your assumption about the situation was wrong.
+  /// Triggered when primary die is on the RIGHT.
   /// Re-examine what you thought was true.
   invalidAssumption,
 }
@@ -129,7 +165,7 @@ extension SpecialTriggerDisplay on SpecialTrigger {
   String get description {
     switch (this) {
       case SpecialTrigger.randomEvent:
-        return 'Something unexpected happens. Roll on the Random Event tables.';
+        return 'Something unexpected happens. Roll on the Random Event tables. Answer is "Yes But".';
       case SpecialTrigger.invalidAssumption:
         return 'Your assumption about the situation was wrong. Re-examine what you thought was true.';
     }
@@ -138,48 +174,66 @@ extension SpecialTriggerDisplay on SpecialTrigger {
 
 /// Possible outcomes from a Fate Check.
 enum FateCheckOutcome {
-  extremeNo,
   noAnd,
   noBut,
-  mixed,      // Ambiguous - resolved by likelihood
+  unfavorable,  // 0- result
+  favorable,    // 0+ result  
   yesBut,
   yesAnd,
-  extremeYes,
 }
 
 /// Extension to provide display text for outcomes.
 extension FateCheckOutcomeDisplay on FateCheckOutcome {
   String get displayText {
     switch (this) {
-      case FateCheckOutcome.extremeNo:
-        return 'Extreme No!';
       case FateCheckOutcome.noAnd:
         return 'No, and...';
       case FateCheckOutcome.noBut:
         return 'No, but...';
-      case FateCheckOutcome.mixed:
-        return 'Mixed';
+      case FateCheckOutcome.unfavorable:
+        return 'Unfavorable';
+      case FateCheckOutcome.favorable:
+        return 'Favorable';
       case FateCheckOutcome.yesBut:
         return 'Yes, but...';
       case FateCheckOutcome.yesAnd:
         return 'Yes, and...';
-      case FateCheckOutcome.extremeYes:
-        return 'Extreme Yes!';
+    }
+  }
+  
+  String get description {
+    switch (this) {
+      case FateCheckOutcome.noAnd:
+        return 'Strong No - with additional negative consequence';
+      case FateCheckOutcome.noBut:
+        return 'No - but with a silver lining';
+      case FateCheckOutcome.unfavorable:
+        return 'The answer is whatever is LEAST favorable to your character';
+      case FateCheckOutcome.favorable:
+        return 'The answer is whatever is MOST favorable to your character';
+      case FateCheckOutcome.yesBut:
+        return 'Yes - but with a complication';
+      case FateCheckOutcome.yesAnd:
+        return 'Strong Yes - with additional benefit';
     }
   }
 
   /// Whether this is fundamentally a "yes" answer.
   bool get isYes {
     return this == FateCheckOutcome.yesBut ||
-           this == FateCheckOutcome.yesAnd ||
-           this == FateCheckOutcome.extremeYes;
+           this == FateCheckOutcome.yesAnd;
   }
 
   /// Whether this is fundamentally a "no" answer.
   bool get isNo {
     return this == FateCheckOutcome.noBut ||
-           this == FateCheckOutcome.noAnd ||
-           this == FateCheckOutcome.extremeNo;
+           this == FateCheckOutcome.noAnd;
+  }
+  
+  /// Whether this is context-dependent (favorable/unfavorable).
+  bool get isContextual {
+    return this == FateCheckOutcome.favorable ||
+           this == FateCheckOutcome.unfavorable;
   }
 }
 
@@ -191,6 +245,7 @@ class FateCheckResult extends RollResult {
   final int intensity;
   final FateCheckOutcome outcome;
   final SpecialTrigger? specialTrigger;
+  final bool primaryOnLeft;
 
   FateCheckResult({
     required this.likelihood,
@@ -199,6 +254,7 @@ class FateCheckResult extends RollResult {
     required this.intensity,
     required this.outcome,
     this.specialTrigger,
+    this.primaryOnLeft = true,
   }) : super(
           type: RollType.fateCheck,
           description: 'Fate Check ($likelihood)',
@@ -212,6 +268,7 @@ class FateCheckResult extends RollResult {
             'intensity': intensity,
             'outcome': outcome.name,
             'specialTrigger': specialTrigger?.name,
+            'primaryOnLeft': primaryOnLeft,
           },
         );
 
@@ -249,20 +306,21 @@ class FateCheckResult extends RollResult {
   bool get hasSpecialTrigger => specialTrigger != null;
 
   /// Intensity description based on the d6 value.
+  /// Uses the "six M's" from design doc: Minimal, Mundane, Minor, Moderate, Major, Massive
   String get intensityDescription {
     switch (intensity) {
       case 1:
         return 'Minimal';
       case 2:
-        return 'Weak';
+        return 'Mundane';
       case 3:
-        return 'Moderate';
+        return 'Minor';
       case 4:
-        return 'Strong';
+        return 'Moderate';
       case 5:
-        return 'Powerful';
+        return 'Major';
       case 6:
-        return 'Extreme';
+        return 'Massive';
       default:
         return 'Unknown';
     }

@@ -31,19 +31,19 @@ Generate unexpected events with:
 - Action + Subject idea generation from 100-word tables
 - Quick "Idea" button for just action/subject
 
-#### Exploration
-For wilderness and dungeon adventures:
+#### Wilderness & Dungeon
+For wilderness and dungeon adventures using Juice Oracle tables:
 
-**Weather**
-- Season modifiers (Spring, Summer, Autumn, Winter)
-- Climate modifiers (Arctic, Temperate, Tropical, Desert)
-- Results from Extreme to Perfect conditions
+**Wilderness Button**
+- Environment selection (Temperate Forest, Mountain, etc.)
+- Weather roll (1d6@Environment skew)
+- Encounter check (d10 based)
+- Monster generation with formula-based dice
 
-**Encounters**
-- Wilderness and Dungeon encounter tables
-- Danger level adjustment
-- Encounter types: Threats, Obstacles, Clues, Discoveries, Treasures, etc.
-- Distance and disposition rolls for creature encounters
+**Dungeon Button**
+- Two-phase area generation (Entrance → Next Area)
+- Encounter tables (Feature, Trap, Hazard, Monster)
+- Boss encounters on doubles
 
 ### User Interface
 - Clean, dark-themed Material Design 3
@@ -114,15 +114,14 @@ lib/
 │   ├── fate_check.dart       # Fate Check oracle
 │   ├── next_scene.dart       # Next Scene oracle
 │   ├── random_event.dart     # Random Event generator
-│   └── exploration.dart      # Weather & encounter tables
+│   └── wilderness.dart       # Weather, encounter & monster tables
 └── ui/
     ├── home_screen.dart      # Main screen
     └── widgets/
         ├── roll_history.dart         # History list
         ├── dice_roll_dialog.dart     # Custom dice dialog
         ├── fate_check_dialog.dart    # Fate Check dialog
-        ├── next_scene_dialog.dart    # Next Scene dialog
-        └── exploration_dialog.dart   # Exploration dialog
+        └── next_scene_dialog.dart    # Next Scene dialog
 ```
 
 ## Running Tests

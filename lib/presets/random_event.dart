@@ -106,20 +106,23 @@ class RandomEvent {
     final modifierIndex = modifierRoll == 10 ? 9 : modifierRoll - 1;
     final modifier = modifierWords[modifierIndex];
 
-    // Roll for idea category and word (d10)
+    // Roll for idea category (d10) - separate from word roll
+    final categoryRoll = _rollEngine.rollDie(10);
+    
+    // Roll for word within category (d10)
     final ideaRoll = _rollEngine.rollDie(10);
     final ideaIndex = ideaRoll == 10 ? 9 : ideaRoll - 1;
     
-    // Determine which idea list based on the roll
+    // Determine which idea list based on category roll
     String idea;
     String ideaCategory;
-    if (ideaRoll >= 1 && ideaRoll <= 3) {
+    if (categoryRoll >= 1 && categoryRoll <= 3) {
       idea = ideaWords[ideaIndex];
       ideaCategory = 'Idea';
-    } else if (ideaRoll >= 4 && ideaRoll <= 6) {
+    } else if (categoryRoll >= 4 && categoryRoll <= 6) {
       idea = eventWords[ideaIndex];
       ideaCategory = 'Event';
-    } else if (ideaRoll >= 7 && ideaRoll <= 8) {
+    } else if (categoryRoll >= 7 && categoryRoll <= 8) {
       idea = personWords[ideaIndex];
       ideaCategory = 'Person';
     } else {
@@ -139,7 +142,8 @@ class RandomEvent {
   }
 
   /// Generate just a modifier + idea pair (for Alter Scene).
-  IdeaResult generateIdea() {
+  /// If category is specified, uses that category's word list.
+  IdeaResult generateIdea({IdeaCategory? category}) {
     final modifierRoll = _rollEngine.rollDie(10);
     final modifierIndex = modifierRoll == 10 ? 9 : modifierRoll - 1;
     final modifier = modifierWords[modifierIndex];
@@ -149,18 +153,39 @@ class RandomEvent {
     
     String idea;
     String ideaCategory;
-    if (ideaRoll >= 1 && ideaRoll <= 3) {
-      idea = ideaWords[ideaIndex];
-      ideaCategory = 'Idea';
-    } else if (ideaRoll >= 4 && ideaRoll <= 6) {
-      idea = eventWords[ideaIndex];
-      ideaCategory = 'Event';
-    } else if (ideaRoll >= 7 && ideaRoll <= 8) {
-      idea = personWords[ideaIndex];
-      ideaCategory = 'Person';
+    IdeaCategory resolvedCategory;
+    
+    if (category != null) {
+      // Use the specified category
+      resolvedCategory = category;
     } else {
-      idea = objectWords[ideaIndex];
-      ideaCategory = 'Object';
+      // Roll separately to determine category (1-3: Idea, 4-6: Event, 7-8: Person, 9-0: Object)
+      final categoryRoll = _rollEngine.rollDie(10);
+      if (categoryRoll >= 1 && categoryRoll <= 3) {
+        resolvedCategory = IdeaCategory.idea;
+      } else if (categoryRoll >= 4 && categoryRoll <= 6) {
+        resolvedCategory = IdeaCategory.event;
+      } else if (categoryRoll >= 7 && categoryRoll <= 8) {
+        resolvedCategory = IdeaCategory.person;
+      } else {
+        resolvedCategory = IdeaCategory.object;
+      }
+    }
+    
+    // Use the resolved category to pick the word
+    switch (resolvedCategory) {
+      case IdeaCategory.idea:
+        idea = ideaWords[ideaIndex];
+        ideaCategory = 'Idea';
+      case IdeaCategory.event:
+        idea = eventWords[ideaIndex];
+        ideaCategory = 'Event';
+      case IdeaCategory.person:
+        idea = personWords[ideaIndex];
+        ideaCategory = 'Person';
+      case IdeaCategory.object:
+        idea = objectWords[ideaIndex];
+        ideaCategory = 'Object';
     }
 
     return IdeaResult(
@@ -171,6 +196,26 @@ class RandomEvent {
       ideaCategory: ideaCategory,
     );
   }
+
+  /// Generate a random event focus only (for Fate Check triggers).
+  RandomEventFocusResult generateFocus() {
+    final focusRoll = _rollEngine.rollDie(10);
+    final focusIndex = focusRoll == 10 ? 9 : focusRoll - 1;
+    final focus = eventFocusTypes[focusIndex];
+
+    return RandomEventFocusResult(
+      focusRoll: focusRoll,
+      focus: focus,
+    );
+  }
+}
+
+/// Categories for idea generation
+enum IdeaCategory {
+  idea,   // 1-3 on d10
+  event,  // 4-6 on d10
+  person, // 7-8 on d10
+  object, // 9-0 on d10
 }
 
 /// Result of a Random Event generation.
@@ -227,7 +272,7 @@ class IdeaResult extends RollResult {
     required this.ideaCategory,
   }) : super(
           type: RollType.randomEvent,
-          description: 'Idea',
+          description: ideaCategory,
           diceResults: [modifierRoll, ideaRoll],
           total: modifierRoll + ideaRoll,
           interpretation: '$modifier $idea',
@@ -241,5 +286,28 @@ class IdeaResult extends RollResult {
   String get phrase => '$modifier $idea';
 
   @override
-  String toString() => 'Idea: $modifier $idea';
+  String toString() => '$ideaCategory: $modifier $idea';
+}
+
+/// Result of a Random Event Focus generation (for Fate Check triggers).
+class RandomEventFocusResult extends RollResult {
+  final int focusRoll;
+  final String focus;
+
+  RandomEventFocusResult({
+    required this.focusRoll,
+    required this.focus,
+  }) : super(
+          type: RollType.randomEvent,
+          description: 'Random Event Focus',
+          diceResults: [focusRoll],
+          total: focusRoll,
+          interpretation: focus,
+          metadata: {
+            'focus': focus,
+          },
+        );
+
+  @override
+  String toString() => 'Random Event: $focus';
 }

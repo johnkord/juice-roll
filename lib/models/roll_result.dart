@@ -13,9 +13,11 @@ enum RollType {
   nextScene,
   randomEvent,
   discoverMeaning,
+  expectationCheck,
   
   // NPC & Dialog
   npcAction,
+  dialog,
   
   // Plot & Story
   payThePrice,
@@ -25,6 +27,7 @@ enum RollType {
   // Exploration
   weather,
   encounter,
+  dungeon,
   
   // Generation
   settlement,
@@ -32,6 +35,8 @@ enum RollType {
   challenge,
   details,
   immersion,
+  nameGenerator,
+  scale,
 }
 
 /// Represents the result of any roll.

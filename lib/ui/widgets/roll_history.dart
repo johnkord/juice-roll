@@ -3,7 +3,6 @@ import '../../models/roll_result.dart';
 import '../../presets/fate_check.dart';
 import '../../presets/next_scene.dart';
 import '../../presets/random_event.dart';
-import '../../presets/exploration.dart';
 import '../../presets/discover_meaning.dart';
 import '../../presets/npc_action.dart';
 import '../../presets/pay_the_price.dart';
@@ -14,12 +13,19 @@ import '../../presets/object_treasure.dart';
 import '../../presets/challenge.dart';
 import '../../presets/details.dart';
 import '../../presets/immersion.dart';
+import '../../presets/dialog_generator.dart';
+import '../../presets/wilderness.dart';
 
 /// Scrollable roll history widget.
 class RollHistory extends StatelessWidget {
   final List<RollResult> history;
+  final void Function(int environmentRow, int typeRow)? onSetWildernessPosition;
 
-  const RollHistory({super.key, required this.history});
+  const RollHistory({
+    super.key, 
+    required this.history,
+    this.onSetWildernessPosition,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +38,7 @@ class RollHistory extends StatelessWidget {
           key: ValueKey('${result.timestamp.millisecondsSinceEpoch}_$index'),
           result: result,
           index: index,
+          onSetWildernessPosition: onSetWildernessPosition,
         );
       },
     );
@@ -41,8 +48,14 @@ class RollHistory extends StatelessWidget {
 class _RollHistoryCard extends StatelessWidget {
   final RollResult result;
   final int index;
+  final void Function(int environmentRow, int typeRow)? onSetWildernessPosition;
 
-  const _RollHistoryCard({super.key, required this.result, required this.index});
+  const _RollHistoryCard({
+    super.key, 
+    required this.result, 
+    required this.index,
+    this.onSetWildernessPosition,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +169,10 @@ class _RollHistoryCard extends StatelessWidget {
         icon = Icons.auto_awesome;
         color = Colors.indigo;
         break;
+      case RollType.dialog:
+        icon = Icons.chat;
+        color = Colors.pink;
+        break;
       default:
         icon = Icons.casino;
         color = Colors.red;
@@ -172,6 +189,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildNextSceneDisplay(result as NextSceneResult, theme);
     } else if (result is RandomEventResult) {
       return _buildRandomEventDisplay(result as RandomEventResult, theme);
+    } else if (result is RandomEventFocusResult) {
+      return _buildRandomEventFocusDisplay(result as RandomEventFocusResult, theme);
     } else if (result is IdeaResult) {
       return _buildIdeaDisplay(result as IdeaResult, theme);
     } else if (result is DiscoverMeaningResult) {
@@ -186,10 +205,6 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildQuestDisplay(result as QuestResult, theme);
     } else if (result is InterruptPlotPointResult) {
       return _buildInterruptDisplay(result as InterruptPlotPointResult, theme);
-    } else if (result is WeatherResult) {
-      return _buildWeatherDisplay(result as WeatherResult, theme);
-    } else if (result is EncounterResult) {
-      return _buildEncounterDisplay(result as EncounterResult, theme);
     } else if (result is SettlementNameResult) {
       return _buildSettlementNameDisplay(result as SettlementNameResult, theme);
     } else if (result is FullSettlementResult) {
@@ -212,6 +227,14 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildDetailResultDisplay(result as DetailResult, theme);
     } else if (result is FateRollResult) {
       return _buildFateRollDisplay(result as FateRollResult, theme);
+    } else if (result is DialogResult) {
+      return _buildDialogDisplay(result as DialogResult, theme);
+    } else if (result is WildernessAreaResult) {
+      return _buildWildernessAreaDisplay(result as WildernessAreaResult, theme);
+    } else if (result is WildernessEncounterResult) {
+      return _buildWildernessEncounterDisplay(result as WildernessEncounterResult, theme);
+    } else if (result is WildernessWeatherResult) {
+      return _buildWildernessWeatherDisplay(result as WildernessWeatherResult, theme);
     }
 
     // Default display
@@ -459,6 +482,16 @@ class _RollHistoryCard extends StatelessWidget {
     );
   }
 
+  Widget _buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData theme) {
+    return Chip(
+      label: Text(result.focus),
+      backgroundColor: Colors.amber.withOpacity(0.2),
+      side: const BorderSide(color: Colors.amber),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
   Widget _buildIdeaDisplay(IdeaResult result, ThemeData theme) {
     return Text(
       '${result.modifier} ${result.idea}',
@@ -698,15 +731,28 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          result.where,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          '${result.negativeEmotion} ↔ ${result.positiveEmotion}',
-          style: theme.textTheme.bodyMedium,
+        Row(
+          children: [
+            Text(
+              result.where,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Chip(
+              avatar: Icon(
+                result.isPositive ? Icons.add : Icons.remove,
+                size: 16,
+                color: result.isPositive ? Colors.green : Colors.red,
+              ),
+              label: Text(result.selectedEmotion),
+              backgroundColor: (result.isPositive ? Colors.green : Colors.red).withOpacity(0.1),
+              side: BorderSide(color: result.isPositive ? Colors.green : Colors.red),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
         ),
         Text(
           'because ${result.cause}',
@@ -717,141 +763,6 @@ class _RollHistoryCard extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildWeatherDisplay(WeatherResult result, ThemeData theme) {
-    return Row(
-      children: [
-        _getWeatherIcon(result.weather),
-        const SizedBox(width: 8),
-        Chip(
-          label: Text(result.weather.displayText),
-          backgroundColor: _getWeatherColor(result.weather).withOpacity(0.2),
-          side: BorderSide(color: _getWeatherColor(result.weather)),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-        ),
-      ],
-    );
-  }
-
-  Widget _getWeatherIcon(Weather weather) {
-    switch (weather) {
-      case Weather.extreme:
-        return const Icon(Icons.thunderstorm, color: Colors.red);
-      case Weather.harsh:
-        return const Icon(Icons.grain, color: Colors.orange);
-      case Weather.poor:
-        return const Icon(Icons.cloud, color: Colors.grey);
-      case Weather.normal:
-        return const Icon(Icons.cloud_queue, color: Colors.blueGrey);
-      case Weather.fair:
-        return const Icon(Icons.wb_cloudy, color: Colors.lightBlue);
-      case Weather.good:
-        return const Icon(Icons.wb_sunny, color: Colors.amber);
-      case Weather.perfect:
-        return const Icon(Icons.brightness_high, color: Colors.yellow);
-    }
-  }
-
-  Color _getWeatherColor(Weather weather) {
-    switch (weather) {
-      case Weather.extreme:
-        return Colors.red;
-      case Weather.harsh:
-        return Colors.orange;
-      case Weather.poor:
-        return Colors.grey;
-      case Weather.normal:
-        return Colors.blueGrey;
-      case Weather.fair:
-        return Colors.lightBlue;
-      case Weather.good:
-        return Colors.amber;
-      case Weather.perfect:
-        return Colors.yellow;
-    }
-  }
-
-  Widget _buildEncounterDisplay(EncounterResult result, ThemeData theme) {
-    if (result.encounterType == EncounterType.nothing) {
-      return const Text(
-        'No encounter',
-        style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      );
-    }
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 4,
-      children: [
-        Chip(
-          label: Text(result.encounterType.displayText),
-          backgroundColor: _getEncounterColor(result.encounterType).withOpacity(0.2),
-          side: BorderSide(color: _getEncounterColor(result.encounterType)),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-        ),
-        if (result.distance != null)
-          Chip(
-            label: Text(result.distance!.displayText),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-          ),
-        if (result.disposition != null)
-          Chip(
-            label: Text(result.disposition!.displayText),
-            backgroundColor: _getDispositionColor(result.disposition!).withOpacity(0.2),
-            side: BorderSide(color: _getDispositionColor(result.disposition!)),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-          ),
-      ],
-    );
-  }
-
-  Color _getEncounterColor(EncounterType type) {
-    switch (type) {
-      case EncounterType.majorThreat:
-        return Colors.red;
-      case EncounterType.minorThreat:
-        return Colors.orange;
-      case EncounterType.trap:
-        return Colors.deepOrange;
-      case EncounterType.obstacle:
-        return Colors.blueGrey;
-      case EncounterType.nothing:
-        return Colors.grey;
-      case EncounterType.clue:
-        return Colors.blue;
-      case EncounterType.discovery:
-        return Colors.teal;
-      case EncounterType.treasure:
-        return Colors.amber;
-      case EncounterType.puzzle:
-        return Colors.purple;
-      case EncounterType.special:
-        return Colors.pink;
-    }
-  }
-
-  Color _getDispositionColor(Disposition disposition) {
-    switch (disposition) {
-      case Disposition.hostile:
-        return Colors.red;
-      case Disposition.unfriendly:
-        return Colors.orange;
-      case Disposition.wary:
-        return Colors.amber;
-      case Disposition.neutral:
-        return Colors.grey;
-      case Disposition.curious:
-        return Colors.blue;
-      case Disposition.friendly:
-        return Colors.green;
-      case Disposition.helpful:
-        return Colors.teal;
-    }
   }
 
   Widget _buildFateRollDisplay(FateRollResult result, ThemeData theme) {
@@ -878,6 +789,64 @@ class _RollHistoryCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildDialogDisplay(DialogResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Chip(
+              label: Text(result.direction),
+              backgroundColor: _getDirectionColor(result.direction).withOpacity(0.2),
+              side: BorderSide(color: _getDirectionColor(result.direction)),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 8),
+            Chip(
+              label: Text(result.tone),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          result.subject,
+          style: theme.textTheme.bodyMedium,
+        ),
+        if (result.isDoubles)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '⚡ Conversation ends',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.orange,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Color _getDirectionColor(String direction) {
+    switch (direction) {
+      case 'Helpful (Me)':
+        return Colors.green;
+      case 'Aggressive (Us)':
+        return Colors.red;
+      case 'Neutral (Us)':
+        return Colors.grey;
+      case 'Passive (Them)':
+        return Colors.blue;
+      case 'Evasive (Them)':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
@@ -944,6 +913,340 @@ class _RollHistoryCard extends StatelessWidget {
     );
   }
 
+  Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme) {
+    // For manual set, show a simpler display
+    if (result.isManualSet) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.location_on, size: 16, color: Colors.orange.shade700),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Position Set',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.orange.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  result.fullDescription,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    final fateSymbols = result.envFateDice.map((f) {
+      switch (f) {
+        case -1: return '−';
+        case 1: return '+';
+        default: return '○';
+      }
+    }).join('');
+    final typeSymbol = switch (result.typeFateDie) {
+      -1 => '−',
+      1 => '+',
+      _ => '○',
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Fate dice for environment
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '2dF: $fateSymbols',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '1dF: $typeSymbol',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            if (result.isTransition && result.previousEnvironment != null) ...[
+              Text(
+                result.previousEnvironment!,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey,
+                ),
+              ),
+              const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+            ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                result.fullDescription,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeData theme) {
+    Color encounterColor = Colors.green;
+    if (result.encounter == 'Natural Hazard' || result.encounter == 'Monster') {
+      encounterColor = Colors.red;
+    } else if (result.encounter == 'Destination/Lost') {
+      encounterColor = result.becameLost ? Colors.orange : Colors.blue;
+    } else if (result.encounter == 'River/Road') {
+      encounterColor = result.becameFound ? Colors.blue : Colors.teal;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'd${result.dieSize}${result.skewUsed != 'straight' ? '@${result.skewUsed[0]}' : ''}: ${result.roll}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            if (result.wasLost) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'LOST',
+                  style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: encounterColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: encounterColor.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                result.encounter,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: encounterColor,
+                ),
+              ),
+            ),
+            if (result.becameLost) ...[
+              const SizedBox(width: 8),
+              const Chip(
+                label: Text('Now Lost!', style: TextStyle(fontSize: 11)),
+                backgroundColor: Colors.orange,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+            if (result.becameFound) ...[
+              const SizedBox(width: 8),
+              const Chip(
+                label: Text('Found!', style: TextStyle(fontSize: 11)),
+                backgroundColor: Colors.blue,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+            if (result.requiresFollowUp) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward, size: 14, color: Colors.grey),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWildernessWeatherDisplay(WildernessWeatherResult result, ThemeData theme) {
+    // Determine weather icon and color
+    IconData weatherIcon;
+    Color weatherColor;
+    
+    switch (result.weather) {
+      case 'Blizzard':
+        weatherIcon = Icons.ac_unit;
+        weatherColor = Colors.lightBlue.shade300;
+        break;
+      case 'Snow Flurries':
+        weatherIcon = Icons.cloudy_snowing;
+        weatherColor = Colors.lightBlue.shade200;
+        break;
+      case 'Freezing Cold':
+        weatherIcon = Icons.severe_cold;
+        weatherColor = Colors.blue.shade300;
+        break;
+      case 'Thunder Storm':
+        weatherIcon = Icons.thunderstorm;
+        weatherColor = Colors.purple;
+        break;
+      case 'Heavy Rain':
+        weatherIcon = Icons.water_drop;
+        weatherColor = Colors.blue;
+        break;
+      case 'Light Rain':
+        weatherIcon = Icons.grain;
+        weatherColor = Colors.blueGrey;
+        break;
+      case 'Heavy Clouds':
+        weatherIcon = Icons.cloud;
+        weatherColor = Colors.grey;
+        break;
+      case 'High Winds':
+        weatherIcon = Icons.air;
+        weatherColor = Colors.teal;
+        break;
+      case 'Clear Skies':
+        weatherIcon = Icons.wb_sunny;
+        weatherColor = Colors.amber;
+        break;
+      case 'Scorching Heat':
+        weatherIcon = Icons.local_fire_department;
+        weatherColor = Colors.red;
+        break;
+      default:
+        weatherIcon = Icons.cloud;
+        weatherColor = Colors.grey;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '${result.typeName} ${result.environment}',
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                result.formula,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(weatherIcon, color: weatherColor, size: 28),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: weatherColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: weatherColor.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                result.weather,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: weatherColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   String _formatTime(DateTime time) {
     final now = DateTime.now();
     final diff = now.difference(time);
@@ -982,6 +1285,32 @@ class _RollHistoryCard extends StatelessWidget {
               'Rolled at ${_formatFullTime(result.timestamp)}',
               style: const TextStyle(color: Colors.grey),
             ),
+            // Show "Set as Current Position" for wilderness results
+            if (result is WildernessAreaResult && onSetWildernessPosition != null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final wilderness = result as WildernessAreaResult;
+                    onSetWildernessPosition!(wilderness.envRoll, wilderness.typeRoll);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('📍 Set position: ${wilderness.interpretation}'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.location_on),
+                  label: const Text('Set as Current Position'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
           ],
         ),
