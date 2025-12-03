@@ -1,27 +1,24 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
 
-/// Cardinal directions for location description
-enum CardinalDirection {
+/// Distance from center (rings of the bullseye)
+enum LocationDistance {
+  center,     // Ring 0: Center cell only (row 3, col 3)
+  close,      // Ring 1: Adjacent to center (rows 2-4, cols 2-4, excluding center)
+  far,        // Ring 2: Outer ring (edge cells)
+}
+
+/// Compass direction for location
+enum CompassDirection {
   north,
-  south,
+  northEast,
   east,
+  southEast,
+  south,
+  southWest,
   west,
+  northWest,
   center,
-}
-
-/// Horizontal position on the grid
-enum HorizontalPosition {
-  west,    // Columns 1-2
-  center,  // Column 3
-  east,    // Columns 4-5
-}
-
-/// Vertical position on the grid
-enum VerticalPosition {
-  north,   // Rows 1-2
-  center,  // Row 3
-  south,   // Rows 4-5
 }
 
 /// Result of a location grid roll
@@ -29,16 +26,16 @@ class LocationResult extends RollResult {
   final int roll;               // 0-99 (from 1d100)
   final int row;                // 1-5 (top to bottom)
   final int column;             // 1-5 (left to right)
-  final HorizontalPosition horizontalPosition;
-  final VerticalPosition verticalPosition;
+  final CompassDirection direction;
+  final LocationDistance distance;
 
   LocationResult({
     required List<int> diceResults,
     required this.roll,
     required this.row,
     required this.column,
-  }) : horizontalPosition = _getHorizontalPosition(column),
-       verticalPosition = _getVerticalPosition(row),
+  }) : direction = _getDirection(row, column),
+       distance = _getDistance(row, column),
        super(
           type: RollType.tableLookup,
           description: 'Location Grid',
@@ -49,45 +46,88 @@ class LocationResult extends RollResult {
             'roll': roll,
             'row': row,
             'column': column,
-            'horizontalPosition': _getHorizontalPosition(column).name,
-            'verticalPosition': _getVerticalPosition(row).name,
+            'direction': _getDirection(row, column).name,
+            'distance': _getDistance(row, column).name,
+            'compassMethod': _buildCompassDescription(row, column),
+            'zoomMethod': 'Grid position [$row,$column]',
           },
         );
 
-  static HorizontalPosition _getHorizontalPosition(int column) {
-    if (column <= 2) return HorizontalPosition.west;
-    if (column == 3) return HorizontalPosition.center;
-    return HorizontalPosition.east;
+  /// Get compass direction based on position relative to center (row 3, col 3)
+  static CompassDirection _getDirection(int row, int column) {
+    // Center cell
+    if (row == 3 && column == 3) return CompassDirection.center;
+    
+    // Determine vertical component
+    final bool isNorth = row < 3;
+    final bool isSouth = row > 3;
+    
+    // Determine horizontal component
+    final bool isWest = column < 3;
+    final bool isEast = column > 3;
+    
+    // Cardinal directions (on center row or column)
+    if (row == 3) {
+      return isWest ? CompassDirection.west : CompassDirection.east;
+    }
+    if (column == 3) {
+      return isNorth ? CompassDirection.north : CompassDirection.south;
+    }
+    
+    // Intercardinal directions (corners)
+    if (isNorth && isWest) return CompassDirection.northWest;
+    if (isNorth && isEast) return CompassDirection.northEast;
+    if (isSouth && isWest) return CompassDirection.southWest;
+    if (isSouth && isEast) return CompassDirection.southEast;
+    
+    return CompassDirection.center; // Fallback
   }
 
-  static VerticalPosition _getVerticalPosition(int row) {
-    if (row <= 2) return VerticalPosition.north;
-    if (row == 3) return VerticalPosition.center;
-    return VerticalPosition.south;
+  /// Get distance from center (which ring of the bullseye)
+  static LocationDistance _getDistance(int row, int column) {
+    // Center cell (row 3, col 3) = Ring 0
+    if (row == 3 && column == 3) return LocationDistance.center;
+    
+    // Adjacent to center (rows 2-4, cols 2-4, excluding center) = Ring 1 (Close)
+    if (row >= 2 && row <= 4 && column >= 2 && column <= 4) {
+      return LocationDistance.close;
+    }
+    
+    // Outer ring (edge cells) = Ring 2 (Far)
+    return LocationDistance.far;
+  }
+
+  /// Build compass method description
+  static String _buildCompassDescription(int row, int column) {
+    final dir = _getDirection(row, column);
+    final dist = _getDistance(row, column);
+    
+    if (dir == CompassDirection.center) {
+      return 'Here (Center)';
+    }
+    
+    // Format direction nicely
+    String dirStr;
+    switch (dir) {
+      case CompassDirection.north: dirStr = 'North'; break;
+      case CompassDirection.northEast: dirStr = 'North-East'; break;
+      case CompassDirection.east: dirStr = 'East'; break;
+      case CompassDirection.southEast: dirStr = 'South-East'; break;
+      case CompassDirection.south: dirStr = 'South'; break;
+      case CompassDirection.southWest: dirStr = 'South-West'; break;
+      case CompassDirection.west: dirStr = 'West'; break;
+      case CompassDirection.northWest: dirStr = 'North-West'; break;
+      case CompassDirection.center: dirStr = 'Center'; break;
+    }
+    
+    // Distance description
+    final distStr = dist == LocationDistance.close ? 'Close' : 'Far';
+    
+    return '$dirStr, $distStr';
   }
 
   static String _buildInterpretation(int row, int column) {
-    final hPos = _getHorizontalPosition(column);
-    final vPos = _getVerticalPosition(row);
-    
-    // Handle center-center case
-    if (hPos == HorizontalPosition.center && vPos == VerticalPosition.center) {
-      return 'Center';
-    }
-
-    final parts = <String>[];
-    
-    // Add vertical position
-    if (vPos != VerticalPosition.center) {
-      parts.add(vPos.name[0].toUpperCase() + vPos.name.substring(1));
-    }
-    
-    // Add horizontal position
-    if (hPos != HorizontalPosition.center) {
-      parts.add(hPos.name[0].toUpperCase() + hPos.name.substring(1));
-    }
-
-    return parts.isEmpty ? 'Center' : parts.join('-');
+    return _buildCompassDescription(row, column);
   }
 
   /// Get the grid cell range string (e.g., "48-51")
@@ -97,14 +137,26 @@ class LocationResult extends RollResult {
     return '$startRange-$endRange';
   }
 
-  /// Get the position description
-  String get positionDescription => _buildInterpretation(row, column);
+  /// Get compass method description (direction + distance)
+  String get compassDescription => _buildCompassDescription(row, column);
+
+  /// Get zoom method description (grid position)
+  String get zoomDescription => 'Grid position [$row,$column]';
 
   @override
-  String toString() => 'Location: Grid [$row,$column]: $positionDescription (Roll: $roll)';
+  String toString() => 'Location: $compassDescription (Roll: $roll, Grid [$row,$column])';
 }
 
 /// Location grid generator using 1d100 to determine position on a 5×5 grid
+/// 
+/// The grid is 5x5, colored like a bullseye:
+/// - Center (row 3, col 3): The origin point
+/// - Close (Ring 1): Cells adjacent to center
+/// - Far (Ring 2): Edge/corner cells
+/// 
+/// Two methods of use:
+/// 1. Compass Method: Direction + Distance from center
+/// 2. Zoom Method: Iterative zooming into regions
 class Location {
   static final RollEngine _engine = RollEngine();
 
@@ -114,16 +166,25 @@ class Location {
   ///   - Each cell covers 4 consecutive numbers (0-3, 4-7, etc.)
   ///   - Total: 100 possible values (0-99 from d100 treating 100 as 00)
   static const List<List<List<int>>> gridRanges = [
-    // Row 1 (North)
+    // Row 1 (North) - Far
     [[0, 3], [4, 7], [8, 11], [12, 15], [16, 19]],
-    // Row 2
+    // Row 2 - Mixed (edges Far, middle Close)
     [[20, 23], [24, 27], [28, 31], [32, 35], [36, 39]],
-    // Row 3 (Center)
+    // Row 3 (Center row) - Mixed (edges Far, middle Close, center Center)
     [[40, 43], [44, 47], [48, 51], [52, 55], [56, 59]],
-    // Row 4
+    // Row 4 - Mixed (edges Far, middle Close)
     [[60, 63], [64, 67], [68, 71], [72, 75], [76, 79]],
-    // Row 5 (South)
+    // Row 5 (South) - Far
     [[80, 83], [84, 87], [88, 91], [92, 95], [96, 99]],
+  ];
+
+  /// Distance ring for each cell (0 = center, 1 = close, 2 = far)
+  static const List<List<int>> distanceRings = [
+    [2, 2, 2, 2, 2],  // Row 1: all far
+    [2, 1, 1, 1, 2],  // Row 2: edges far, middle close
+    [2, 1, 0, 1, 2],  // Row 3: edges far, close, center
+    [2, 1, 1, 1, 2],  // Row 4: edges far, middle close
+    [2, 2, 2, 2, 2],  // Row 5: all far
   ];
 
   /// Roll 1d100 and determine grid position
@@ -167,44 +228,45 @@ class Location {
     return value >= range[0] && value <= range[1];
   }
 
-  /// Get all cells in a direction
-  static List<List<int>> getCellsInDirection(CardinalDirection direction) {
-    switch (direction) {
-      case CardinalDirection.north:
-        // Rows 1-2
-        return [
-          for (var row = 0; row < 2; row++)
-            for (var col = 0; col < 5; col++)
-              [row + 1, col + 1]
-        ];
-      case CardinalDirection.south:
-        // Rows 4-5
-        return [
-          for (var row = 3; row < 5; row++)
-            for (var col = 0; col < 5; col++)
-              [row + 1, col + 1]
-        ];
-      case CardinalDirection.west:
-        // Columns 1-2
-        return [
-          for (var row = 0; row < 5; row++)
-            for (var col = 0; col < 2; col++)
-              [row + 1, col + 1]
-        ];
-      case CardinalDirection.east:
-        // Columns 4-5
-        return [
-          for (var row = 0; row < 5; row++)
-            for (var col = 3; col < 5; col++)
-              [row + 1, col + 1]
-        ];
-      case CardinalDirection.center:
-        // Row 3, Column 3
-        return [[3, 3]];
-    }
+  /// Get the distance ring for a cell (0 = center, 1 = close, 2 = far)
+  static int getDistanceRing(int row, int column) {
+    final clampedRow = row.clamp(1, 5);
+    final clampedColumn = column.clamp(1, 5);
+    return distanceRings[clampedRow - 1][clampedColumn - 1];
   }
 
-  /// Generate an ASCII representation of the grid
+  /// Get all cells at a specific distance
+  static List<List<int>> getCellsAtDistance(LocationDistance distance) {
+    final cells = <List<int>>[];
+    final targetRing = distance == LocationDistance.center ? 0 
+        : distance == LocationDistance.close ? 1 : 2;
+    
+    for (var row = 1; row <= 5; row++) {
+      for (var col = 1; col <= 5; col++) {
+        if (getDistanceRing(row, col) == targetRing) {
+          cells.add([row, col]);
+        }
+      }
+    }
+    return cells;
+  }
+
+  /// Get all cells in a compass direction
+  static List<List<int>> getCellsInDirection(CompassDirection direction) {
+    final cells = <List<int>>[];
+    
+    for (var row = 1; row <= 5; row++) {
+      for (var col = 1; col <= 5; col++) {
+        final cellDir = LocationResult._getDirection(row, col);
+        if (cellDir == direction) {
+          cells.add([row, col]);
+        }
+      }
+    }
+    return cells;
+  }
+
+  /// Generate an ASCII representation of the grid with bullseye rings
   static String getGridDisplay({int? highlightRoll}) {
     final buffer = StringBuffer();
     buffer.writeln('                        North');
@@ -220,6 +282,7 @@ class Location {
       for (var col = 0; col < 5; col++) {
         final range = gridRanges[row][col];
         final rangeStr = '${range[0].toString().padLeft(2)}-${range[1].toString().padLeft(2)}';
+        final ring = distanceRings[row][col];
         
         // Highlight if the roll falls in this cell
         if (highlightRoll != null && 
@@ -227,7 +290,9 @@ class Location {
             highlightRoll <= range[1]) {
           buffer.write('[${rangeStr}]');
         } else {
-          buffer.write(' $rangeStr ');
+          // Show ring indicator
+          final ringChar = ring == 0 ? '◉' : (ring == 1 ? '○' : '·');
+          buffer.write('$ringChar$rangeStr$ringChar');
         }
         buffer.write('│');
       }
@@ -240,6 +305,8 @@ class Location {
     
     buffer.writeln('        └───────┴───────┴───────┴───────┴───────┘');
     buffer.writeln('                        South');
+    buffer.writeln('');
+    buffer.writeln('◉ = Center  ○ = Close  · = Far');
     
     return buffer.toString();
   }

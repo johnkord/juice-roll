@@ -270,9 +270,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _rollLocation() {
-    final result = Location.roll();
-    _addToHistory(result);
+  void _showLocationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _LocationDialog(
+        onRoll: _addToHistory,
+      ),
+    );
   }
 
   @override
@@ -470,7 +474,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _RollButton(
                       label: 'Location',
                       icon: Icons.grid_on,
-                      onPressed: _rollLocation,
+                      onPressed: _showLocationDialog,
                       color: Colors.brown,
                     ),
                     _RollButton(
@@ -1943,6 +1947,117 @@ class _RandomTablesDialog extends StatelessWidget {
             ),
           ],
         ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dialog for Location Grid options.
+class _LocationDialog extends StatelessWidget {
+  final void Function(RollResult) onRoll;
+
+  const _LocationDialog({required this.onRoll});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Location Grid'),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 350),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.brown.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'A 5×5 bullseye grid. Roll 1d100 to get both a direction and a distance.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              const Text('Compass Method', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
+                'Imagine your PC at the center. Roll to get:\n'
+                '• Direction (N, S, E, W, NE, NW, SE, SW)\n'
+                '• Distance (Close or Far based on ring)\n\n'
+                'Use for: next town location, hex map population, travel days, road directions.',
+                style: TextStyle(fontSize: 11),
+              ),
+              const Divider(),
+              const Text('Zoom Method', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
+                'Use iterative zooming:\n'
+                '1. Grid overlays world map → roll to zoom in\n'
+                '2. Grid overlays region → roll again\n'
+                '3. Grid overlays settlement → roll for building\n'
+                '4. Keep zooming until you have your answer\n\n'
+                'Use for: Remote Events, finding hidden treasure locations.',
+                style: TextStyle(fontSize: 11),
+              ),
+              const Divider(),
+              // Show the grid legend
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Grid Rings:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                    SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text('◉ Center (origin)', style: TextStyle(fontSize: 10)),
+                        SizedBox(width: 12),
+                        Text('○ Close', style: TextStyle(fontSize: 10)),
+                        SizedBox(width: 12),
+                        Text('· Far', style: TextStyle(fontSize: 10)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    onRoll(Location.roll());
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.casino),
+                  label: const Text('Roll 1d100'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.brown,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
