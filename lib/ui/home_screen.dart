@@ -321,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             flex: 2,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.only(left: 12, right: 12, top: 4, bottom: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -479,6 +479,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed: _showDiceRollDialog,
                       color: Colors.red,
                     ),
+                    const SizedBox(), // Placeholder for consistent sizing
+                    const SizedBox(), // Placeholder for consistent sizing
                   ]),
                 ],
               ),
@@ -668,25 +670,85 @@ class _SettlementDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Settlement'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _DialogOption(
-            title: 'Full Settlement',
-            subtitle: 'Name + Establishment + News',
-            onTap: () {
-              onRoll(settlement.generateFull());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Name Only',
-            onTap: () {
-              onRoll(settlement.generateName());
-              Navigator.pop(context);
-            },
-          ),
-        ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Generate Settlement',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Villages: 1d6@- count, d6 establishments\n'
+              'Cities: 1d6@+ count, d10 establishments',
+              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+            ),
+            const Divider(),
+            _DialogOption(
+              title: 'Village',
+              subtitle: 'Name + establishments (1d6@-) + news',
+              onTap: () {
+                onRoll(settlement.generateVillage());
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'City',
+              subtitle: 'Name + establishments (1d6@+) + news',
+              onTap: () {
+                onRoll(settlement.generateCity());
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(),
+            const Text(
+              'Individual Rolls',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            _DialogOption(
+              title: 'Name Only',
+              subtitle: 'Settlement name (2d10)',
+              onTap: () {
+                onRoll(settlement.generateName());
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Establishment (Village)',
+              subtitle: 'Single establishment (d6)',
+              onTap: () {
+                onRoll(settlement.rollEstablishment(isVillage: true));
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Establishment (City)',
+              subtitle: 'Single establishment (d10)',
+              onTap: () {
+                onRoll(settlement.rollEstablishment(isVillage: false));
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Artisan',
+              subtitle: 'Type of artisan (d10)',
+              onTap: () {
+                onRoll(settlement.rollArtisan());
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'News',
+              subtitle: 'Current events (d10)',
+              onTap: () {
+                onRoll(settlement.rollNews());
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -1003,10 +1065,15 @@ class _ExpectationCheckDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Expectation Check'),
-      content: const Text(
-        'Instead of asking "Is X true?", you assume X is true and test '
-        'whether your expectation holds.\n\n'
-        'Also works for NPC behavior: assume what an NPC will likely do, then test it.',
+      insetPadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      content: SizedBox(
+        width: 240,
+        child: const Text(
+          'Instead of asking "Is X true?", you assume X is true and test '
+          'whether your expectation holds.\n\n'
+          'Also works for NPC behavior: assume what an NPC will likely do, then test it.',
+        ),
       ),
       actions: [
         TextButton(
@@ -1088,120 +1155,268 @@ class _DungeonDialog extends StatefulWidget {
 
 class _DungeonDialogState extends State<_DungeonDialog> {
   bool _isEntering = true;
+  // Shared settings for Passage/Condition/Encounter tables
+  bool _useD6 = false;  // false = d10, true = d6
+  AdvantageType _skew = AdvantageType.none;
+
+  String _getDieLabel() => _useD6 ? 'd6' : 'd10';
+  String _getSkewLabel() {
+    switch (_skew) {
+      case AdvantageType.advantage: return '@+';
+      case AdvantageType.disadvantage: return '@-';
+      case AdvantageType.none: return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final phaseText = _isEntering
-        ? 'Currently: Entering (@-)'
-        : 'Currently: Exploring (@+)';
+        ? 'Phase: Entering (@-) - Until doubles'
+        : 'Phase: Exploring (@+) - After doubles';
     
+    final screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
       title: const Text('Dungeon'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(phaseText, style: const TextStyle(fontStyle: FontStyle.italic)),
-          Row(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: SizedBox(
+        width: 320,
+        height: screenHeight * 0.55,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Phase: '),
-              ChoiceChip(
-                label: const Text('Entering'),
-                selected: _isEntering,
-                onSelected: (selected) => setState(() => _isEntering = true),
+              // Heading explanation
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'NA: 1d10@- Until Doubles, Then NA: 1d10@+',
+                      style: TextStyle(fontSize: 11, fontFamily: 'monospace', fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(phaseText, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                label: const Text('Exploring'),
-                selected: !_isEntering,
-                onSelected: (selected) => setState(() => _isEntering = false),
+              const SizedBox(height: 8),
+              // Phase toggle
+              Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('Entering'),
+                    selected: _isEntering,
+                    onSelected: (selected) => setState(() => _isEntering = true),
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Text('Exploring'),
+                    selected: !_isEntering,
+                    onSelected: (selected) => setState(() => _isEntering = false),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const Text('Dungeon Generation', style: TextStyle(fontWeight: FontWeight.bold)),
+              _DialogOption(
+                title: 'Generate Name',
+                subtitle: 'The [Descriptor] [Subject] (2d10)',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.generateName());
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Next Area',
+                subtitle: _isEntering 
+                    ? '1d10@- (Sprawling, Branching)'
+                    : '1d10@+ (Interconnected, More Exits)',
+                onTap: () {
+                  final result = widget.dungeonGenerator.generateNextArea(isEntering: _isEntering);
+                  widget.onRoll(result);
+                  // Auto-switch phase if doubles
+                  if (result.isDoubles && _isEntering) {
+                    setState(() => _isEntering = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('DOUBLES! Switched to Exploring phase (@+)')),
+                    );
+                  }
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Full Area',
+                subtitle: 'Next Area + Condition (uses settings below)',
+                onTap: () {
+                  final result = widget.dungeonGenerator.generateFullArea(
+                    isEntering: _isEntering,
+                    isOccupied: !_useD6,
+                    conditionSkew: _skew,
+                  );
+                  widget.onRoll(result);
+                  if (result.area.isDoubles && _isEntering) {
+                    setState(() => _isEntering = false);
+                  }
+                  Navigator.pop(context);
+                },
+              ),
+              const Divider(),
+              // Combined settings section
+              const Text('Table Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+              Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'd6: Linear/Unoccupied/Lingering\n'
+                      'd10: Branching/Occupied/First Entry\n'
+                      '@-: Smaller/Worse | @+: Larger/Better',
+                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('d6'),
+                          selected: _useD6,
+                          onSelected: (s) => setState(() => _useD6 = true),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        ChoiceChip(
+                          label: const Text('d10'),
+                          selected: !_useD6,
+                          onSelected: (s) => setState(() => _useD6 = false),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: const Text('@-'),
+                          selected: _skew == AdvantageType.disadvantage,
+                          onSelected: (s) => setState(() => _skew = s ? AdvantageType.disadvantage : AdvantageType.none),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        ChoiceChip(
+                          label: const Text('@+'),
+                          selected: _skew == AdvantageType.advantage,
+                          onSelected: (s) => setState(() => _skew = s ? AdvantageType.advantage : AdvantageType.none),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              const Text('Individual Rolls', style: TextStyle(fontWeight: FontWeight.bold)),
+              _DialogOption(
+                title: 'Passage',
+                subtitle: 'Passage type (${_getDieLabel()}${_getSkewLabel()})',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.generatePassage(
+                    useD6: _useD6,
+                    skew: _skew,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Condition',
+                subtitle: 'Room state (${_getDieLabel()}${_getSkewLabel()})',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.generateCondition(
+                    useD6: _useD6,
+                    skew: _skew,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Encounter Type',
+                subtitle: 'What do you find? (${_getDieLabel()}${_getSkewLabel()})',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.rollEncounterType(
+                    isLingering: _useD6,
+                    skew: _skew,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Full Encounter',
+                subtitle: 'Type + details (${_getDieLabel()}${_getSkewLabel()})',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.rollFullEncounter(
+                    isLingering: _useD6,
+                    skew: _skew,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              const Divider(),
+              const Text('Encounter Details', style: TextStyle(fontWeight: FontWeight.bold)),
+              _DialogOption(
+                title: 'Monster',
+                subtitle: 'Descriptor + Ability (2d10)',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.rollMonsterDescription());
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Trap',
+                subtitle: 'Action + Subject (2d10)',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.rollTrap());
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Feature',
+                subtitle: 'Dungeon feature (1d10)',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.rollFeature());
+                  Navigator.pop(context);
+                },
+              ),
+              // Show trap procedure info
+              const Divider(),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Trap Procedure:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                    Text(
+                      '• Active (10m, @+): Pass=Avoid, Fail=Locate\n'
+                      '• Passive: Pass=Locate, Fail=Trigger',
+                      style: TextStyle(fontSize: 9),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const Divider(),
-          _DialogOption(
-            title: 'Generate Name',
-            subtitle: 'Random dungeon name',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.generateName());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Next Area',
-            subtitle: 'Roll for dungeon area type',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.generateNextArea(isEntering: _isEntering));
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Full Area',
-            subtitle: 'Area type + condition',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.generateFullArea(isEntering: _isEntering));
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Passage',
-            subtitle: 'Roll passage details',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.generatePassage());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Room Condition',
-            subtitle: 'Roll room state',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.generateCondition());
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(),
-          const Text('Encounters', style: TextStyle(fontWeight: FontWeight.bold)),
-          _DialogOption(
-            title: 'Encounter Type',
-            subtitle: 'What do you find? (1d10)',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.rollEncounterType());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Full Encounter',
-            subtitle: 'Type + details based on result',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.rollFullEncounter());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Monster Description',
-            subtitle: 'Descriptor + ability (2d10)',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.rollMonsterDescription());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Trap',
-            subtitle: 'Method + effect (2d10)',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.rollTrap());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Feature',
-            subtitle: 'Dungeon feature (1d10)',
-            onTap: () {
-              widget.onRoll(widget.dungeonGenerator.rollFeature());
-              Navigator.pop(context);
-            },
-          ),
-        ],
+        ),
       ),
       actions: [
         TextButton(
@@ -1529,15 +1744,21 @@ class _MonsterEncounterDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Monster Encounter'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              MonsterEncounter.deadlyExplanation,
-              style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-            ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+          maxWidth: 350,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                MonsterEncounter.deadlyExplanation,
+                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+              ),
             const Divider(),
             _DialogOption(
               title: 'Roll Encounter',
@@ -1609,6 +1830,7 @@ class _MonsterEncounterDialog extends StatelessWidget {
             ),
           ],
         ),
+        ),
       ),
       actions: [
         TextButton(
@@ -1634,15 +1856,18 @@ class _RandomTablesDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Random Tables'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'RE / Alter: Modifier + Idea',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 350),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'RE / Alter: Modifier + Idea',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             const SizedBox(height: 4),
             const Text(
               'Used for inspiration, scene alterations, or as a quick Random Event in Simple Mode.',
@@ -1717,6 +1942,7 @@ class _RandomTablesDialog extends StatelessWidget {
               },
             ),
           ],
+        ),
         ),
       ),
       actions: [

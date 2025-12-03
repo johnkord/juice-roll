@@ -1,8 +1,15 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
 
+/// Settlement type (village vs city).
+enum SettlementType { village, city }
+
 /// Settlement generator preset for the Juice Oracle.
 /// Uses settlement.md for generating settlement details.
+/// 
+/// Per Juice rules:
+/// - Villages: 1d6@disadvantage for establishment count, d6 for type
+/// - Cities: 1d6@advantage for establishment count, d10 for type
 class Settlement {
   final RollEngine _rollEngine;
 
@@ -34,7 +41,7 @@ class Settlement {
     'Wood',   // 0/10
   ];
 
-  /// Establishments - d10
+  /// Establishments - d10 (d6 for villages, d10 for cities)
   static const List<String> establishments = [
     'Stable',        // 1
     'Tavern',        // 2
@@ -47,6 +54,20 @@ class Settlement {
     'Guild Hall',    // 9
     'Magic Shop',    // 0/10
   ];
+  
+  /// Establishment descriptions for display.
+  static const Map<String, String> establishmentDescriptions = {
+    'Stable': 'Rent/buy horses, pay for transportation to another area.',
+    'Tavern': 'Food, drink, stories, rumors. Great for NPC info and side quests.',
+    'Inn': 'Spend the night and rest safely. Sometimes combined with Tavern.',
+    'Entertainment': 'Market, bath house, casino, brothel, etc.',
+    'General Store': 'Basics and common items. Stock up on rations and torches.',
+    'Artisan': 'Specialist craftsperson. Better quality, repairs, custom orders.',
+    'Courier': 'Send messages, money, packages. Receive news from other settlements.',
+    'Temple': 'Pray, receive blessings, remove curses. Library access for history.',
+    'Guild Hall': 'Quest distribution, guild services. May offer food and lodging.',
+    'Magic Shop': 'Potions, arcane books, dark secrets, trinkets, artificers.',
+  };
 
   /// Artisans - d10
   static const List<String> artisans = [
@@ -61,6 +82,20 @@ class Settlement {
     'Jeweler',    // 9
     'Scribe',     // 0/10
   ];
+  
+  /// Artisan descriptions.
+  static const Map<String, String> artisanDescriptions = {
+    'Artist': 'Painter, calligrapher, cartologist (maps), glassblower.',
+    'Baker': 'Delicious meals, breads, rations.',
+    'Tailor': 'Clothing, costumes, light armor.',
+    'Tanner': 'Leather armor (medium), accessories, saddles.',
+    'Archer': 'Bows, bowstrings, arrows, quivers.',
+    'Blacksmith': 'Weapons, heavy armor, metal accessories.',
+    'Carpenter': 'Wagons, structures, furniture, wood items.',
+    'Apothecary': 'Medicine, herbs, pharmacy. Knowledge of flora.',
+    'Jeweler': 'Gems, appraisal, cutting, magic infusion, engravings.',
+    'Scribe': 'Formal letters, magical scrolls, legal documents, forgery.',
+  };
 
   /// News/Events - d10
   static const List<String> news = [
@@ -75,6 +110,20 @@ class Settlement {
     'Sale',             // 9
     'Celebration',      // 0/10
   ];
+  
+  /// News descriptions.
+  static const Map<String, String> newsDescriptions = {
+    'War': 'Battle, civil war, trade war, gang rivalry, shop competition, debate.',
+    'Sickness': 'Plague, celebrity illness, crop fungus, dying trees.',
+    'Natural Disaster': 'Fire, earthquake, flood, tornado.',
+    'Crime': 'Assassination, theft, racketeering, smuggling.',
+    'Succession': 'Death, term ended, coming of age, election, retirement.',
+    'Remote Event': 'News from far away. Update on a previous Remote Event.',
+    'Arrival': 'Someone/something is coming. King? Army? Music group? Adventurers?',
+    'Mail': 'You\'ve got mail! Letter or package. Good or bad news?',
+    'Sale': 'Shop or market sale today. Act quick for discount!',
+    'Celebration': 'Festival or event. Holiday? Birthday? Anniversary?',
+  };
 
   Settlement([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
@@ -96,19 +145,24 @@ class Settlement {
   }
 
   /// Roll for an establishment.
-  SettlementDetailResult rollEstablishment() {
-    final roll = _rollEngine.rollDie(10);
-    final index = roll == 10 ? 9 : roll - 1;
+  /// [isVillage] determines die size: d6 for villages, d10 for cities.
+  SettlementDetailResult rollEstablishment({bool isVillage = false}) {
+    final dieSize = isVillage ? 6 : 10;
+    final roll = _rollEngine.rollDie(dieSize);
+    final index = roll == dieSize ? dieSize - 1 : roll - 1;
     var establishment = establishments[index];
+    final description = establishmentDescriptions[establishment];
 
     // If artisan, roll on artisan table
     String? artisan;
     int? artisanRoll;
+    String? artisanDescription;
     if (establishment == 'Artisan') {
       artisanRoll = _rollEngine.rollDie(10);
       final artisanIndex = artisanRoll == 10 ? 9 : artisanRoll - 1;
       artisan = artisans[artisanIndex];
-      establishment = '$artisan Shop';
+      artisanDescription = artisanDescriptions[artisan];
+      establishment = '$artisan (Artisan)';
     }
 
     return SettlementDetailResult(
@@ -117,6 +171,8 @@ class Settlement {
       result: establishment,
       subRoll: artisanRoll,
       subResult: artisan,
+      detailDescription: artisanDescription ?? description,
+      dieSize: dieSize,
     );
   }
 
@@ -125,11 +181,13 @@ class Settlement {
     final roll = _rollEngine.rollDie(10);
     final index = roll == 10 ? 9 : roll - 1;
     final artisan = artisans[index];
+    final description = artisanDescriptions[artisan];
 
     return SettlementDetailResult(
       detailType: 'Artisan',
       roll: roll,
       result: artisan,
+      detailDescription: description,
     );
   }
 
@@ -138,11 +196,56 @@ class Settlement {
     final roll = _rollEngine.rollDie(10);
     final index = roll == 10 ? 9 : roll - 1;
     final newsItem = news[index];
+    final description = newsDescriptions[newsItem];
 
     return SettlementDetailResult(
       detailType: 'News',
       roll: roll,
       result: newsItem,
+      detailDescription: description,
+    );
+  }
+  
+  /// Generate establishment count for a settlement.
+  /// Villages: 1d6@disadvantage (smaller, fewer)
+  /// Cities: 1d6@advantage (larger, more)
+  EstablishmentCountResult rollEstablishmentCount({required SettlementType type}) {
+    final dice = [_rollEngine.rollDie(6), _rollEngine.rollDie(6)];
+    final int count;
+    final String skewUsed;
+    
+    if (type == SettlementType.village) {
+      // Disadvantage: take lower
+      count = dice[0] < dice[1] ? dice[0] : dice[1];
+      skewUsed = '@- (disadvantage)';
+    } else {
+      // Advantage: take higher
+      count = dice[0] > dice[1] ? dice[0] : dice[1];
+      skewUsed = '@+ (advantage)';
+    }
+    
+    return EstablishmentCountResult(
+      count: count,
+      dice: dice,
+      settlementType: type,
+      skewUsed: skewUsed,
+    );
+  }
+  
+  /// Generate multiple establishments for a settlement.
+  /// [type] determines die size and count roll skew.
+  MultiEstablishmentResult generateEstablishments({required SettlementType type}) {
+    final countResult = rollEstablishmentCount(type: type);
+    final isVillage = type == SettlementType.village;
+    
+    final establishments = <SettlementDetailResult>[];
+    for (var i = 0; i < countResult.count; i++) {
+      establishments.add(rollEstablishment(isVillage: isVillage));
+    }
+    
+    return MultiEstablishmentResult(
+      countResult: countResult,
+      establishments: establishments,
     );
   }
 
@@ -155,6 +258,34 @@ class Settlement {
     return FullSettlementResult(
       name: name,
       establishment: establishment,
+      news: newsItem,
+    );
+  }
+  
+  /// Generate a complete village with name, multiple establishments, and news.
+  CompleteSettlementResult generateVillage() {
+    final name = generateName();
+    final establishments = generateEstablishments(type: SettlementType.village);
+    final newsItem = rollNews();
+    
+    return CompleteSettlementResult(
+      settlementType: SettlementType.village,
+      name: name,
+      establishments: establishments,
+      news: newsItem,
+    );
+  }
+  
+  /// Generate a complete city with name, multiple establishments, and news.
+  CompleteSettlementResult generateCity() {
+    final name = generateName();
+    final establishments = generateEstablishments(type: SettlementType.city);
+    final newsItem = rollNews();
+    
+    return CompleteSettlementResult(
+      settlementType: SettlementType.city,
+      name: name,
+      establishments: establishments,
       news: newsItem,
     );
   }
@@ -197,6 +328,8 @@ class SettlementDetailResult extends RollResult {
   final String result;
   final int? subRoll;
   final String? subResult;
+  final String? detailDescription;
+  final int? dieSize;
 
   SettlementDetailResult({
     required this.detailType,
@@ -204,6 +337,8 @@ class SettlementDetailResult extends RollResult {
     required this.result,
     this.subRoll,
     this.subResult,
+    this.detailDescription,
+    this.dieSize,
   }) : super(
           type: RollType.settlement,
           description: 'Settlement $detailType',
@@ -214,11 +349,69 @@ class SettlementDetailResult extends RollResult {
             'detailType': detailType,
             'result': result,
             if (subResult != null) 'subResult': subResult,
+            if (detailDescription != null) 'detailDescription': detailDescription,
+            if (dieSize != null) 'dieSize': dieSize,
           },
         );
 
   @override
   String toString() => '$detailType: $result';
+}
+
+/// Result of rolling establishment count.
+class EstablishmentCountResult extends RollResult {
+  final int count;
+  final List<int> dice;
+  final SettlementType settlementType;
+  final String skewUsed;
+
+  EstablishmentCountResult({
+    required this.count,
+    required this.dice,
+    required this.settlementType,
+    required this.skewUsed,
+  }) : super(
+          type: RollType.settlement,
+          description: 'Establishment Count',
+          diceResults: dice,
+          total: count,
+          interpretation: '$count establishments',
+          metadata: {
+            'count': count,
+            'settlementType': settlementType.name,
+            'skewUsed': skewUsed,
+          },
+        );
+
+  @override
+  String toString() => 'Establishments: $count ($skewUsed)';
+}
+
+/// Result of generating multiple establishments.
+class MultiEstablishmentResult extends RollResult {
+  final EstablishmentCountResult countResult;
+  final List<SettlementDetailResult> establishments;
+
+  MultiEstablishmentResult({
+    required this.countResult,
+    required this.establishments,
+  }) : super(
+          type: RollType.settlement,
+          description: 'Settlement Establishments',
+          diceResults: [
+            ...countResult.diceResults,
+            ...establishments.expand((e) => e.diceResults),
+          ],
+          total: establishments.length,
+          interpretation: establishments.map((e) => e.result).join(', '),
+          metadata: {
+            'count': countResult.count,
+            'establishments': establishments.map((e) => e.result).toList(),
+          },
+        );
+
+  @override
+  String toString() => 'Establishments (${countResult.count}): ${establishments.map((e) => e.result).join(', ')}';
 }
 
 /// Result of generating a full settlement.
@@ -252,4 +445,59 @@ class FullSettlementResult extends RollResult {
   @override
   String toString() =>
       'Settlement: ${name.name}\n  Has: ${establishment.result}\n  News: ${news.result}';
+}
+
+/// Result of generating a complete settlement (village or city).
+class CompleteSettlementResult extends RollResult {
+  final SettlementType settlementType;
+  final SettlementNameResult name;
+  final MultiEstablishmentResult establishments;
+  final SettlementDetailResult news;
+
+  CompleteSettlementResult({
+    required this.settlementType,
+    required this.name,
+    required this.establishments,
+    required this.news,
+  }) : super(
+          type: RollType.settlement,
+          description: settlementType == SettlementType.village ? 'Village' : 'City',
+          diceResults: [
+            ...name.diceResults,
+            ...establishments.diceResults,
+            ...news.diceResults,
+          ],
+          total: name.total + establishments.total + news.total,
+          interpretation: _formatInterpretation(settlementType, name, establishments, news),
+          metadata: {
+            'settlementType': settlementType.name,
+            'name': name.name,
+            'establishments': establishments.establishments.map((e) => e.result).toList(),
+            'news': news.result,
+          },
+        );
+
+  static String _formatInterpretation(
+    SettlementType type,
+    SettlementNameResult name,
+    MultiEstablishmentResult establishments,
+    SettlementDetailResult news,
+  ) {
+    final typeLabel = type == SettlementType.village ? 'Village' : 'City';
+    final estList = establishments.establishments.map((e) => e.result).join(', ');
+    return '$typeLabel of ${name.name}\nEstablishments: $estList\nNews: ${news.result}';
+  }
+
+  @override
+  String toString() {
+    final typeLabel = settlementType == SettlementType.village ? 'Village' : 'City';
+    final buffer = StringBuffer();
+    buffer.writeln('$typeLabel: ${name.name}');
+    buffer.writeln('Establishments (${establishments.countResult.count}):');
+    for (final est in establishments.establishments) {
+      buffer.writeln('  • ${est.result}');
+    }
+    buffer.writeln('News: ${news.result}');
+    return buffer.toString();
+  }
 }

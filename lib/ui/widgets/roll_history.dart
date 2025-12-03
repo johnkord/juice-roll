@@ -207,6 +207,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildInterruptDisplay(result as InterruptPlotPointResult, theme);
     } else if (result is SettlementNameResult) {
       return _buildSettlementNameDisplay(result as SettlementNameResult, theme);
+    } else if (result is CompleteSettlementResult) {
+      return _buildCompleteSettlementDisplay(result as CompleteSettlementResult, theme);
     } else if (result is FullSettlementResult) {
       return _buildFullSettlementDisplay(result as FullSettlementResult, theme);
     } else if (result is ObjectTreasureResult) {
@@ -254,16 +256,11 @@ class _RollHistoryCard extends StatelessWidget {
           ),
         ),
         if (result.interpretation != null) ...[
-          const Spacer(),
-          Flexible(
-            child: Chip(
-              label: Text(
-                result.interpretation!,
-                style: const TextStyle(fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              result.interpretation!,
+              style: const TextStyle(fontSize: 12),
             ),
           ),
         ],
@@ -646,6 +643,68 @@ class _RollHistoryCard extends StatelessWidget {
           'Has: ${result.establishment.result}',
           style: theme.textTheme.bodySmall,
         ),
+        Text(
+          'News: ${result.news.result}',
+          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompleteSettlementDisplay(CompleteSettlementResult result, ThemeData theme) {
+    final typeLabel = result.settlementType == SettlementType.village ? 'Village' : 'City';
+    final typeColor = result.settlementType == SettlementType.village 
+        ? Colors.brown 
+        : Colors.blueGrey;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: typeColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: typeColor),
+              ),
+              child: Text(
+                typeLabel,
+                style: TextStyle(
+                  color: typeColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                result.name.name,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Establishments (${result.establishments.countResult.count}):',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        ...result.establishments.establishments.map((est) => Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            '• ${est.result}',
+            style: theme.textTheme.bodySmall,
+          ),
+        )),
+        const SizedBox(height: 4),
         Text(
           'News: ${result.news.result}',
           style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),

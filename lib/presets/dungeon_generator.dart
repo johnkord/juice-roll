@@ -2,60 +2,76 @@ import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
 
 /// Dungeon Generator preset for the Juice Oracle.
-/// Uses a two-phase stateful generation system from dungeon-generator.md.
+/// Uses a two-phase stateful generation system.
+/// 
+/// Heading: NA: 1d10@- Until Doubles, Then NA: 1d10@+
 /// 
 /// Phase 1 (Entering): Roll 1d10 with disadvantage (@-)
 /// - Continue rolling until you get doubles
 /// - Doubles indicate transition to Phase 2
 /// 
 /// Phase 2 (Exploring): Roll 1d10 with advantage (@+)
-/// - Continue until conditions change
+/// - Continue with advantage after doubles are rolled
+/// 
+/// Skew Effects:
+/// - Disadvantage: Sprawling, Branching Dungeons
+/// - Advantage: Interconnected Dungeons with many Exits
+
+/// Advantage type for dungeon rolls
+enum AdvantageType { none, advantage, disadvantage }
+
 class DungeonGenerator {
   final RollEngine _rollEngine;
 
   /// Next Area results - d10
+  /// Disadvantage = Sprawling, Branching Dungeons
+  /// Advantage = Interconnected Dungeons with many Exits
   static const List<String> areaTypes = [
-    'Passage',        // 1
-    'Chamber',        // 2
-    'Chamber',        // 3
-    'Locked',         // 4
-    'Locked',         // 5
-    'Vertical',       // 6
-    'Vertical',       // 7
-    'Exit',           // 8
-    'Exit',           // 9
-    'Boss/Treasure',  // 10
+    'Passage',                       // 1
+    'Small Chamber: 3 Doors',        // 2
+    'Large Chamber: 3 Doors',        // 3
+    'Small Chamber: 2 Doors',        // 4
+    'Small Chamber: 1 Door',         // 5 (dead end!)
+    'Locked Door',                   // 6
+    'Known / Expected',              // 7
+    'Exit / Stairs',                 // 8
+    'Connection to Previous Area',   // 9
+    'Passage',                       // 0/10
   ];
 
   /// Passage details - d10
+  /// Die Size: d6 = Linear Dungeons, d10 = Branching Dungeons
+  /// Skew: Disadvantage = Smaller Dungeons, Advantage = Larger Dungeons
   static const List<String> passageTypes = [
-    'Dead End',           // 1
-    'Narrow Crawlspace',  // 2
-    'Stairs',             // 3
-    'Slope',              // 4
-    'T-Intersection',     // 5
-    'Crossroads',         // 6
-    'Bridge',             // 7
-    'Flooded',            // 8
-    'Collapsed',          // 9
-    'Hidden Door',        // 10
+    'Dead End',            // 1
+    'Narrow Crawlspace',   // 2
+    'Bridge',              // 3
+    'Long',                // 4
+    'Wide',                // 5
+    'Expected',            // 6
+    'Right Angle Turn',    // 7
+    'Side Passage',        // 8
+    '3-Way Intersection',  // 9
+    '4-Way Intersection',  // 0/10
   ];
 
   /// Room condition - d10
+  /// Die Size: d6 = Unoccupied, d10 = Occupied
+  /// Skew: Disadvantage = Worse Conditions, Advantage = Better Conditions
   static const List<String> roomConditions = [
-    'Collapsed',   // 1
-    'Flooded',     // 2
-    'Burned',      // 3
-    'Overgrown',   // 4
-    'Ransacked',   // 5
-    'Normal',      // 6
-    'Pristine',    // 7
-    'Converted',   // 8
-    'Decorated',   // 9
-    'Trapped',     // 10
+    'Partially Collapsed',    // 1
+    'Holes in Floor',         // 2
+    'Flooded',                // 3
+    'Ashes / Burned',         // 4
+    'Damaged',                // 5
+    'Expected',               // 6
+    'Stripped Bare',          // 7
+    'Used as Campsite',       // 8
+    'Converted to Other Use', // 9
+    'Pristine',               // 0/10
   ];
 
-  /// Dungeon name descriptors - d10
+  /// Dungeon name descriptors - d10 (first word)
   static const List<String> dungeonDescriptors = [
     'Bloodstained',  // 1
     'Chaotic',       // 2
@@ -66,10 +82,10 @@ class DungeonGenerator {
     'Lost',          // 7
     'Ruined',        // 8
     'Sacred',        // 9
-    'Silent',        // 10
+    'Silent',        // 0/10
   ];
 
-  /// Dungeon name subjects - d10
+  /// Dungeon name subjects - d10 (second word)
   static const List<String> dungeonSubjects = [
     'Blades',    // 1
     'Blight',    // 2
@@ -80,27 +96,30 @@ class DungeonGenerator {
     'Flame',     // 7
     'Shadows',   // 8
     'Souls',     // 9
-    'Whispers',  // 10
+    'Whispers',  // 0/10
   ];
 
   // ============ DUNGEON ENCOUNTER TABLES ============
 
   /// Dungeon encounter types - d10
-  /// Italicized entries (*) are the primary encounter types
+  /// Die Size: d6 = Lingering (10+ min in unsafe area), d10 = First entry
+  /// Skew: Advantage = Better Encounters, Disadvantage = Worse Encounters
+  /// 
+  /// Heading: 10m 1d6 (NH: d6); Trap: 10m AP@+ A/L, PP L/T
   static const List<String> encounterTypes = [
-    'Monster',         // 1 (primary)
-    'Natural Hazard',  // 2 (primary)
-    'Challenge',       // 3 (primary)
-    'Immersion',       // 4 (primary)
+    'Monster',         // 1
+    'Natural Hazard',  // 2
+    'Challenge',       // 3
+    'Immersion',       // 4
     'Safety',          // 5
-    'Known / None',    // 6
-    'Trap',            // 7 (primary)
-    'Feature',         // 8 (primary)
+    'Known',           // 6
+    'Trap',            // 7
+    'Feature',         // 8
     'Key',             // 9
-    'Treasure',        // 0/10 (primary)
+    'Treasure',        // 0/10
   ];
 
-  /// Monster descriptors - Column 1 of Monster table
+  /// Monster descriptors - Column 1 of Monster table (d10)
   static const List<String> monsterDescriptors = [
     'Agile',        // 1
     'Beast',        // 2
@@ -114,7 +133,7 @@ class DungeonGenerator {
     'Nightmarish',  // 0/10
   ];
 
-  /// Monster special abilities - Column 2 of Monster table
+  /// Monster special abilities - Column 2 of Monster table (d10)
   static const List<String> monsterAbilities = [
     'Climb',     // 1
     'Detect',    // 2
@@ -128,8 +147,8 @@ class DungeonGenerator {
     'Ranged',    // 0/10
   ];
 
-  /// Trap methods - Column 1 of Trap table
-  static const List<String> trapMethods = [
+  /// Trap actions - Column 1 of Trap table (d10)
+  static const List<String> trapActions = [
     'Ambush',    // 1
     'Collapse',  // 2
     'Divert',    // 3
@@ -142,8 +161,8 @@ class DungeonGenerator {
     'Trigger',   // 0/10
   ];
 
-  /// Trap effects - Column 2 of Trap table
-  static const List<String> trapEffects = [
+  /// Trap subjects - Column 2 of Trap table (d10)
+  static const List<String> trapSubjects = [
     'Alarm',      // 1
     'Barrier',    // 2
     'Decay',      // 3
@@ -170,9 +189,18 @@ class DungeonGenerator {
     'Workshop',   // 0/10
   ];
 
-  /// Trap timing info: 10m intervals, 1d6 (NH: d6)
-  /// AP@+ for Alarm/Lure, PP for Lock/Trap
-  static const String trapTimingInfo = '10m: 1d6 (NH: d6); Trap: 10m AP@+ A/L, PP L/T';
+  /// Trap procedure info from heading:
+  /// "10m AP@+ A/L, PP L/T"
+  /// - Spend 10 minutes for Active Perception check with advantage
+  /// - Pass: Avoid, Fail: Locate
+  /// - Passive Perception: Pass: Locate, Fail: Trigger
+  static const String trapProcedure = '''
+Trap Procedure:
+• Active Perception (10 min, @+): Pass = Avoid, Fail = Locate
+• Passive Perception: Pass = Locate, Fail = Trigger
+  - Avoid: Find and completely bypass the trap
+  - Locate: Find the trap, must disarm or bypass
+  - Trigger: Suffer the consequences''';
 
   DungeonGenerator([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
@@ -224,33 +252,78 @@ class DungeonGenerator {
   }
 
   /// Generate passage details.
-  DungeonDetailResult generatePassage() {
-    final roll = _rollEngine.rollDie(10);
+  /// [useD6] for linear dungeons, d10 for branching dungeons.
+  /// [skew] determines dungeon size: disadvantage = smaller, advantage = larger.
+  DungeonDetailResult generatePassage({bool useD6 = false, AdvantageType skew = AdvantageType.none}) {
+    final int roll;
+    final List<int> diceResults;
+    
+    if (skew != AdvantageType.none) {
+      final result = skew == AdvantageType.advantage
+          ? _rollEngine.rollWithAdvantage(1, useD6 ? 6 : 10)
+          : _rollEngine.rollWithDisadvantage(1, useD6 ? 6 : 10);
+      roll = result.chosenSum;
+      diceResults = [result.sum1, result.sum2];
+    } else {
+      roll = _rollEngine.rollDie(useD6 ? 6 : 10);
+      diceResults = [roll];
+    }
+    
     final passage = passageTypes[roll - 1];
+    final dieLabel = useD6 ? 'd6' : 'd10';
+    final skewLabel = skew == AdvantageType.advantage ? '@+' : skew == AdvantageType.disadvantage ? '@-' : '';
 
     return DungeonDetailResult(
       detailType: 'Passage',
       roll: roll,
       result: passage,
+      description: 'Passage ($dieLabel$skewLabel)',
+      diceResultsList: diceResults,
     );
   }
 
   /// Generate room condition.
-  DungeonDetailResult generateCondition() {
-    final roll = _rollEngine.rollDie(10);
+  /// [useD6] for unoccupied areas, d10 for occupied areas.
+  /// [skew] determines condition quality: disadvantage = worse, advantage = better.
+  DungeonDetailResult generateCondition({bool useD6 = false, AdvantageType skew = AdvantageType.none}) {
+    final int roll;
+    final List<int> diceResults;
+    
+    if (skew != AdvantageType.none) {
+      final result = skew == AdvantageType.advantage
+          ? _rollEngine.rollWithAdvantage(1, useD6 ? 6 : 10)
+          : _rollEngine.rollWithDisadvantage(1, useD6 ? 6 : 10);
+      roll = result.chosenSum;
+      diceResults = [result.sum1, result.sum2];
+    } else {
+      roll = _rollEngine.rollDie(useD6 ? 6 : 10);
+      diceResults = [roll];
+    }
+    
     final condition = roomConditions[roll - 1];
+    final dieLabel = useD6 ? 'd6' : 'd10';
+    final skewLabel = skew == AdvantageType.advantage ? '@+' : skew == AdvantageType.disadvantage ? '@-' : '';
 
     return DungeonDetailResult(
       detailType: 'Condition',
       roll: roll,
       result: condition,
+      description: 'Condition ($dieLabel$skewLabel)',
+      diceResultsList: diceResults,
     );
   }
 
   /// Generate a complete area (area type + condition).
-  FullDungeonAreaResult generateFullArea({bool isEntering = true}) {
+  /// [isEntering] determines phase: true = entering (1d10@-), false = exploring (1d10@+)
+  /// [isOccupied] determines condition die: true = d10, false = d6
+  /// [conditionSkew] determines condition quality: advantage = better, disadvantage = worse
+  FullDungeonAreaResult generateFullArea({
+    bool isEntering = true,
+    bool isOccupied = true,
+    AdvantageType conditionSkew = AdvantageType.none,
+  }) {
     final area = generateNextArea(isEntering: isEntering);
-    final condition = generateCondition();
+    final condition = generateCondition(useD6: !isOccupied, skew: conditionSkew);
 
     return FullDungeonAreaResult(
       area: area,
@@ -260,15 +333,35 @@ class DungeonGenerator {
 
   // ============ DUNGEON ENCOUNTER METHODS ============
 
-  /// Roll for dungeon encounter type (1d10)
-  DungeonDetailResult rollEncounterType() {
-    final roll = _rollEngine.rollDie(10);
+  /// Roll for dungeon encounter type.
+  /// [isLingering] if true, uses d6 (lingering in unsafe area 10+ min).
+  /// [skew] determines encounter quality: advantage = better, disadvantage = worse.
+  DungeonDetailResult rollEncounterType({bool isLingering = false, AdvantageType skew = AdvantageType.none}) {
+    final int roll;
+    final List<int> diceResults;
+    final dieSize = isLingering ? 6 : 10;
+    
+    if (skew != AdvantageType.none) {
+      final result = skew == AdvantageType.advantage
+          ? _rollEngine.rollWithAdvantage(1, dieSize)
+          : _rollEngine.rollWithDisadvantage(1, dieSize);
+      roll = result.chosenSum;
+      diceResults = [result.sum1, result.sum2];
+    } else {
+      roll = _rollEngine.rollDie(dieSize);
+      diceResults = [roll];
+    }
+    
     final encounterType = encounterTypes[roll - 1];
+    final dieLabel = isLingering ? 'd6' : 'd10';
+    final skewLabel = skew == AdvantageType.advantage ? '@+' : skew == AdvantageType.disadvantage ? '@-' : '';
 
     return DungeonDetailResult(
       detailType: 'Encounter',
       roll: roll,
       result: encounterType,
+      description: 'Encounter ($dieLabel$skewLabel)',
+      diceResultsList: diceResults,
     );
   }
 
@@ -288,19 +381,19 @@ class DungeonGenerator {
     );
   }
 
-  /// Generate a trap (2d10 for method + effect)
+  /// Generate a trap (2d10 for action + subject)
   DungeonTrapResult rollTrap() {
-    final methodRoll = _rollEngine.rollDie(10);
-    final effectRoll = _rollEngine.rollDie(10);
+    final actionRoll = _rollEngine.rollDie(10);
+    final subjectRoll = _rollEngine.rollDie(10);
 
-    final method = trapMethods[methodRoll - 1];
-    final effect = trapEffects[effectRoll - 1];
+    final action = trapActions[actionRoll - 1];
+    final subject = trapSubjects[subjectRoll - 1];
 
     return DungeonTrapResult(
-      methodRoll: methodRoll,
-      method: method,
-      effectRoll: effectRoll,
-      effect: effect,
+      actionRoll: actionRoll,
+      action: action,
+      subjectRoll: subjectRoll,
+      subject: subject,
     );
   }
 
@@ -316,9 +409,11 @@ class DungeonGenerator {
     );
   }
 
-  /// Generate a full dungeon encounter based on encounter type
-  DungeonEncounterResult rollFullEncounter() {
-    final encounterRoll = rollEncounterType();
+  /// Generate a full dungeon encounter based on encounter type.
+  /// [isLingering] if true, uses d6 (lingering in unsafe area 10+ min).
+  /// [skew] determines encounter quality: advantage = better, disadvantage = worse.
+  DungeonEncounterResult rollFullEncounter({bool isLingering = false, AdvantageType skew = AdvantageType.none}) {
+    final encounterRoll = rollEncounterType(isLingering: isLingering, skew: skew);
     final encounterType = encounterRoll.result;
 
     DungeonMonsterResult? monster;
@@ -454,10 +549,12 @@ class DungeonDetailResult extends RollResult {
     required this.detailType,
     required this.roll,
     required this.result,
+    String? description,
+    List<int>? diceResultsList,
   }) : super(
           type: RollType.dungeon,
-          description: 'Dungeon $detailType',
-          diceResults: [roll],
+          description: description ?? 'Dungeon $detailType',
+          diceResults: diceResultsList ?? [roll],
           total: roll,
           interpretation: result,
           metadata: {
@@ -527,29 +624,29 @@ class DungeonMonsterResult extends RollResult {
 
 /// Result of dungeon trap generation (2d10)
 class DungeonTrapResult extends RollResult {
-  final int methodRoll;
-  final String method;
-  final int effectRoll;
-  final String effect;
+  final int actionRoll;
+  final String action;
+  final int subjectRoll;
+  final String subject;
 
   DungeonTrapResult({
-    required this.methodRoll,
-    required this.method,
-    required this.effectRoll,
-    required this.effect,
+    required this.actionRoll,
+    required this.action,
+    required this.subjectRoll,
+    required this.subject,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Trap',
-          diceResults: [methodRoll, effectRoll],
-          total: methodRoll + effectRoll,
-          interpretation: '$method trap with $effect',
+          diceResults: [actionRoll, subjectRoll],
+          total: actionRoll + subjectRoll,
+          interpretation: '$action trap with $subject',
           metadata: {
-            'method': method,
-            'effect': effect,
+            'action': action,
+            'subject': subject,
           },
         );
 
-  String get trapDescription => '$method trap with $effect';
+  String get trapDescription => '$action trap with $subject';
 
   @override
   String toString() => 'Trap: $trapDescription';

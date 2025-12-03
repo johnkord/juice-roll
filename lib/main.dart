@@ -40,13 +40,19 @@ class PhoneFrame extends StatelessWidget {
           maxWidth: 430, // iPhone 14 Pro Max width
           maxHeight: 932, // iPhone 14 Pro Max height
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade800, width: 2),
-            borderRadius: BorderRadius.circular(20),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade800, width: 2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Navigator(
+              onGenerateRoute: (settings) => MaterialPageRoute(
+                builder: (context) => child,
+              ),
+            ),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: child,
         ),
       ),
     );
