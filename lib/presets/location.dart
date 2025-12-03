@@ -37,7 +37,7 @@ class LocationResult extends RollResult {
   }) : direction = _getDirection(row, column),
        distance = _getDistance(row, column),
        super(
-          type: RollType.tableLookup,
+          type: RollType.location,
           description: 'Location Grid',
           diceResults: diceResults,
           total: roll,

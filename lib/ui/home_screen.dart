@@ -70,6 +70,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final Details _details = Details();
   final Immersion _immersion = Immersion();
 
+  // Dungeon exploration phase state (persists across dialog opens)
+  bool _isDungeonEntering = true;
+
+  void _setDungeonPhase(bool isEntering) {
+    setState(() => _isDungeonEntering = isEntering);
+  }
+
   void _addToHistory(RollResult result) {
     setState(() {
       _history.insert(0, result);
@@ -247,6 +254,8 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => _DungeonDialog(
         dungeonGenerator: _dungeonGenerator,
         onRoll: _addToHistory,
+        isEntering: _isDungeonEntering,
+        onPhaseChange: _setDungeonPhase,
       ),
     );
   }
@@ -1150,18 +1159,36 @@ class _NameGeneratorDialog extends StatelessWidget {
 class _DungeonDialog extends StatefulWidget {
   final DungeonGenerator dungeonGenerator;
   final void Function(RollResult) onRoll;
+  final bool isEntering;
+  final void Function(bool) onPhaseChange;
 
-  const _DungeonDialog({required this.dungeonGenerator, required this.onRoll});
+  const _DungeonDialog({
+    required this.dungeonGenerator,
+    required this.onRoll,
+    required this.isEntering,
+    required this.onPhaseChange,
+  });
 
   @override
   State<_DungeonDialog> createState() => _DungeonDialogState();
 }
 
 class _DungeonDialogState extends State<_DungeonDialog> {
-  bool _isEntering = true;
+  late bool _isEntering;
   // Shared settings for Passage/Condition/Encounter tables
   bool _useD6 = false;  // false = d10, true = d6
   AdvantageType _skew = AdvantageType.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _isEntering = widget.isEntering;
+  }
+
+  void _setPhase(bool isEntering) {
+    setState(() => _isEntering = isEntering);
+    widget.onPhaseChange(isEntering);
+  }
 
   String _getDieLabel() => _useD6 ? 'd6' : 'd10';
   String _getSkewLabel() {
@@ -1217,13 +1244,13 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   ChoiceChip(
                     label: const Text('Entering'),
                     selected: _isEntering,
-                    onSelected: (selected) => setState(() => _isEntering = true),
+                    onSelected: (selected) => _setPhase(true),
                   ),
                   const SizedBox(width: 8),
                   ChoiceChip(
                     label: const Text('Exploring'),
                     selected: !_isEntering,
-                    onSelected: (selected) => setState(() => _isEntering = false),
+                    onSelected: (selected) => _setPhase(false),
                   ),
                 ],
               ),
@@ -1245,9 +1272,9 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                 onTap: () {
                   final result = widget.dungeonGenerator.generateNextArea(isEntering: _isEntering);
                   widget.onRoll(result);
-                  // Auto-switch phase if doubles
+                  // Auto-switch phase if doubles while entering
                   if (result.isDoubles && _isEntering) {
-                    setState(() => _isEntering = false);
+                    _setPhase(false);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('DOUBLES! Switched to Exploring phase (@+)')),
                     );
@@ -1265,8 +1292,12 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                     conditionSkew: _skew,
                   );
                   widget.onRoll(result);
+                  // Auto-switch phase if doubles while entering
                   if (result.area.isDoubles && _isEntering) {
-                    setState(() => _isEntering = false);
+                    _setPhase(false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('DOUBLES! Switched to Exploring phase (@+)')),
+                    );
                   }
                   Navigator.pop(context);
                 },

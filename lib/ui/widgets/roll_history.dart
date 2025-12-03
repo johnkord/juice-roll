@@ -15,6 +15,7 @@ import '../../presets/details.dart';
 import '../../presets/immersion.dart';
 import '../../presets/dialog_generator.dart';
 import '../../presets/wilderness.dart';
+import '../../presets/location.dart';
 
 /// Scrollable roll history widget.
 class RollHistory extends StatelessWidget {
@@ -165,6 +166,10 @@ class _RollHistoryCard extends StatelessWidget {
         icon = Icons.visibility;
         color = Colors.deepOrange;
         break;
+      case RollType.location:
+        icon = Icons.grid_on;
+        color = Colors.brown;
+        break;
       case RollType.fate:
         icon = Icons.auto_awesome;
         color = Colors.indigo;
@@ -237,6 +242,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildWildernessEncounterDisplay(result as WildernessEncounterResult, theme);
     } else if (result is WildernessWeatherResult) {
       return _buildWildernessWeatherDisplay(result as WildernessWeatherResult, theme);
+    } else if (result is LocationResult) {
+      return _buildLocationDisplay(result as LocationResult, theme);
     }
 
     // Default display
@@ -1304,6 +1311,203 @@ class _RollHistoryCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dice roll info
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.brown.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'd100: ${result.roll}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Cell [${result.row},${result.column}]',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Direction and distance result
+        Row(
+          children: [
+            Icon(
+              _getDirectionIcon(result.direction),
+              color: _getDistanceColor(result.distance),
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _getDistanceColor(result.distance).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _getDistanceColor(result.distance).withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                result.compassDescription,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: _getDistanceColor(result.distance),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Visual grid map
+        _buildLocationGrid(result, theme),
+      ],
+    );
+  }
+
+  Widget _buildLocationGrid(LocationResult result, ThemeData theme) {
+    const cellSize = 18.0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // North label
+        const Text(
+          'N',
+          style: TextStyle(fontSize: 8, color: Colors.grey, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 1),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // West label
+            const SizedBox(
+              width: 12,
+              child: Text(
+                'W',
+                style: TextStyle(fontSize: 8, color: Colors.grey, fontWeight: FontWeight.w500),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // Grid
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade400, width: 1),
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: Column(
+                children: List.generate(5, (row) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(5, (col) {
+                      final isSelected = (row + 1) == result.row && (col + 1) == result.column;
+                      final ring = Location.distanceRings[row][col];
+                      
+                      Color bgColor;
+                      if (isSelected) {
+                        bgColor = Colors.amber.withValues(alpha: 0.9);
+                      } else {
+                        // Ring-based coloring (bullseye pattern)
+                        switch (ring) {
+                          case 0: // Center
+                            bgColor = Colors.green.withValues(alpha: 0.3);
+                            break;
+                          case 1: // Close
+                            bgColor = Colors.blue.withValues(alpha: 0.15);
+                            break;
+                          default: // Far
+                            bgColor = Colors.grey.withValues(alpha: 0.08);
+                        }
+                      }
+                      
+                      return Container(
+                        width: cellSize,
+                        height: cellSize,
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          border: Border(
+                            right: col < 4 ? BorderSide(color: Colors.grey.shade300, width: 0.5) : BorderSide.none,
+                            bottom: row < 4 ? BorderSide(color: Colors.grey.shade300, width: 0.5) : BorderSide.none,
+                          ),
+                        ),
+                      );
+                    }),
+                  );
+                }),
+              ),
+            ),
+            // East label
+            const SizedBox(
+              width: 12,
+              child: Text(
+                'E',
+                style: TextStyle(fontSize: 8, color: Colors.grey, fontWeight: FontWeight.w500),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 1),
+        // South label
+        const Text(
+          'S',
+          style: TextStyle(fontSize: 8, color: Colors.grey, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  IconData _getDirectionIcon(CompassDirection direction) {
+    switch (direction) {
+      case CompassDirection.north:
+        return Icons.north;
+      case CompassDirection.northEast:
+        return Icons.north_east;
+      case CompassDirection.east:
+        return Icons.east;
+      case CompassDirection.southEast:
+        return Icons.south_east;
+      case CompassDirection.south:
+        return Icons.south;
+      case CompassDirection.southWest:
+        return Icons.south_west;
+      case CompassDirection.west:
+        return Icons.west;
+      case CompassDirection.northWest:
+        return Icons.north_west;
+      case CompassDirection.center:
+        return Icons.my_location;
+    }
+  }
+
+  Color _getDistanceColor(LocationDistance distance) {
+    switch (distance) {
+      case LocationDistance.center:
+        return Colors.green;
+      case LocationDistance.close:
+        return Colors.blue;
+      case LocationDistance.far:
+        return Colors.brown;
+    }
   }
 
   String _formatTime(DateTime time) {

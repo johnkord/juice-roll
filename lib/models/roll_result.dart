@@ -28,6 +28,7 @@ enum RollType {
   weather,
   encounter,
   dungeon,
+  location,
   
   // Generation
   settlement,
