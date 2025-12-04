@@ -1,5 +1,7 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
+import 'details.dart';
+import 'name_generator.dart';
 
 /// NPC Disposition determines the die size for Action/Combat tables.
 /// Passive NPCs roll d6, Active NPCs roll d10.
@@ -311,6 +313,110 @@ class NpcAction {
       needAllRolls: needAllRolls,
     );
   }
+
+  /// Generate a dual personality (primary + secondary traits).
+  /// Per instructions: "You can optionally give them a secondary personality trait."
+  /// Example: "Confident, yet Reserved"
+  DualPersonalityResult rollDualPersonality() {
+    final roll1 = _rollEngine.rollDie(10);
+    final roll2 = _rollEngine.rollDie(10);
+    
+    final primary = personalities[_getIndex(roll1)];
+    final secondary = personalities[_getIndex(roll2)];
+    
+    return DualPersonalityResult(
+      primaryRoll: roll1,
+      primary: primary,
+      secondaryRoll: roll2,
+      secondary: secondary,
+    );
+  }
+
+  /// Generate a complex NPC profile.
+  /// Per instructions (page 128-129): For complex NPCs like sidekicks:
+  /// - Name (via NameGenerator)
+  /// - 2 Personality traits (primary, optionally secondary)
+  /// - Need (with advantage for people, disadvantage for monsters)
+  /// - Motive
+  /// - Color (1d10)
+  /// - Two Properties (1d10+1d6 each)
+  /// 
+  /// Example from instructions:
+  /// "Demor is someone with high self esteem who always sees the best in people,
+  /// and yearns for people to someday see the best in them as well. They are
+  /// trying to earn money. Demor has average looks and is pretty thin."
+  ComplexNpcResult generateComplexNpc({
+    NeedSkew needSkew = NeedSkew.complex, // Default to @+ for people NPCs
+    bool includeName = true,
+    bool dualPersonality = true,
+  }) {
+    final details = Details(_rollEngine);
+    
+    // Name (optional)
+    NameResult? nameResult;
+    if (includeName) {
+      final nameGen = NameGenerator(_rollEngine);
+      nameResult = nameGen.generatePatternNeutral();
+    }
+    
+    // Personality (1 or 2 traits)
+    final persRoll1 = _rollEngine.rollDie(10);
+    final primary = personalities[_getIndex(persRoll1)];
+    int? persRoll2;
+    String? secondary;
+    if (dualPersonality) {
+      persRoll2 = _rollEngine.rollDie(10);
+      secondary = personalities[_getIndex(persRoll2)];
+    }
+    
+    // Need with skew
+    int needRoll;
+    List<int> needAllRolls = [];
+    switch (needSkew) {
+      case NeedSkew.primitive:
+        final result = _rollEngine.rollWithDisadvantage(1, 10);
+        needRoll = result.chosenSum;
+        needAllRolls = [result.sum1, result.sum2];
+        break;
+      case NeedSkew.complex:
+        final result = _rollEngine.rollWithAdvantage(1, 10);
+        needRoll = result.chosenSum;
+        needAllRolls = [result.sum1, result.sum2];
+        break;
+      case NeedSkew.none:
+        needRoll = _rollEngine.rollDie(10);
+        needAllRolls = [needRoll];
+    }
+    final need = needs[_getIndex(needRoll)];
+    
+    // Motive
+    final motiveRoll = _rollEngine.rollDie(10);
+    final motive = motives[_getIndex(motiveRoll)];
+    
+    // Color (1d10)
+    final colorResult = details.rollColor();
+    
+    // Two Properties (1d10+1d6 each)
+    final property1 = details.rollProperty();
+    final property2 = details.rollProperty();
+    
+    return ComplexNpcResult(
+      name: nameResult,
+      primaryPersonalityRoll: persRoll1,
+      primaryPersonality: primary,
+      secondaryPersonalityRoll: persRoll2,
+      secondaryPersonality: secondary,
+      needRoll: needRoll,
+      need: need,
+      needSkew: needSkew,
+      needAllRolls: needAllRolls,
+      motiveRoll: motiveRoll,
+      motive: motive,
+      color: colorResult,
+      property1: property1,
+      property2: property2,
+    );
+  }
 }
 
 /// Which column of the NPC table was rolled.
@@ -472,4 +578,164 @@ class NpcProfileResult extends RollResult {
   @override
   String toString() =>
       'NPC Profile: $personality (needs $need, motivated by $motive)';
+}
+
+/// Result of rolling dual personality traits.
+/// Per instructions: "You can optionally give them a secondary personality trait."
+/// Example: "Confident, yet Reserved"
+class DualPersonalityResult extends RollResult {
+  final int primaryRoll;
+  final String primary;
+  final int secondaryRoll;
+  final String secondary;
+
+  DualPersonalityResult({
+    required this.primaryRoll,
+    required this.primary,
+    required this.secondaryRoll,
+    required this.secondary,
+  }) : super(
+          type: RollType.npcAction,
+          description: 'Dual Personality',
+          diceResults: [primaryRoll, secondaryRoll],
+          total: primaryRoll + secondaryRoll,
+          interpretation: '$primary, yet $secondary',
+          metadata: {
+            'primary': primary,
+            'secondary': secondary,
+          },
+        );
+
+  @override
+  String toString() => 'Personality: $primary, yet $secondary';
+}
+
+/// Result of generating a complex NPC.
+/// Per instructions (page 128-129): Complex NPCs include:
+/// - Name (optional)
+/// - 2 Personality traits (primary + optional secondary)
+/// - Need (with advantage for people, disadvantage for monsters)
+/// - Motive
+/// - Color (1d10)
+/// - Two Properties (1d10+1d6 each)
+class ComplexNpcResult extends RollResult {
+  final NameResult? name;
+  final int primaryPersonalityRoll;
+  final String primaryPersonality;
+  final int? secondaryPersonalityRoll;
+  final String? secondaryPersonality;
+  final int needRoll;
+  final String need;
+  final NeedSkew needSkew;
+  final List<int> needAllRolls;
+  final int motiveRoll;
+  final String motive;
+  final DetailResult color;
+  final PropertyResult property1;
+  final PropertyResult property2;
+
+  ComplexNpcResult({
+    this.name,
+    required this.primaryPersonalityRoll,
+    required this.primaryPersonality,
+    this.secondaryPersonalityRoll,
+    this.secondaryPersonality,
+    required this.needRoll,
+    required this.need,
+    required this.needSkew,
+    required this.needAllRolls,
+    required this.motiveRoll,
+    required this.motive,
+    required this.color,
+    required this.property1,
+    required this.property2,
+  }) : super(
+          type: RollType.npcAction,
+          description: 'Complex NPC',
+          diceResults: _buildDiceResults(
+            name, primaryPersonalityRoll, secondaryPersonalityRoll, 
+            needAllRolls, motiveRoll, color, property1, property2,
+          ),
+          total: primaryPersonalityRoll + needRoll + motiveRoll,
+          interpretation: _buildInterpretation(
+            name, primaryPersonality, secondaryPersonality, need, motive,
+            color, property1, property2,
+          ),
+          metadata: _buildMetadata(
+            name, primaryPersonality, secondaryPersonality, need, motive,
+            needSkew, color, property1, property2,
+          ),
+        );
+
+  static List<int> _buildDiceResults(
+    NameResult? name, int persRoll1, int? persRoll2,
+    List<int> needRolls, int motiveRoll, DetailResult color,
+    PropertyResult prop1, PropertyResult prop2,
+  ) {
+    return [
+      if (name != null) ...name.diceResults,
+      persRoll1,
+      if (persRoll2 != null) persRoll2,
+      ...needRolls,
+      motiveRoll,
+      color.roll,
+      prop1.propertyRoll, prop1.intensityRoll,
+      prop2.propertyRoll, prop2.intensityRoll,
+    ];
+  }
+
+  static String _buildInterpretation(
+    NameResult? name, String primary, String? secondary,
+    String need, String motive, DetailResult color,
+    PropertyResult prop1, PropertyResult prop2,
+  ) {
+    final namePart = name != null ? '${name.name}: ' : '';
+    final personalityPart = secondary != null 
+        ? '$primary, yet $secondary' 
+        : primary;
+    return '$namePart$personalityPart / $need / $motive\n'
+           '${color.emoji ?? ''} ${color.result}\n'
+           '${prop1.intensityDescription} ${prop1.property} + ${prop2.intensityDescription} ${prop2.property}';
+  }
+
+  static Map<String, dynamic> _buildMetadata(
+    NameResult? name, String primary, String? secondary,
+    String need, String motive, NeedSkew needSkew,
+    DetailResult color, PropertyResult prop1, PropertyResult prop2,
+  ) {
+    return {
+      if (name != null) 'name': name.name,
+      'primaryPersonality': primary,
+      if (secondary != null) 'secondaryPersonality': secondary,
+      'need': need,
+      'motive': motive,
+      'needSkew': needSkew.name,
+      'color': color.result,
+      'property1': '${prop1.intensityDescription} ${prop1.property}',
+      'property2': '${prop2.intensityDescription} ${prop2.property}',
+    };
+  }
+
+  /// Get personality display text.
+  String get personalityDisplay => secondaryPersonality != null
+      ? '$primaryPersonality, yet $secondaryPersonality'
+      : primaryPersonality;
+
+  /// Get properties display text.
+  String get propertiesDisplay =>
+      '${property1.intensityDescription} ${property1.property} + ${property2.intensityDescription} ${property2.property}';
+
+  @override
+  String toString() {
+    final buffer = StringBuffer();
+    if (name != null) {
+      buffer.writeln('Name: ${name!.name}');
+    }
+    buffer.writeln('Personality: $personalityDisplay');
+    buffer.writeln('Need: $need (${needSkew.name})');
+    buffer.writeln('Motive: $motive');
+    buffer.writeln('Color: ${color.emoji ?? ''} ${color.result}');
+    buffer.writeln('Properties: $propertiesDisplay');
+    return buffer.toString().trim();
+  }
 }

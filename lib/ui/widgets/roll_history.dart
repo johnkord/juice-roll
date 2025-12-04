@@ -224,6 +224,12 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildInterruptDisplay(result as InterruptPlotPointResult, theme);
     } else if (result is SettlementNameResult) {
       return _buildSettlementNameDisplay(result as SettlementNameResult, theme);
+    } else if (result is EstablishmentNameResult) {
+      return _buildEstablishmentNameDisplay(result as EstablishmentNameResult, theme);
+    } else if (result is SettlementPropertiesResult) {
+      return _buildSettlementPropertiesDisplay(result as SettlementPropertiesResult, theme);
+    } else if (result is SimpleNpcResult) {
+      return _buildSimpleNpcDisplay(result as SimpleNpcResult, theme);
     } else if (result is CompleteSettlementResult) {
       return _buildCompleteSettlementDisplay(result as CompleteSettlementResult, theme);
     } else if (result is FullSettlementResult) {
@@ -716,6 +722,114 @@ class _RollHistoryCard extends StatelessWidget {
       style: theme.textTheme.titleMedium?.copyWith(
         fontWeight: FontWeight.bold,
       ),
+    );
+  }
+
+  Widget _buildEstablishmentNameDisplay(EstablishmentNameResult result, ThemeData theme) {
+    return Row(
+      children: [
+        Text(
+          result.colorEmoji,
+          style: const TextStyle(fontSize: 18),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                result.name,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '${result.color} + ${result.object}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettlementPropertiesDisplay(SettlementPropertiesResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Chip(
+              label: Text('${result.property1.intensityDescription} ${result.property1.property}'),
+              backgroundColor: Colors.teal.withValues(alpha: 0.2),
+              side: const BorderSide(color: Colors.teal),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 8),
+            const Text('+'),
+            const SizedBox(width: 8),
+            Chip(
+              label: Text('${result.property2.intensityDescription} ${result.property2.property}'),
+              backgroundColor: Colors.teal.withValues(alpha: 0.2),
+              side: const BorderSide(color: Colors.teal),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSimpleNpcDisplay(SimpleNpcResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          result.name.name,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          children: [
+            Chip(
+              avatar: const Icon(Icons.psychology, size: 14),
+              label: Text(result.profile.personality),
+              backgroundColor: Colors.purple.withValues(alpha: 0.1),
+              side: BorderSide(color: Colors.purple.withValues(alpha: 0.3)),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              labelStyle: const TextStyle(fontSize: 11),
+            ),
+            Chip(
+              avatar: const Icon(Icons.favorite, size: 14),
+              label: Text(result.profile.need),
+              backgroundColor: Colors.red.withValues(alpha: 0.1),
+              side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              labelStyle: const TextStyle(fontSize: 11),
+            ),
+            Chip(
+              avatar: const Icon(Icons.trending_up, size: 14),
+              label: Text(result.profile.motive),
+              backgroundColor: Colors.blue.withValues(alpha: 0.1),
+              side: BorderSide(color: Colors.blue.withValues(alpha: 0.3)),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              labelStyle: const TextStyle(fontSize: 11),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

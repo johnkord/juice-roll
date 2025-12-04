@@ -1,5 +1,6 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
+import 'wilderness.dart';
 
 /// Dungeon Generator preset for the Juice Oracle.
 /// Uses a two-phase stateful generation system.
@@ -418,6 +419,66 @@ Trap Procedure:
     );
   }
 
+  /// Full Trap Procedure from the Juice instructions.
+  /// 
+  /// Procedure:
+  /// 1. BEFORE rolling encounter: decide if you're searching (10 min) or not
+  /// 2. If searching: Active Perception @+ vs DC
+  ///    - Pass: AVOID (find and completely bypass)
+  ///    - Fail: LOCATE (find but must deal with it)
+  /// 3. If NOT searching: Passive Perception vs DC
+  ///    - Pass: LOCATE (find but must deal with it)
+  ///    - Fail: TRIGGER (suffer consequences)
+  /// 
+  /// Returns the trap details + DC for the perception check.
+  /// [isSearching] determines the procedure path and outcome meanings.
+  /// [dcSkew] allows easy/hard DC adjustment.
+  TrapProcedureResult rollTrapProcedure({
+    bool isSearching = true,
+    AdvantageType dcSkew = AdvantageType.none,
+  }) {
+    // Roll the trap type
+    final trap = rollTrap();
+    
+    // Roll a DC for the perception check
+    final int dcRoll;
+    final List<int> dcRolls;
+    
+    if (dcSkew != AdvantageType.none) {
+      final roll1 = _rollEngine.rollDie(10);
+      final roll2 = _rollEngine.rollDie(10);
+      // Advantage = lower DC (easier), disadvantage = higher DC (harder)
+      // Lower rolls = higher DC in the DC table, so:
+      // - For advantage (easy), take higher roll (lower index = lower DC? No - check logic)
+      // Actually: roll 1 = DC 17, roll 10 = DC 8
+      // So higher roll = lower DC = easier
+      if (dcSkew == AdvantageType.advantage) {
+        dcRoll = roll1 > roll2 ? roll1 : roll2; // Take higher for lower DC
+      } else {
+        dcRoll = roll1 < roll2 ? roll1 : roll2; // Take lower for higher DC
+      }
+      dcRolls = [roll1, roll2];
+    } else {
+      dcRoll = _rollEngine.rollDie(10);
+      dcRolls = [dcRoll];
+    }
+    
+    // Convert roll to DC (same as Challenge DC table)
+    // Roll 1 = DC 17, Roll 10 = DC 8
+    const dcValues = [17, 16, 15, 14, 13, 12, 11, 10, 9, 8];
+    final dcIndex = dcRoll == 10 ? 9 : dcRoll - 1;
+    final dc = dcValues[dcIndex];
+    
+    return TrapProcedureResult(
+      trap: trap,
+      isSearching: isSearching,
+      dcRoll: dcRoll,
+      dcRolls: dcRolls,
+      dc: dc,
+      dcSkew: dcSkew,
+    );
+  }
+
   /// Roll for a dungeon feature (1d10)
   DungeonDetailResult rollFeature() {
     final roll = _rollEngine.rollDie(10);
@@ -427,6 +488,21 @@ Trap Procedure:
       detailType: 'Feature',
       roll: roll,
       result: feature,
+    );
+  }
+
+  /// Roll for a natural hazard (1d10 on first entry, 1d6 when lingering)
+  /// Uses the same Natural Hazard table from Wilderness.
+  DungeonDetailResult rollNaturalHazard({bool isLingering = false}) {
+    final dieSize = isLingering ? 6 : 10;
+    final roll = _rollEngine.rollDie(dieSize);
+    final hazard = Wilderness.naturalHazards[roll - 1];
+
+    return DungeonDetailResult(
+      detailType: 'Natural Hazard',
+      roll: roll,
+      result: hazard,
+      description: 'Natural Hazard (d$dieSize)',
     );
   }
 
@@ -440,6 +516,7 @@ Trap Procedure:
     DungeonMonsterResult? monster;
     DungeonTrapResult? trap;
     DungeonDetailResult? feature;
+    DungeonDetailResult? naturalHazard;
 
     // Based on encounter type, roll for additional details
     if (encounterType == 'Monster') {
@@ -448,6 +525,9 @@ Trap Procedure:
       trap = rollTrap();
     } else if (encounterType == 'Feature') {
       feature = rollFeature();
+    } else if (encounterType == 'Natural Hazard') {
+      // Roll on Natural Hazard table - uses d6 if lingering
+      naturalHazard = rollNaturalHazard(isLingering: isLingering);
     }
 
     return DungeonEncounterResult(
@@ -455,6 +535,58 @@ Trap Procedure:
       monster: monster,
       trap: trap,
       feature: feature,
+      naturalHazard: naturalHazard,
+    );
+  }
+
+  // ============ TWO-PASS SUPPORT METHODS ============
+
+  /// For Two-Pass method: generates just the Next Area and Passage for map creation.
+  /// Does NOT roll encounters. Returns true in phaseChange if doubles occurred.
+  /// 
+  /// Two-Pass rules:
+  /// - Start rolling 1d10 with Advantage (map generation mode)
+  /// - First doubles: switch to 1d10 with Disadvantage
+  /// - Second doubles: stop generating - all unrevealed paths become "Small Chamber: 1 Door"
+  TwoPassAreaResult generateTwoPassArea({
+    required bool hasFirstDoubles,
+    bool useD6ForPassage = false,
+    AdvantageType passageSkew = AdvantageType.none,
+  }) {
+    // Two-Pass uses advantage first, then switches to disadvantage after first doubles
+    final useAdvantage = !hasFirstDoubles;
+    
+    final RollWithAdvantageResult result;
+    if (useAdvantage) {
+      result = _rollEngine.rollWithAdvantage(1, 10);
+    } else {
+      result = _rollEngine.rollWithDisadvantage(1, 10);
+    }
+    
+    final areaRoll = result.chosenSum;
+    final areaType = areaTypes[areaRoll - 1];
+    final isDoubles = result.sum1 == result.sum2;
+
+    // Generate passage detail if applicable
+    DungeonDetailResult? passage;
+    if (areaType == 'Passage') {
+      passage = generatePassage(useD6: useD6ForPassage, skew: passageSkew);
+    }
+
+    // Generate condition
+    final condition = generateCondition(useD6: useD6ForPassage, skew: passageSkew);
+
+    return TwoPassAreaResult(
+      roll1: result.sum1,
+      roll2: result.sum2,
+      chosenRoll: areaRoll,
+      areaType: areaType,
+      isDoubles: isDoubles,
+      hadFirstDoubles: hasFirstDoubles,
+      isSecondDoubles: hasFirstDoubles && isDoubles,
+      stopMapGeneration: hasFirstDoubles && isDoubles,
+      condition: condition,
+      passage: passage,
     );
   }
 }
@@ -686,12 +818,14 @@ class DungeonEncounterResult extends RollResult {
   final DungeonMonsterResult? monster;
   final DungeonTrapResult? trap;
   final DungeonDetailResult? feature;
+  final DungeonDetailResult? naturalHazard;
 
   DungeonEncounterResult({
     required this.encounterRoll,
     this.monster,
     this.trap,
     this.feature,
+    this.naturalHazard,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Encounter',
@@ -700,14 +834,16 @@ class DungeonEncounterResult extends RollResult {
             if (monster != null) ...monster.diceResults,
             if (trap != null) ...trap.diceResults,
             if (feature != null) ...feature.diceResults,
+            if (naturalHazard != null) ...naturalHazard.diceResults,
           ],
           total: encounterRoll.roll,
-          interpretation: _buildInterpretation(encounterRoll, monster, trap, feature),
+          interpretation: _buildInterpretation(encounterRoll, monster, trap, feature, naturalHazard),
           metadata: {
             'encounterType': encounterRoll.result,
             if (monster != null) 'monster': monster.metadata,
             if (trap != null) 'trap': trap.metadata,
             if (feature != null) 'feature': feature.metadata,
+            if (naturalHazard != null) 'naturalHazard': naturalHazard.metadata,
           },
         );
 
@@ -716,6 +852,7 @@ class DungeonEncounterResult extends RollResult {
     DungeonMonsterResult? monster,
     DungeonTrapResult? trap,
     DungeonDetailResult? feature,
+    DungeonDetailResult? naturalHazard,
   ) {
     final buffer = StringBuffer(encounter.result);
     if (monster != null) {
@@ -727,6 +864,9 @@ class DungeonEncounterResult extends RollResult {
     if (feature != null) {
       buffer.write(': ${feature.result}');
     }
+    if (naturalHazard != null) {
+      buffer.write(': ${naturalHazard.result}');
+    }
     return buffer.toString();
   }
 
@@ -736,6 +876,201 @@ class DungeonEncounterResult extends RollResult {
     if (monster != null) buffer.write(' - ${monster!.monsterDescription}');
     if (trap != null) buffer.write(' - ${trap!.trapDescription}');
     if (feature != null) buffer.write(' - ${feature!.result}');
+    if (naturalHazard != null) buffer.write(' - ${naturalHazard!.result}');
+    return buffer.toString();
+  }
+}
+
+/// Result of Two-Pass dungeon area generation (for map pre-generation).
+/// Does not include encounter rolls - only area, passage, and condition.
+class TwoPassAreaResult extends RollResult {
+  final int roll1;
+  final int roll2;
+  final int chosenRoll;
+  final String areaType;
+  final bool isDoubles;
+  final bool hadFirstDoubles;
+  final bool isSecondDoubles;
+  final bool stopMapGeneration;
+  final DungeonDetailResult condition;
+  final DungeonDetailResult? passage;
+
+  TwoPassAreaResult({
+    required this.roll1,
+    required this.roll2,
+    required this.chosenRoll,
+    required this.areaType,
+    required this.isDoubles,
+    required this.hadFirstDoubles,
+    required this.isSecondDoubles,
+    required this.stopMapGeneration,
+    required this.condition,
+    this.passage,
+  }) : super(
+          type: RollType.dungeon,
+          description: _buildDescription(hadFirstDoubles, isSecondDoubles),
+          diceResults: [
+            roll1,
+            roll2,
+            ...condition.diceResults,
+            if (passage != null) ...passage.diceResults,
+          ],
+          total: chosenRoll,
+          interpretation: _buildInterpretation(
+            areaType, 
+            condition, 
+            passage, 
+            isDoubles, 
+            hadFirstDoubles, 
+            isSecondDoubles,
+          ),
+          metadata: {
+            'areaType': areaType,
+            'isDoubles': isDoubles,
+            'isSecondDoubles': isSecondDoubles,
+            'stopMapGeneration': stopMapGeneration,
+            'condition': condition.metadata,
+            if (passage != null) 'passage': passage.metadata,
+          },
+        );
+
+  static String _buildDescription(bool hadFirstDoubles, bool isSecondDoubles) {
+    if (isSecondDoubles) {
+      return 'Two-Pass Area (2nd DOUBLES - STOP!)';
+    } else if (hadFirstDoubles) {
+      return 'Two-Pass Area (1d10@-)';
+    } else {
+      return 'Two-Pass Area (1d10@+)';
+    }
+  }
+
+  static String _buildInterpretation(
+    String areaType,
+    DungeonDetailResult condition,
+    DungeonDetailResult? passage,
+    bool isDoubles,
+    bool hadFirstDoubles,
+    bool isSecondDoubles,
+  ) {
+    final buffer = StringBuffer('$areaType (${condition.result})');
+    if (passage != null) {
+      buffer.write(' via ${passage.result}');
+    }
+    if (isSecondDoubles) {
+      buffer.write(' [2nd DOUBLES - All unrevealed paths become Small Chamber: 1 Door]');
+    } else if (isDoubles && !hadFirstDoubles) {
+      buffer.write(' [DOUBLES - Switch to @- for remaining areas]');
+    }
+    return buffer.toString();
+  }
+
+  @override
+  String toString() {
+    final buffer = StringBuffer('Two-Pass: $areaType');
+    if (isSecondDoubles) {
+      buffer.write(' [STOP MAP GENERATION]');
+    } else if (isDoubles && !hadFirstDoubles) {
+      buffer.write(' [1st DOUBLES - switch to @-]');
+    }
+    return buffer.toString();
+  }
+}
+
+/// Result of the Trap Procedure.
+/// 
+/// Trap Procedure workflow (from Juice instructions):
+/// 1. BEFORE rolling encounter: decide if searching (10 min) or not
+/// 2. If searching: Active Perception @+ vs DC
+///    - Pass: AVOID (find and completely bypass the trap)
+///    - Fail: LOCATE (find the trap, must disarm/bypass)
+/// 3. If NOT searching: Passive Perception vs DC
+///    - Pass: LOCATE (find the trap, must disarm/bypass)
+///    - Fail: TRIGGER (suffer the consequences)
+/// 
+/// Notes:
+/// - Searching takes 10 minutes
+/// - Any action in a room takes 10 minutes
+/// - Lingering >10 min in non-Safety room = roll another encounter (d6)
+/// - For parties: only one character needs to search
+///   - If no one searches, randomly pick who triggers on fail
+class TrapProcedureResult extends RollResult {
+  final DungeonTrapResult trap;
+  final bool isSearching;
+  final int dcRoll;
+  final List<int> dcRolls;
+  final int dc;
+  final AdvantageType dcSkew;
+
+  TrapProcedureResult({
+    required this.trap,
+    required this.isSearching,
+    required this.dcRoll,
+    required this.dcRolls,
+    required this.dc,
+    required this.dcSkew,
+  }) : super(
+          type: RollType.dungeon,
+          description: 'Trap Procedure',
+          diceResults: [
+            ...trap.diceResults,
+            ...dcRolls,
+          ],
+          total: dc,
+          interpretation: _buildInterpretation(trap, isSearching, dc, dcSkew),
+          metadata: {
+            'trap': trap.metadata,
+            'isSearching': isSearching,
+            'dc': dc,
+            'dcSkew': dcSkew.name,
+            'passOutcome': isSearching ? 'AVOID' : 'LOCATE',
+            'failOutcome': isSearching ? 'LOCATE' : 'TRIGGER',
+          },
+        );
+
+  static String _buildInterpretation(
+    DungeonTrapResult trap,
+    bool isSearching,
+    int dc,
+    AdvantageType dcSkew,
+  ) {
+    final buffer = StringBuffer();
+    buffer.write('${trap.trapDescription}\n');
+    buffer.write('Perception DC $dc');
+    if (dcSkew != AdvantageType.none) {
+      buffer.write(' (${dcSkew == AdvantageType.advantage ? 'Easy' : 'Hard'})');
+    }
+    buffer.write('\n');
+    if (isSearching) {
+      buffer.write('Searching (10 min, @+): Pass=AVOID, Fail=LOCATE');
+    } else {
+      buffer.write('Passive Perception: Pass=LOCATE, Fail=TRIGGER');
+    }
+    return buffer.toString();
+  }
+
+  /// What happens on a passed perception check
+  String get passOutcome => isSearching ? 'AVOID' : 'LOCATE';
+  
+  /// What happens on a failed perception check  
+  String get failOutcome => isSearching ? 'LOCATE' : 'TRIGGER';
+  
+  /// Description of AVOID outcome
+  static const String avoidDescription = 
+      'You find the trap and completely bypass it. No issues.';
+  
+  /// Description of LOCATE outcome
+  static const String locateDescription = 
+      'You find the trap but must disarm or bypass it.';
+  
+  /// Description of TRIGGER outcome
+  static const String triggerDescription = 
+      'You trigger the trap and suffer the consequences.';
+
+  @override
+  String toString() {
+    final buffer = StringBuffer('Trap: ${trap.trapDescription}');
+    buffer.write(' [DC $dc]');
+    buffer.write(isSearching ? ' (Search: Avoid/Locate)' : ' (Passive: Locate/Trigger)');
     return buffer.toString();
   }
 }

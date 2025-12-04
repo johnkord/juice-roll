@@ -1,5 +1,9 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
+import 'details.dart';
+import 'random_event.dart';
+import 'npc_action.dart';
+import 'name_generator.dart';
 
 /// Settlement type (village vs city).
 enum SettlementType { village, city }
@@ -10,8 +14,20 @@ enum SettlementType { village, city }
 /// Per Juice rules:
 /// - Villages: 1d6@disadvantage for establishment count, d6 for type
 /// - Cities: 1d6@advantage for establishment count, d10 for type
+/// 
+/// **Establishment Naming:** Use Color + Object for naming (e.g., "The Crimson Hourglass")
+/// - Each establishment gets a distinct color for map marking
+/// - Each has an object as their emblem on the storefront sign
+/// - The color/object pairing gives hints about the establishment's theme
+/// 
+/// **Settlement Properties:** Roll two properties to describe the settlement
+/// (e.g., "Major Style" and "Minimal Weight")
 class Settlement {
   final RollEngine _rollEngine;
+  late final Details _details;
+  late final RandomEvent _randomEvent;
+  late final NpcAction _npcAction;
+  late final NameGenerator _nameGenerator;
 
   /// Name prefixes - d10
   static const List<String> namePrefixes = [
@@ -126,7 +142,61 @@ class Settlement {
   };
 
   Settlement([RollEngine? rollEngine])
-      : _rollEngine = rollEngine ?? RollEngine();
+      : _rollEngine = rollEngine ?? RollEngine() {
+    _details = Details(_rollEngine);
+    _randomEvent = RandomEvent(_rollEngine);
+    _npcAction = NpcAction(_rollEngine);
+    _nameGenerator = NameGenerator(_rollEngine);
+  }
+
+  /// Generate an establishment name using Color + Object pattern.
+  /// Per instructions: "Use Color + Object for naming Establishments"
+  /// Example: "The Crimson Hourglass", "The Violet Claw"
+  EstablishmentNameResult generateEstablishmentName() {
+    final colorResult = _details.rollColor();
+    final objectResult = _randomEvent.rollObject();
+    
+    // Extract just the color name (without the full description)
+    // e.g., "Crimson Red" -> "Crimson", "Cobalt Blue" -> "Cobalt"
+    final colorParts = colorResult.result.split(' ');
+    final shortColor = colorParts.isNotEmpty ? colorParts[0] : colorResult.result;
+    
+    final name = 'The $shortColor ${objectResult.result}';
+    
+    return EstablishmentNameResult(
+      colorRoll: colorResult.roll,
+      color: colorResult.result,
+      shortColor: shortColor,
+      colorEmoji: colorResult.emoji ?? '',
+      objectRoll: objectResult.roll,
+      object: objectResult.result,
+      name: name,
+    );
+  }
+
+  /// Generate settlement properties (roll two properties with intensity).
+  /// Per instructions: "Roll two properties, such as 'Major Style' and 'Minimal Weight'"
+  SettlementPropertiesResult generateProperties() {
+    final prop1 = _details.rollProperty();
+    final prop2 = _details.rollProperty();
+    
+    return SettlementPropertiesResult(
+      property1: prop1,
+      property2: prop2,
+    );
+  }
+
+  /// Generate a simple NPC (name + personality + need + motive).
+  /// Per instructions: "For each establishment, generate a simple NPC as the owner."
+  SimpleNpcResult generateSimpleNpc({NeedSkew needSkew = NeedSkew.none}) {
+    final nameResult = _nameGenerator.generate();
+    final profileResult = _npcAction.generateProfile(needSkew: needSkew);
+    
+    return SimpleNpcResult(
+      name: nameResult,
+      profile: profileResult,
+    );
+  }
 
   /// Generate a settlement name.
   SettlementNameResult generateName() {
@@ -500,4 +570,107 @@ class CompleteSettlementResult extends RollResult {
     buffer.writeln('News: ${news.result}');
     return buffer.toString();
   }
+}
+
+/// Result of generating an establishment name using Color + Object pattern.
+/// Per instructions: "Use Color + Object for naming Establishments"
+/// Example: "The Crimson Hourglass", "The Violet Claw"
+class EstablishmentNameResult extends RollResult {
+  final int colorRoll;
+  final String color;
+  final String shortColor;
+  final String colorEmoji;
+  final int objectRoll;
+  final String object;
+  final String name;
+
+  EstablishmentNameResult({
+    required this.colorRoll,
+    required this.color,
+    required this.shortColor,
+    required this.colorEmoji,
+    required this.objectRoll,
+    required this.object,
+    required this.name,
+  }) : super(
+          type: RollType.settlement,
+          description: 'Establishment Name',
+          diceResults: [colorRoll, objectRoll],
+          total: colorRoll + objectRoll,
+          interpretation: '$colorEmoji $name',
+          metadata: {
+            'color': color,
+            'shortColor': shortColor,
+            'colorEmoji': colorEmoji,
+            'object': object,
+            'name': name,
+          },
+        );
+
+  @override
+  String toString() => 'Establishment: $colorEmoji $name';
+}
+
+/// Result of generating settlement properties.
+/// Per instructions: "Roll two properties, such as 'Major Style' and 'Minimal Weight'"
+class SettlementPropertiesResult extends RollResult {
+  final PropertyResult property1;
+  final PropertyResult property2;
+
+  SettlementPropertiesResult({
+    required this.property1,
+    required this.property2,
+  }) : super(
+          type: RollType.settlement,
+          description: 'Settlement Properties',
+          diceResults: [
+            property1.propertyRoll,
+            property1.intensityRoll,
+            property2.propertyRoll,
+            property2.intensityRoll,
+          ],
+          total: property1.propertyRoll + property2.propertyRoll,
+          interpretation: '${property1.interpretation} + ${property2.interpretation}',
+          metadata: {
+            'property1': property1.property,
+            'intensity1': property1.intensityRoll,
+            'property2': property2.property,
+            'intensity2': property2.intensityRoll,
+          },
+        );
+
+  @override
+  String toString() =>
+      'Properties: ${property1.intensityDescription} ${property1.property} + ${property2.intensityDescription} ${property2.property}';
+}
+
+/// Result of generating a simple NPC (name + profile).
+/// Per instructions: "For each establishment, generate a simple NPC as the owner."
+class SimpleNpcResult extends RollResult {
+  final NameResult name;
+  final NpcProfileResult profile;
+
+  SimpleNpcResult({
+    required this.name,
+    required this.profile,
+  }) : super(
+          type: RollType.settlement,
+          description: 'Simple NPC',
+          diceResults: [
+            ...name.diceResults,
+            ...profile.diceResults,
+          ],
+          total: name.total + profile.total,
+          interpretation: '${name.name}: ${profile.personality}, ${profile.need}, ${profile.motive}',
+          metadata: {
+            'name': name.name,
+            'personality': profile.personality,
+            'need': profile.need,
+            'motive': profile.motive,
+          },
+        );
+
+  @override
+  String toString() =>
+      'NPC: ${name.name} - ${profile.personality}, ${profile.need}, ${profile.motive}';
 }

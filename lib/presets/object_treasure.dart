@@ -1,6 +1,6 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
-import 'details.dart' show SkewType;
+import 'details.dart' show Details, SkewType, PropertyResult, DetailResult;
 
 /// Object and Treasure generator preset for the Juice Oracle.
 /// Uses object-treasure.md for generating treasure details.
@@ -361,6 +361,44 @@ class ObjectTreasure {
       columnLabels: ['Quality', 'Material', 'Type'],
     );
   }
+
+  /// Generate a full item as per Item Creation procedure in Juice instructions.
+  /// 
+  /// To create an item:
+  /// 1. Roll 4d6 on the Object/Treasure table (base item description)
+  /// 2. Roll two properties (1d10+1d6 each) to flesh it out
+  /// 3. Optionally roll a color for appearance or elemental powers
+  /// 
+  /// Example from instructions:
+  /// 4d6 -> 4,3,4,5 -> "Accessory: Simple Silver Necklace"
+  /// Property: 1d10+1d6 -> 9,5 -> Major Value
+  /// Property: 1d10+1d6 -> 5,4 -> Moderate Power
+  ItemCreationResult generateFullItem({
+    SkewType skew = SkewType.none,
+    bool includeColor = false,
+  }) {
+    final details = Details(_rollEngine);
+    
+    // Step 1: Roll 4d6 for base item
+    final baseItem = generate(skew: skew);
+    
+    // Step 2: Roll two properties (1d10+1d6 each)
+    final property1 = details.rollProperty();
+    final property2 = details.rollProperty();
+    
+    // Step 3: Optionally roll color
+    DetailResult? color;
+    if (includeColor) {
+      color = details.rollColor();
+    }
+    
+    return ItemCreationResult(
+      baseItem: baseItem,
+      property1: property1,
+      property2: property2,
+      color: color,
+    );
+  }
 }
 
 /// Result of an Object/Treasure generation.
@@ -428,4 +466,74 @@ class ObjectTreasureResult extends RollResult {
 
   @override
   String toString() => '$category: $fullDescription';
+}
+
+/// Result of the full Item Creation procedure.
+/// Combines 4d6 Object/Treasure + 2 Property rolls + optional Color.
+/// 
+/// Example interpretation:
+/// "Accessory: Simple Silver Necklace" with
+/// Property 1: "Major Value" (1d10=9, 1d6=5)
+/// Property 2: "Moderate Power" (1d10=5, 1d6=4)
+/// Color: "Crimson Red" (optional, for appearance/elemental)
+class ItemCreationResult extends RollResult {
+  final ObjectTreasureResult baseItem;
+  final PropertyResult property1;
+  final PropertyResult property2;
+  final DetailResult? color;
+
+  ItemCreationResult({
+    required this.baseItem,
+    required this.property1,
+    required this.property2,
+    this.color,
+  }) : super(
+          type: RollType.objectTreasure,
+          description: 'Item Creation',
+          diceResults: _combineDiceResults(baseItem, property1, property2, color),
+          total: baseItem.total + property1.total + property2.total + (color?.total ?? 0),
+          interpretation: _buildInterpretation(baseItem, property1, property2, color),
+          metadata: {
+            'baseItem': baseItem.metadata,
+            'property1': property1.metadata,
+            'property2': property2.metadata,
+            if (color != null) 'color': color.metadata,
+          },
+        );
+
+  static List<int> _combineDiceResults(
+    ObjectTreasureResult baseItem,
+    PropertyResult property1,
+    PropertyResult property2,
+    DetailResult? color,
+  ) {
+    return [
+      ...baseItem.diceResults,
+      ...property1.diceResults,
+      ...property2.diceResults,
+      if (color != null) ...color.diceResults,
+    ];
+  }
+
+  static String _buildInterpretation(
+    ObjectTreasureResult baseItem,
+    PropertyResult property1,
+    PropertyResult property2,
+    DetailResult? color,
+  ) {
+    final buffer = StringBuffer();
+    buffer.writeln('${baseItem.category}: ${baseItem.fullDescription}');
+    buffer.writeln('• ${property1.interpretation}');
+    buffer.writeln('• ${property2.interpretation}');
+    if (color != null) {
+      buffer.write('• Color: ${color.interpretation}');
+    }
+    return buffer.toString().trim();
+  }
+
+  @override
+  String toString() {
+    final colorStr = color != null ? ' [${color!.result}]' : '';
+    return 'Item: ${baseItem.fullDescription}$colorStr (${property1.intensityDescription} ${property1.property}, ${property2.intensityDescription} ${property2.property})';
+  }
 }

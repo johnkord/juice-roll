@@ -78,30 +78,41 @@ class Challenge {
   Challenge([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
 
-  /// Generate a FULL CHALLENGE: both physical and mental skills with DCs.
+  /// Generate a FULL CHALLENGE: both physical and mental skills with independent DCs.
   /// This is the core challenge mechanic from the Juice instructions.
   /// PC must pass only ONE of these; otherwise, Pay The Price.
+  /// 
+  /// Per the Challenge Procedure:
+  /// 1. Roll 1 Physical + 1 Mental challenge
+  /// 2. Roll a DC for EACH challenge (independently)
+  /// 3. Combine with current context to create a scene
+  /// 4. PC chooses which path to attempt
+  /// 5. Fail = Pay The Price
   FullChallengeResult rollFullChallenge({DcSkew dcSkew = DcSkew.none}) {
     // Roll physical challenge
     final physicalRoll = _rollEngine.rollDie(10);
     final physicalIndex = physicalRoll == 10 ? 9 : physicalRoll - 1;
     final physicalSkill = physicalChallenges[physicalIndex];
+    
+    // Roll DC for physical challenge
+    final physicalDcResult = rollDc(skew: dcSkew);
 
     // Roll mental challenge
     final mentalRoll = _rollEngine.rollDie(10);
     final mentalIndex = mentalRoll == 10 ? 9 : mentalRoll - 1;
     final mentalSkill = mentalChallenges[mentalIndex];
-
-    // Roll DC with optional skew
-    final dcResult = rollDc(skew: dcSkew);
+    
+    // Roll DC for mental challenge (independent from physical)
+    final mentalDcResult = rollDc(skew: dcSkew);
 
     return FullChallengeResult(
       physicalRoll: physicalRoll,
       physicalSkill: physicalSkill,
+      physicalDc: physicalDcResult.dc,
       mentalRoll: mentalRoll,
       mentalSkill: mentalSkill,
-      dc: dcResult.dc,
-      dcMethod: dcResult.method,
+      mentalDc: mentalDcResult.dc,
+      dcMethod: physicalDcResult.method, // Same method for both
     );
   }
 
@@ -257,40 +268,49 @@ extension ChallengeTypeDisplay on ChallengeType {
   }
 }
 
-/// Result of a Full Challenge roll (both physical and mental).
+/// Result of a Full Challenge roll (both physical and mental with independent DCs).
 /// Core challenge mechanic: PC must pass ONE of these, otherwise Pay The Price.
+/// 
+/// Per the Challenge Procedure:
+/// - Each challenge has its own DC (not shared)
+/// - One physical, one mental = two different paths forward
+/// - Failing one may lock out the other option
+/// - The difficulty of the challenge indicates the risk vs reward
 class FullChallengeResult extends RollResult {
   final int physicalRoll;
   final String physicalSkill;
+  final int physicalDc;
   final int mentalRoll;
   final String mentalSkill;
-  final int dc;
+  final int mentalDc;
   final String dcMethod;
 
   FullChallengeResult({
     required this.physicalRoll,
     required this.physicalSkill,
+    required this.physicalDc,
     required this.mentalRoll,
     required this.mentalSkill,
-    required this.dc,
+    required this.mentalDc,
     required this.dcMethod,
   }) : super(
           type: RollType.challenge,
           description: 'Challenge',
           diceResults: [physicalRoll, mentalRoll],
-          total: dc,
-          interpretation: '$physicalSkill OR $mentalSkill (DC $dc)',
+          total: physicalDc + mentalDc,
+          interpretation: '$physicalSkill (DC $physicalDc) OR $mentalSkill (DC $mentalDc)',
           metadata: {
             'physicalSkill': physicalSkill,
+            'physicalDc': physicalDc,
             'mentalSkill': mentalSkill,
-            'dc': dc,
+            'mentalDc': mentalDc,
             'dcMethod': dcMethod,
           },
         );
 
   @override
   String toString() =>
-      'Challenge: $physicalSkill or $mentalSkill (DC $dc via $dcMethod)';
+      'Challenge: $physicalSkill (DC $physicalDc) or $mentalSkill (DC $mentalDc) via $dcMethod';
 }
 
 /// Result of a DC roll.

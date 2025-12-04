@@ -814,6 +814,58 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
               ),
               const Divider(),
               
+              // Complex NPC Section
+              const Text('Complex NPC (Sidekick)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                ),
+                child: const Text(
+                  'For complex NPCs like sidekicks: Name + 2 Personalities + '
+                  'Need + Motive + Color + 2 Properties.\n'
+                  'Use @+ for people, @- for monsters.',
+                  style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                ),
+              ),
+              const SizedBox(height: 4),
+              _DialogOption(
+                title: 'Complex NPC (Person)',
+                subtitle: 'Name + 2 Personalities + Need@+ + Motive + Color + Properties',
+                onTap: () {
+                  widget.onRoll(widget.npcAction.generateComplexNpc(
+                    needSkew: NeedSkew.complex,
+                    includeName: true,
+                    dualPersonality: true,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Complex NPC (Monster)',
+                subtitle: 'Name + 2 Personalities + Need@- + Motive + Color + Properties',
+                onTap: () {
+                  widget.onRoll(widget.npcAction.generateComplexNpc(
+                    needSkew: NeedSkew.primitive,
+                    includeName: true,
+                    dualPersonality: true,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Dual Personality',
+                subtitle: '2d10 - "Primary, yet Secondary" (e.g., "Confident, yet Reserved")',
+                onTap: () {
+                  widget.onRoll(widget.npcAction.rollDualPersonality());
+                  Navigator.pop(context);
+                },
+              ),
+              const Divider(),
+              
               // Action Table Section
               const Text('Action Table', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
@@ -1107,6 +1159,48 @@ class _SettlementDialog extends StatelessWidget {
             ),
             const Divider(),
             const Text(
+              'Naming & Description',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: Colors.purple.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Use Color + Object for establishment names (e.g., "The Crimson Hourglass"). '
+                'The color helps mark on maps, the object is their emblem.',
+                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+              ),
+            ),
+            _DialogOption(
+              title: 'Establishment Name',
+              subtitle: 'Color + Object → "The [Color] [Object]"',
+              onTap: () {
+                onRoll(settlement.generateEstablishmentName());
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Settlement Properties',
+              subtitle: 'Two properties with intensity (e.g., "Major Style" + "Minimal Weight")',
+              onTap: () {
+                onRoll(settlement.generateProperties());
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Simple NPC',
+              subtitle: 'Name + Personality + Need + Motive (for establishment owners)',
+              onTap: () {
+                onRoll(settlement.generateSimpleNpc());
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(),
+            const Text(
               'News',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
@@ -1157,6 +1251,7 @@ class _TreasureDialog extends StatefulWidget {
 
 class _TreasureDialogState extends State<_TreasureDialog> {
   SkewType _skew = SkewType.none;
+  bool _includeColor = false;
 
   String _getSkewLabel() {
     switch (_skew) {
@@ -1177,6 +1272,60 @@ class _TreasureDialogState extends State<_TreasureDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Item Creation Section (from instructions)
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.3)),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Item Creation Procedure:',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '1. Roll 4d6 on Object/Treasure table\n'
+                    '2. Roll two properties (1d10+1d6 each)\n'
+                    '3. Optionally roll color for appearance/elemental',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Color toggle for Item Creation
+            Row(
+              children: [
+                Checkbox(
+                  value: _includeColor,
+                  onChanged: (v) => setState(() => _includeColor = v ?? false),
+                  visualDensity: VisualDensity.compact,
+                ),
+                const Expanded(
+                  child: Text(
+                    'Include Color (for appearance or elemental powers)',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+            _DialogOption(
+              title: '⭐ Create Full Item',
+              subtitle: '4d6 + 2 Properties${_includeColor ? ' + Color' : ''}${_skew != SkewType.none ? ' ${_getSkewLabel()}' : ''}',
+              onTap: () {
+                widget.onRoll(widget.treasure.generateFullItem(
+                  skew: _skew,
+                  includeColor: _includeColor,
+                ));
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(),
             // Header explanation from Juice instructions
             Container(
               padding: const EdgeInsets.all(8),
@@ -1308,9 +1457,15 @@ class _TreasureDialogState extends State<_TreasureDialog> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
+                'Basic 4d6:\n'
                 '2,5,4,2: New satchel full of art.\n'
                 '6,1,5,3: Broken Mithral gloves.\n'
-                '4,4,1,1: Fine wooden headpiece (crown).',
+                '4,4,1,1: Fine wooden headpiece (crown).\n\n'
+                'Full Item Creation:\n'
+                '4,3,4,5 → "Accessory: Simple Silver Necklace"\n'
+                '  Property: 9,5 → Major Value\n'
+                '  Property: 5,4 → Moderate Power\n'
+                '(A normal-looking necklace that grants power!)',
                 style: TextStyle(fontSize: 10, fontFamily: 'monospace'),
               ),
             ),
@@ -1352,33 +1507,50 @@ class _ChallengeDialog extends StatelessWidget {
                 color: Colors.lime.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'Roll physical + mental challenge. Create a situation where both make sense. '
-                'PC must pass ONE; otherwise, Pay The Price.',
-                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Challenge Procedure (Mythic Scene + Skill Check + Pay The Price):',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '1. Roll Physical + Mental challenge with DCs\n'
+                    '2. Create a situation where both make sense\n'
+                    '3. Choose ONE path - only need to pass one!\n'
+                    '4. Fail = Pay The Price (may lock out other option)',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
               ),
             ),
             const Divider(),
             const Text('Full Challenge', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text(
+              'Rolls 1 Physical + 1 Mental with separate DCs for each:',
+              style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+            ),
             _DialogOption(
-              title: 'Challenge (Random DC)',
-              subtitle: 'Physical + Mental skills with 1d10 DC',
+              title: 'Challenge (Random DCs)',
+              subtitle: 'Physical (DC) + Mental (DC) - each gets own DC',
               onTap: () {
                 onRoll(challenge.rollFullChallenge());
                 Navigator.pop(context);
               },
             ),
             _DialogOption(
-              title: 'Challenge (Easy DC)',
-              subtitle: 'Physical + Mental with advantage (lower DC)',
+              title: 'Challenge (Easy DCs)',
+              subtitle: 'Both DCs rolled with advantage (lower)',
               onTap: () {
                 onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.advantage));
                 Navigator.pop(context);
               },
             ),
             _DialogOption(
-              title: 'Challenge (Hard DC)',
-              subtitle: 'Physical + Mental with disadvantage (higher DC)',
+              title: 'Challenge (Hard DCs)',
+              subtitle: 'Both DCs rolled with disadvantage (higher)',
               onTap: () {
                 onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.disadvantage));
                 Navigator.pop(context);
@@ -1957,6 +2129,10 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   // Advantage = Better Encounters, Disadvantage = Worse Encounters
   AdvantageType _encounterSkew = AdvantageType.none;
 
+  // Two-Pass map generation mode
+  bool _isTwoPassMode = false;
+  bool _twoPassHasFirstDoubles = false;
+
   @override
   void initState() {
     super.initState();
@@ -2147,6 +2323,83 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                 },
               ),
               const Divider(),
+              // Two-Pass Method Section
+              const Text('Two-Pass Method', style: TextStyle(fontWeight: FontWeight.bold)),
+              Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.indigo.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Pre-generate the map first, then explore with encounters.\n'
+                      '• Start with 1d10@+ until 1st doubles → switch to 1d10@-\n'
+                      '• 2nd doubles = STOP (all remaining paths → Small Chamber: 1 Door)',
+                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          _twoPassHasFirstDoubles
+                              ? 'Phase: 1d10@- (after 1st doubles)'
+                              : 'Phase: 1d10@+ (until 1st doubles)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: _twoPassHasFirstDoubles ? Colors.orange : Colors.green,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () => setState(() => _twoPassHasFirstDoubles = false),
+                          child: const Text('Reset', style: TextStyle(fontSize: 10)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              _DialogOption(
+                title: 'Two-Pass Area',
+                subtitle: _twoPassHasFirstDoubles
+                    ? 'Area + Condition only (1d10@- for map)'
+                    : 'Area + Condition only (1d10@+ for map)',
+                onTap: () {
+                  final result = widget.dungeonGenerator.generateTwoPassArea(
+                    hasFirstDoubles: _twoPassHasFirstDoubles,
+                    useD6ForPassage: _useD6ForPassage,
+                    passageSkew: _passageConditionSkew,
+                  );
+                  widget.onRoll(result);
+                  
+                  // Handle doubles transitions
+                  if (result.isSecondDoubles) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
+                        backgroundColor: Colors.red.shade700,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  } else if (result.isDoubles && !_twoPassHasFirstDoubles) {
+                    setState(() => _twoPassHasFirstDoubles = true);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
+                        backgroundColor: Colors.orange.shade700,
+                      ),
+                    );
+                  }
+                  Navigator.pop(context);
+                },
+              ),
+              const Divider(),
               // Passage & Condition Settings
               const Text('Passage & Condition Settings', style: TextStyle(fontWeight: FontWeight.bold)),
               Container(
@@ -2324,6 +2577,22 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                 },
               ),
               _DialogOption(
+                title: 'Trap Procedure (Searching)',
+                subtitle: 'Trap + DC (10 min, @+): Pass=Avoid, Fail=Locate',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.rollTrapProcedure(isSearching: true));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Trap Procedure (Passive)',
+                subtitle: 'Trap + DC (Passive): Pass=Locate, Fail=Trigger',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.rollTrapProcedure(isSearching: false));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
                 title: 'Feature (1d10)',
                 subtitle: 'Library, Mural, Mushrooms, Prison...',
                 onTap: () {
@@ -2345,11 +2614,15 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                     Text('Trap Procedure:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                     SizedBox(height: 4),
                     Text(
-                      '• Active Perception (10m, @+):\n'
-                      '   Pass = Avoid (completely bypass)\n'
-                      '   Fail = Locate (must disarm/bypass)\n'
-                      '• Passive Perception:\n'
-                      '   Pass = Locate, Fail = Trigger',
+                      '1. BEFORE encounter: decide to search (10 min) or not\n'
+                      '2. If searching: Active Perception @+ vs DC\n'
+                      '   • Pass = AVOID (completely bypass)\n'
+                      '   • Fail = LOCATE (must disarm/bypass)\n'
+                      '3. If NOT searching: Passive Perception vs DC\n'
+                      '   • Pass = LOCATE (must disarm/bypass)\n'
+                      '   • Fail = TRIGGER (suffer consequences)\n\n'
+                      'Note: Lingering >10 min in non-Safety room = roll\n'
+                      'another encounter (d6). Only 1 action per room is "free".',
                       style: TextStyle(fontSize: 10),
                     ),
                   ],
