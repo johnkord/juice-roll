@@ -5,7 +5,7 @@ metadata:
   labels:
     app: juice-roll
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: juice-roll
@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: juice-roll
-        image: ribacr123.azurecr.io/juice-roll:latest
+        image: ribacr123.azurecr.io/juice-roll:20251204-010145
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         resources:
