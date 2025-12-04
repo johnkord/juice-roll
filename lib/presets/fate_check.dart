@@ -1,4 +1,5 @@
 import '../core/roll_engine.dart';
+import '../core/fate_dice_formatter.dart';
 import '../models/roll_result.dart';
 
 /// Fate Check preset for the Juice Oracle.
@@ -366,20 +367,7 @@ class FateCheckResult extends RollResult {
   }
 
   /// Get symbolic representation of the Fate dice.
-  String get fateSymbols {
-    return fateDice.map((d) {
-      switch (d) {
-        case -1:
-          return '−';
-        case 0:
-          return '○';
-        case 1:
-          return '+';
-        default:
-          return '?';
-      }
-    }).join(' ');
-  }
+  String get fateSymbols => FateDiceFormatter.diceToSymbols(fateDice);
 
   /// Whether this result triggered a special event.
   bool get hasSpecialTrigger => specialTrigger != null;

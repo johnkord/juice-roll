@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/fate_dice_formatter.dart';
 import '../../models/roll_result.dart';
 import '../../presets/fate_check.dart';
 import '../../presets/next_scene.dart';
@@ -202,6 +203,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildExpectationCheckDisplay(result as ExpectationCheckResult, theme);
     } else if (result is ScaleResult) {
       return _buildScaleDisplay(result as ScaleResult, theme);
+    } else if (result is NextSceneWithFollowUpResult) {
+      return _buildNextSceneWithFollowUpDisplay(result as NextSceneWithFollowUpResult, theme);
     } else if (result is NextSceneResult) {
       return _buildNextSceneDisplay(result as NextSceneResult, theme);
     } else if (result is RandomEventResult) {
@@ -305,21 +308,11 @@ class _RollHistoryCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            // Fate dice symbols
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                result.fateSymbols,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-              ),
+            // Fate dice symbols with label
+            FateDiceFormatter.buildLabeledFateDiceDisplay(
+              label: '2dF',
+              dice: result.fateDice,
+              theme: theme,
             ),
             const SizedBox(width: 12),
             // Intensity die
@@ -445,21 +438,11 @@ class _RollHistoryCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            // Fate dice symbols
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                result.fateSymbols,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-              ),
+            // Fate dice symbols with label
+            FateDiceFormatter.buildLabeledFateDiceDisplay(
+              label: '2dF',
+              dice: result.fateDice,
+              theme: theme,
             ),
             const SizedBox(width: 12),
             Chip(
@@ -479,6 +462,110 @@ class _RollHistoryCard extends StatelessWidget {
               color: Colors.grey,
               fontStyle: FontStyle.italic,
             ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, ThemeData theme) {
+    final sceneResult = result.sceneResult;
+    Color chipColor;
+    switch (sceneResult.sceneType) {
+      case SceneType.normal:
+        chipColor = Colors.green;
+        break;
+      case SceneType.alterAdd:
+      case SceneType.alterRemove:
+        chipColor = Colors.amber;
+        break;
+      case SceneType.interruptFavorable:
+        chipColor = Colors.blue;
+        break;
+      case SceneType.interruptUnfavorable:
+        chipColor = Colors.red;
+        break;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Fate dice symbols with label
+            FateDiceFormatter.buildLabeledFateDiceDisplay(
+              label: '2dF',
+              dice: sceneResult.fateDice,
+              theme: theme,
+            ),
+            const SizedBox(width: 12),
+            Chip(
+              label: Text(sceneResult.sceneType.displayText),
+              backgroundColor: chipColor.withOpacity(0.2),
+              side: BorderSide(color: chipColor),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+        // Show the follow-up result
+        if (result.focusResult != null) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                'Focus: ',
+                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+              ),
+              Chip(
+                label: Text(result.focusResult!.focus),
+                backgroundColor: Colors.teal.withOpacity(0.2),
+                side: const BorderSide(color: Colors.teal),
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ],
+        if (result.ideaResult != null) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                '${result.ideaResult!.modifier} ${result.ideaResult!.idea}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ],
+        if (result.plotPointResult != null) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Chip(
+                label: Text(result.plotPointResult!.category),
+                backgroundColor: Colors.purple.withOpacity(0.2),
+                side: const BorderSide(color: Colors.purple),
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                result.plotPointResult!.event,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ],
       ],
@@ -1079,21 +1166,11 @@ class _RollHistoryCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            // Fate dice symbols in styled container
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                result.fateSymbols,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-              ),
+            // Fate dice symbols with label
+            FateDiceFormatter.buildLabeledFateDiceDisplay(
+              label: '2dF',
+              dice: result.fateDice,
+              theme: theme,
             ),
             const Spacer(),
             // Outcome chip
@@ -1142,21 +1219,11 @@ class _RollHistoryCard extends StatelessWidget {
 
     return Row(
       children: [
-        // Fate dice symbols in styled container
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            result.fateSymbols,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              letterSpacing: 4,
-            ),
-          ),
+        // Fate dice symbols with label
+        FateDiceFormatter.buildLabeledFateDiceDisplay(
+          label: '2dF',
+          dice: result.fateDice,
+          theme: theme,
         ),
         const SizedBox(width: 12),
         // Intensity die with lightning bolt
@@ -1495,18 +1562,8 @@ class _RollHistoryCard extends StatelessWidget {
       );
     }
 
-    final fateSymbols = result.envFateDice.map((f) {
-      switch (f) {
-        case -1: return '−';
-        case 1: return '+';
-        default: return '○';
-      }
-    }).join('');
-    final typeSymbol = switch (result.typeFateDie) {
-      -1 => '−',
-      1 => '+',
-      _ => '○',
-    };
+    final fateSymbols = FateDiceFormatter.diceToSymbols(result.envFateDice);
+    final typeSymbol = FateDiceFormatter.dieToSymbol(result.typeFateDie);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

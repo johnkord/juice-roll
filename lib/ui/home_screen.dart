@@ -3554,38 +3554,57 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
     );
   }
 
+  void _setPosition(int row, int col) {
+    widget.dialogGenerator.setPosition(row, col);
+    setState(() {
+      _lastResult = null;
+    });
+    final fragment = DialogGenerator.grid[row][col];
+    final isPast = row <= 1;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Starting position set to "$fragment" ${isPast ? "(Past)" : "(Present)"}'),
+        backgroundColor: Colors.cyan,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
   Widget _buildGridCell(int row, int col) {
     final fragment = DialogGenerator.grid[row][col];
     final isCurrentPos = row == widget.dialogGenerator.currentRow && 
                         col == widget.dialogGenerator.currentCol;
     final isPastRow = row <= 1;
     
-    return Container(
-      width: 52,
-      height: 40,
-      margin: const EdgeInsets.all(1),
-      decoration: BoxDecoration(
-        color: isCurrentPos 
-            ? Colors.cyan.withValues(alpha: 0.4)
-            : isPastRow 
-                ? Colors.grey.withValues(alpha: 0.15)
-                : Colors.grey.withValues(alpha: 0.05),
-        border: Border.all(
-          color: isCurrentPos ? Colors.cyan : Colors.grey.withValues(alpha: 0.3),
-          width: isCurrentPos ? 2 : 1,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Center(
-        child: Text(
-          fragment,
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: isCurrentPos ? FontWeight.bold : FontWeight.normal,
-            fontStyle: isPastRow ? FontStyle.italic : FontStyle.normal,
-            color: isCurrentPos ? Colors.cyan : Colors.white70,
+    return GestureDetector(
+      onTap: () => _setPosition(row, col),
+      child: Container(
+        width: 52,
+        height: 40,
+        margin: const EdgeInsets.all(1),
+        decoration: BoxDecoration(
+          color: isCurrentPos 
+              ? Colors.cyan.withValues(alpha: 0.4)
+              : isPastRow 
+                  ? Colors.grey.withValues(alpha: 0.15)
+                  : Colors.grey.withValues(alpha: 0.05),
+          border: Border.all(
+            color: isCurrentPos ? Colors.cyan : Colors.grey.withValues(alpha: 0.3),
+            width: isCurrentPos ? 2 : 1,
           ),
-          textAlign: TextAlign.center,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Center(
+          child: Text(
+            fragment,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: isCurrentPos ? FontWeight.bold : FontWeight.normal,
+              fontStyle: isPastRow ? FontStyle.italic : FontStyle.normal,
+              color: isCurrentPos ? Colors.cyan : Colors.white70,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ),
       ),
     );
@@ -3652,10 +3671,10 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
                     ),
                     SizedBox(height: 4),
                     Text(
+                      '• Tap any cell to set your starting position\n'
                       '• Roll 2d10: 1st = Direction + Tone, 2nd = Subject\n'
                       '• Doubles = Conversation ends\n'
-                      '• Edges wrap around\n'
-                      '• You say what your PC says; this guides NPC response',
+                      '• Edges wrap around',
                       style: TextStyle(fontSize: 10),
                     ),
                   ],

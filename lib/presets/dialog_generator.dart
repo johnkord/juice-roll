@@ -119,6 +119,18 @@ class DialogGenerator {
     _currentCol = 2;
   }
 
+  /// Set position to a specific cell on the grid
+  /// This starts a conversation if not already active
+  void setPosition(int row, int col) {
+    if (row >= 0 && row < 5 && col >= 0 && col < 5) {
+      _currentRow = row;
+      _currentCol = col;
+      if (!_conversationActive) {
+        _conversationActive = true;
+      }
+    }
+  }
+
   /// Move in a direction with wrap-around
   void _move(String direction) {
     switch (direction) {
