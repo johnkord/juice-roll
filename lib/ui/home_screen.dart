@@ -79,9 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Dungeon exploration phase state (persists across dialog opens)
   bool _isDungeonEntering = true;
+  // Two-Pass map generation state (persists across dialog opens)
+  bool _twoPassHasFirstDoubles = false;
 
   void _setDungeonPhase(bool isEntering) {
     setState(() => _isDungeonEntering = isEntering);
+  }
+
+  void _setTwoPassFirstDoubles(bool hasFirstDoubles) {
+    setState(() => _twoPassHasFirstDoubles = hasFirstDoubles);
   }
 
   void _addToHistory(RollResult result) {
@@ -268,6 +274,8 @@ class _HomeScreenState extends State<HomeScreen> {
         onRoll: _addToHistory,
         isEntering: _isDungeonEntering,
         onPhaseChange: _setDungeonPhase,
+        twoPassHasFirstDoubles: _twoPassHasFirstDoubles,
+        onTwoPassFirstDoublesChange: _setTwoPassFirstDoubles,
       ),
     );
   }
@@ -2102,12 +2110,16 @@ class _DungeonDialog extends StatefulWidget {
   final void Function(RollResult) onRoll;
   final bool isEntering;
   final void Function(bool) onPhaseChange;
+  final bool twoPassHasFirstDoubles;
+  final void Function(bool) onTwoPassFirstDoublesChange;
 
   const _DungeonDialog({
     required this.dungeonGenerator,
     required this.onRoll,
     required this.isEntering,
     required this.onPhaseChange,
+    required this.twoPassHasFirstDoubles,
+    required this.onTwoPassFirstDoublesChange,
   });
 
   @override
@@ -2129,9 +2141,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   // Advantage = Better Encounters, Disadvantage = Worse Encounters
   AdvantageType _encounterSkew = AdvantageType.none;
 
-  // Two-Pass map generation mode
-  bool _isTwoPassMode = false;
-  bool _twoPassHasFirstDoubles = false;
+  // Two-Pass state is managed by parent widget via widget.twoPassHasFirstDoubles
 
   @override
   void initState() {
@@ -2324,7 +2334,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
               ),
               const Divider(),
               // Two-Pass Method Section
-              const Text('Two-Pass Method', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Two-Pass Method (Map Pre-Generation)', style: TextStyle(fontWeight: FontWeight.bold)),
               Container(
                 padding: const EdgeInsets.all(8),
                 margin: const EdgeInsets.symmetric(vertical: 4),
@@ -2337,42 +2347,63 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Pre-generate the map first, then explore with encounters.\n'
-                      '• Start with 1d10@+ until 1st doubles → switch to 1d10@-\n'
-                      '• 2nd doubles = STOP (all remaining paths → Small Chamber: 1 Door)',
+                      'PASS 1: Pre-generate the entire map (no encounters)',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      '• Start with 1d10@+ (interconnected, more exits)\n'
+                      '• 1st doubles → switch to 1d10@- (adds dead ends)\n'
+                      '• 2nd doubles → STOP (remaining paths = Small Chamber: 1 Door)',
                       style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text(
-                          _twoPassHasFirstDoubles
-                              ? 'Phase: 1d10@- (after 1st doubles)'
-                              : 'Phase: 1d10@+ (until 1st doubles)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: _twoPassHasFirstDoubles ? Colors.orange : Colors.green,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: widget.twoPassHasFirstDoubles 
+                                ? Colors.orange.withValues(alpha: 0.2) 
+                                : Colors.green.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: widget.twoPassHasFirstDoubles ? Colors.orange : Colors.green,
+                            ),
+                          ),
+                          child: Text(
+                            widget.twoPassHasFirstDoubles
+                                ? 'MAP: 1d10@- (after 1st doubles)'
+                                : 'MAP: 1d10@+ (until 1st doubles)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: widget.twoPassHasFirstDoubles ? Colors.orange.shade800 : Colors.green.shade800,
+                            ),
                           ),
                         ),
                         const Spacer(),
                         TextButton(
-                          onPressed: () => setState(() => _twoPassHasFirstDoubles = false),
-                          child: const Text('Reset', style: TextStyle(fontSize: 10)),
+                          onPressed: () {
+                            widget.onTwoPassFirstDoublesChange(false);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Reset Map', style: TextStyle(fontSize: 10)),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+              // Two-Pass Map Generation Buttons
               _DialogOption(
-                title: 'Two-Pass Area',
-                subtitle: _twoPassHasFirstDoubles
-                    ? 'Area + Condition only (1d10@- for map)'
-                    : 'Area + Condition only (1d10@+ for map)',
+                title: 'Next Area (Map)',
+                subtitle: widget.twoPassHasFirstDoubles
+                    ? '1d10@- - layout only, no encounters'
+                    : '1d10@+ - layout only, no encounters',
                 onTap: () {
                   final result = widget.dungeonGenerator.generateTwoPassArea(
-                    hasFirstDoubles: _twoPassHasFirstDoubles,
+                    hasFirstDoubles: widget.twoPassHasFirstDoubles,
                     useD6ForPassage: _useD6ForPassage,
                     passageSkew: _passageConditionSkew,
                   );
@@ -2387,8 +2418,8 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                         duration: const Duration(seconds: 4),
                       ),
                     );
-                  } else if (result.isDoubles && !_twoPassHasFirstDoubles) {
-                    setState(() => _twoPassHasFirstDoubles = true);
+                  } else if (result.isDoubles && !widget.twoPassHasFirstDoubles) {
+                    widget.onTwoPassFirstDoublesChange(true);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
@@ -2398,6 +2429,54 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   }
                   Navigator.pop(context);
                 },
+              ),
+              _DialogOption(
+                title: 'Passage (Map)',
+                subtitle: 'If area is Passage, roll type (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.generatePassage(
+                    useD6: _useD6ForPassage,
+                    skew: _passageConditionSkew,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Condition (Map)',
+                subtitle: 'Room state for map (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
+                onTap: () {
+                  widget.onRoll(widget.dungeonGenerator.generateCondition(
+                    useD6: _useD6ForPassage,
+                    skew: _passageConditionSkew,
+                  ));
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 8),
+              // Pass 2 - Exploration
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.teal.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.teal.withValues(alpha: 0.2)),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PASS 2: Explore the pre-made map',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'After map is drawn, traverse it room by room.\n'
+                      'Roll encounters when entering each new area.\n'
+                      '(Use Encounter buttons below for this phase)',
+                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                ),
               ),
               const Divider(),
               // Passage & Condition Settings

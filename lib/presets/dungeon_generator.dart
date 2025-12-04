@@ -544,16 +544,21 @@ Trap Procedure:
   /// For Two-Pass method: generates just the Next Area and Passage for map creation.
   /// Does NOT roll encounters. Returns true in phaseChange if doubles occurred.
   /// 
-  /// Two-Pass rules:
-  /// - Start rolling 1d10 with Advantage (map generation mode)
-  /// - First doubles: switch to 1d10 with Disadvantage
+  /// Two-Pass rules (from Juice instructions):
+  /// - Start rolling 1d10 with Advantage (@+) for map generation
+  /// - First doubles: switch to 1d10 with Disadvantage (@-)
   /// - Second doubles: stop generating - all unrevealed paths become "Small Chamber: 1 Door"
+  ///
+  /// This is the OPPOSITE of One-Pass which starts with @- and switches to @+.
+  /// Two-Pass is designed for pre-generating maps quickly (advantage first gives
+  /// more interconnected maps with exits, then disadvantage adds dead ends).
   TwoPassAreaResult generateTwoPassArea({
     required bool hasFirstDoubles,
     bool useD6ForPassage = false,
     AdvantageType passageSkew = AdvantageType.none,
   }) {
-    // Two-Pass uses advantage first, then switches to disadvantage after first doubles
+    // Two-Pass: starts with ADVANTAGE (@+), switches to DISADVANTAGE (@-) after first doubles
+    // This is opposite of One-Pass which starts with @- and switches to @+
     final useAdvantage = !hasFirstDoubles;
     
     final RollWithAdvantageResult result;
@@ -936,11 +941,11 @@ class TwoPassAreaResult extends RollResult {
 
   static String _buildDescription(bool hadFirstDoubles, bool isSecondDoubles) {
     if (isSecondDoubles) {
-      return 'Two-Pass Area (2nd DOUBLES - STOP!)';
+      return 'Two-Pass Map (2nd DOUBLES - STOP!)';
     } else if (hadFirstDoubles) {
-      return 'Two-Pass Area (1d10@-)';
+      return 'Two-Pass Map (1d10@- after 1st doubles)';
     } else {
-      return 'Two-Pass Area (1d10@+)';
+      return 'Two-Pass Map (1d10@+ until 1st doubles)';
     }
   }
 
