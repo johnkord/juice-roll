@@ -79,12 +79,12 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
   String _getLikelihoodDescription(String likelihood) {
     switch (likelihood) {
       case 'Unlikely':
-        return 'Shifts mixed results toward No';
+        return 'If either die is −, result is No-like';
       case 'Likely':
-        return 'Shifts mixed results toward Yes';
+        return 'If either die is +, result is Yes-like';
       case 'Even Odds':
       default:
-        return '50/50 chance';
+        return 'Standard interpretation (50/50)';
     }
   }
 

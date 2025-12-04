@@ -9,6 +9,95 @@ enum MonsterDifficulty {
   boss,    // Doubles only
 }
 
+/// Represents a single monster type with its count in an encounter
+class MonsterCount {
+  final String code;
+  final String name;
+  final int count;
+  final String skewSymbol; // '+', '-', or ''
+
+  MonsterCount({
+    required this.code,
+    required this.name,
+    required this.count,
+    required this.skewSymbol,
+  });
+
+  @override
+  String toString() => count > 0 ? '$count× $name' : '0× $name (none)';
+}
+
+/// Result of a full monster encounter with counts
+class FullMonsterEncounterResult extends RollResult {
+  final int row;
+  final MonsterDifficulty difficulty;
+  final bool hasBoss;
+  final String? bossMonster;
+  final List<MonsterCount> monsters;
+  final int environmentRow;
+  final String environmentFormula;
+  final bool wasDoubles;
+  final bool isForest; // Special case: Forest uses Blights for row 6
+
+  FullMonsterEncounterResult({
+    required List<int> diceResults,
+    required this.row,
+    required this.difficulty,
+    required this.hasBoss,
+    this.bossMonster,
+    required this.monsters,
+    required this.environmentRow,
+    required this.environmentFormula,
+    required this.wasDoubles,
+    this.isForest = false,
+  }) : super(
+          type: RollType.encounter,
+          description: 'Monster Encounter',
+          diceResults: diceResults,
+          total: row + 1,
+          interpretation: _buildInterpretation(monsters, hasBoss, bossMonster),
+          metadata: {
+            'row': row,
+            'difficulty': difficulty.name,
+            'hasBoss': hasBoss,
+            'bossMonster': bossMonster,
+            'monsters': monsters.map((m) => {'name': m.name, 'count': m.count}).toList(),
+            'environmentRow': environmentRow,
+            'environmentFormula': environmentFormula,
+            'wasDoubles': wasDoubles,
+            'isForest': isForest,
+          },
+        );
+
+  static String _buildInterpretation(List<MonsterCount> monsters, bool hasBoss, String? bossMonster) {
+    final parts = <String>[];
+    if (hasBoss && bossMonster != null) {
+      parts.add('1× $bossMonster (Boss)');
+    }
+    for (final m in monsters) {
+      if (m.count > 0) {
+        parts.add('${m.count}× ${m.name}');
+      }
+    }
+    return parts.isEmpty ? 'No monsters' : parts.join(', ');
+  }
+
+  /// Get a formatted summary of the encounter
+  String get encounterSummary {
+    final parts = <String>[];
+    if (hasBoss && bossMonster != null) {
+      parts.add('1 $bossMonster (Boss)');
+    }
+    for (final m in monsters.where((m) => m.count > 0)) {
+      parts.add('${m.count} ${m.name}');
+    }
+    return parts.isEmpty ? 'No monsters appeared' : parts.join('\n');
+  }
+
+  @override
+  String toString() => 'Encounter: $encounterSummary';
+}
+
 /// Result of a monster encounter roll
 class MonsterEncounterResult extends RollResult {
   final int row;                    // 0-11 (0-9 plus * and **)
@@ -355,4 +444,202 @@ class MonsterEncounter {
   static const String deadlyFormula = '💀: ∑CR>∑Lvl/(Lvl>4?2:4), Any CR>Lvl';
   static const String deadlyExplanation = 
     'Deadly if: Total CR > Total Level ÷ (2 if level > 4, else 4), or any single CR > Level';
+
+  /// Environment-based monster formulas from the wilderness table
+  /// Format: {'modifier': int, 'advantage': String} where advantage is '+', '-', or '0'
+  static const List<Map<String, dynamic>> environmentFormulas = [
+    {'modifier': 0, 'advantage': '-'},  // 1: Arctic +0@-
+    {'modifier': 0, 'advantage': '0'},  // 2: Mountains +0@0
+    {'modifier': 1, 'advantage': '-'},  // 3: Cavern +1@-
+    {'modifier': 1, 'advantage': '0'},  // 4: Hills +1@0
+    {'modifier': 3, 'advantage': '-'},  // 5: Grassland +3@-
+    {'modifier': 2, 'advantage': '0'},  // 6: Forest +2@0 (special: row 6 = Blights)
+    {'modifier': 3, 'advantage': '+'},  // 7: Swamp +3@+
+    {'modifier': 3, 'advantage': '0'},  // 8: Water +3@0
+    {'modifier': 4, 'advantage': '-'},  // 9: Coast +4@-
+    {'modifier': 4, 'advantage': '+'},  // 10: Desert +4@+
+  ];
+
+  /// Environment names for display
+  static const List<String> environmentNames = [
+    'Arctic', 'Mountains', 'Cavern', 'Hills', 'Grassland',
+    'Forest', 'Swamp', 'Water', 'Coast', 'Desert'
+  ];
+
+  /// Get the formula string for an environment
+  static String getEnvironmentFormula(int environmentRow) {
+    final idx = (environmentRow - 1).clamp(0, 9);
+    final formula = environmentFormulas[idx];
+    final mod = formula['modifier'] as int;
+    final adv = formula['advantage'] as String;
+    return '+$mod@$adv';
+  }
+
+  /// Roll for monster row based on environment formula
+  /// Returns the row (0-11) on the monster table
+  /// If doubles are rolled on 1d6, this is a Bandit encounter (row 11)
+  static ({int row, List<int> dice, bool wasDoubles, bool isForest}) rollMonsterRowByEnvironment(int environmentRow) {
+    final idx = (environmentRow - 1).clamp(0, 9);
+    final formula = environmentFormulas[idx];
+    final modifier = formula['modifier'] as int;
+    final advantageType = formula['advantage'] as String;
+    final isForest = environmentRow == 6;
+
+    // Roll 1d6 or 2d6 depending on advantage
+    int baseRoll;
+    int? secondRoll;
+    bool wasDoubles = false;
+
+    if (advantageType == '+') {
+      // Advantage: roll 2d6, take higher
+      final die1 = _engine.rollDie(6);
+      final die2 = _engine.rollDie(6);
+      wasDoubles = die1 == die2;
+      baseRoll = wasDoubles ? die1 : (die1 > die2 ? die1 : die2);
+      secondRoll = die2;
+    } else if (advantageType == '-') {
+      // Disadvantage: roll 2d6, take lower
+      final die1 = _engine.rollDie(6);
+      final die2 = _engine.rollDie(6);
+      wasDoubles = die1 == die2;
+      baseRoll = wasDoubles ? die1 : (die1 < die2 ? die1 : die2);
+      secondRoll = die2;
+    } else {
+      // Straight roll
+      baseRoll = _engine.rollDie(6);
+    }
+
+    // If doubles, this is a Bandit encounter
+    if (wasDoubles) {
+      return (
+        row: 11,  // ** row (Bandits)
+        dice: secondRoll != null ? [baseRoll, secondRoll] : [baseRoll],
+        wasDoubles: true,
+        isForest: isForest,
+      );
+    }
+
+    // Calculate the row: base + modifier, clamped to 1-10 (then converted to 0-9)
+    final rawRow = baseRoll + modifier;
+    int row = (rawRow).clamp(1, 10) - 1;  // Convert to 0-indexed
+
+    // Special case: Forest environment and row 6 (index 5) = use Blights (* row)
+    if (isForest && row == 5) {
+      row = 10;  // * row (Blights)
+    }
+
+    return (
+      row: row,
+      dice: secondRoll != null ? [baseRoll, secondRoll] : [baseRoll],
+      wasDoubles: false,
+      isForest: isForest,
+    );
+  }
+
+  /// Roll for the number of a specific monster type
+  /// Uses 1d6-1 with advantage/disadvantage based on the monster's skew symbol
+  /// Note: In Juice, "+" means advantage (take lower die = fewer monsters)
+  /// and "-" means disadvantage (take higher die = more monsters).
+  /// This is counterintuitive but matches the Juice instructions examples.
+  static int rollMonsterCount(String skewSymbol) {
+    int baseRoll;
+    
+    if (skewSymbol == '+') {
+      // Advantage in Juice context: take LOWER die (results in fewer monsters)
+      final result = _engine.rollWithDisadvantage(1, 6);  // Use disadvantage to take lower
+      baseRoll = result.chosenSum;
+    } else if (skewSymbol == '-') {
+      // Disadvantage in Juice context: take HIGHER die (results in more monsters)
+      final result = _engine.rollWithAdvantage(1, 6);  // Use advantage to take higher
+      baseRoll = result.chosenSum;
+    } else {
+      // Straight roll
+      baseRoll = _engine.rollDie(6);
+    }
+    
+    // Result is 1d6-1, minimum 0
+    return (baseRoll - 1).clamp(0, 5);
+  }
+
+  /// Generate a full monster encounter based on environment
+  /// This follows the complete Juice procedure:
+  /// 1. Roll for monster row using environment formula
+  /// 2. Roll 2d10 for difficulty (doubles = boss)
+  /// 3. Roll counts for each monster type included in the difficulty
+  static FullMonsterEncounterResult generateFullEncounter(int environmentRow) {
+    List<int> allDice = [];
+    
+    // Step 1: Roll for monster row
+    final rowResult = rollMonsterRowByEnvironment(environmentRow);
+    allDice.addAll(rowResult.dice);
+    final row = rowResult.row;
+    final monsterRowDoubles = rowResult.wasDoubles;
+    final isForest = rowResult.isForest;
+    
+    // Step 2: Roll 2d10 for difficulty
+    final diffDie1 = _engine.rollDie(10);
+    final diffDie2 = _engine.rollDie(10);
+    allDice.addAll([diffDie1, diffDie2]);
+    
+    final wasDoubles = diffDie1 == diffDie2;
+    final diffRoll = diffDie1;
+    
+    MonsterDifficulty difficulty;
+    if (wasDoubles) {
+      difficulty = MonsterDifficulty.boss;
+    } else if (diffRoll >= 1 && diffRoll <= 4) {
+      difficulty = MonsterDifficulty.easy;
+    } else if (diffRoll >= 5 && diffRoll <= 8) {
+      difficulty = MonsterDifficulty.medium;
+    } else {
+      difficulty = MonsterDifficulty.hard;
+    }
+    
+    // Step 3: Determine which monsters are in this encounter
+    // Include all columns up to and including the difficulty column
+    final maxColumn = _difficultyToColumn(difficulty);
+    final hasBoss = wasDoubles;
+    String? bossMonster;
+    
+    if (hasBoss) {
+      final bossCode = monsterTable[row][4]; // Boss column
+      bossMonster = monsterFullNames[bossCode] ?? bossCode;
+    }
+    
+    // Roll counts for each monster type (columns 1-3 based on difficulty)
+    final monsters = <MonsterCount>[];
+    for (int col = 1; col <= maxColumn.clamp(1, 3); col++) {
+      final monsterCode = monsterTable[row][col];
+      final monsterName = monsterFullNames[monsterCode] ?? monsterCode;
+      
+      // Get skew symbol from the monster code
+      String skewSymbol = '';
+      if (monsterCode.startsWith('+ ')) {
+        skewSymbol = '+';
+      } else if (monsterCode.startsWith('- ')) {
+        skewSymbol = '-';
+      }
+      
+      final count = rollMonsterCount(skewSymbol);
+      monsters.add(MonsterCount(
+        code: monsterCode,
+        name: monsterName,
+        count: count,
+        skewSymbol: skewSymbol,
+      ));
+    }
+    
+    return FullMonsterEncounterResult(
+      diceResults: allDice,
+      row: row,
+      difficulty: difficulty,
+      hasBoss: hasBoss,
+      bossMonster: bossMonster,
+      monsters: monsters,
+      environmentRow: environmentRow,
+      environmentFormula: getEnvironmentFormula(environmentRow),
+      wasDoubles: wasDoubles || monsterRowDoubles,
+      isForest: isForest,
+    );
+  }
 }

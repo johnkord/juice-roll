@@ -38,6 +38,9 @@ enum RollType {
   immersion,
   nameGenerator,
   scale,
+  
+  // Abstract Icons
+  abstractIcons,
 }
 
 /// Represents the result of any roll.
@@ -49,6 +52,7 @@ class RollResult {
   final String? interpretation;
   final DateTime timestamp;
   final Map<String, dynamic>? metadata;
+  final String? imagePath;
 
   RollResult({
     required this.type,
@@ -58,6 +62,7 @@ class RollResult {
     this.interpretation,
     DateTime? timestamp,
     this.metadata,
+    this.imagePath,
   }) : timestamp = timestamp ?? DateTime.now();
 
   @override
@@ -84,13 +89,14 @@ class FateRollResult extends RollResult {
   }) : super(type: RollType.fate);
 
   /// Get symbolic representation of Fate dice.
+  /// Uses Unicode minus (−), circle (○), and plus (+) for consistency.
   String get symbols {
     return diceResults.map((d) {
       switch (d) {
         case -1:
-          return '-';
+          return '−';  // Unicode minus sign (U+2212)
         case 0:
-          return '0';
+          return '○';  // White circle (U+25CB)
         case 1:
           return '+';
         default:

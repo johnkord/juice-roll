@@ -71,32 +71,47 @@ class DungeonGenerator {
     'Pristine',               // 0/10
   ];
 
-  /// Dungeon name descriptors - d10 (first word)
-  static const List<String> dungeonDescriptors = [
-    'Bloodstained',  // 1
-    'Chaotic',       // 2
-    'Cursed',        // 3
-    'Fallen',        // 4
-    'Frozen',        // 5
-    'Hidden',        // 6
-    'Lost',          // 7
-    'Ruined',        // 8
-    'Sacred',        // 9
-    'Silent',        // 0/10
+  /// Dungeon types - d10 (from natural-hazard-feature-dungeon.md)
+  /// Format: "[Dungeon] of the [Description] [Subject]"
+  static const List<String> dungeonTypes = [
+    'Catacombs',   // 1
+    'Cavern',      // 2
+    'Crypt',       // 3
+    'Fortress',    // 4
+    'Hideout',     // 5
+    'Lair',        // 6
+    'Mine',        // 7
+    'Ruins',       // 8
+    'Sanctuary',   // 9
+    'Temple',      // 0/10
   ];
 
-  /// Dungeon name subjects - d10 (second word)
+  /// Dungeon name descriptions - d10 (from natural-hazard-feature-dungeon.md)
+  static const List<String> dungeonDescriptions = [
+    'Bloodstained',  // 1
+    'Chaotic',       // 2
+    'Endless',       // 3
+    'Fallen',        // 4
+    'Forbidden',     // 5
+    'Forgotten',     // 6
+    'Shattered',     // 7
+    'Shrouded',      // 8
+    'Silent',        // 9
+    'Unknown',       // 0/10
+  ];
+
+  /// Dungeon name subjects - d10 (from natural-hazard-feature-dungeon.md)
   static const List<String> dungeonSubjects = [
-    'Blades',    // 1
-    'Blight',    // 2
-    'Darkness',  // 3
-    'Doom',      // 4
-    'Dread',     // 5
-    'Eyes',      // 6
-    'Flame',     // 7
-    'Shadows',   // 8
-    'Souls',     // 9
-    'Whispers',  // 0/10
+    'Blades',     // 1
+    'Blight',     // 2
+    'Darkness',   // 3
+    'Fury',       // 4
+    'Lies',       // 5
+    'Madness',    // 6
+    'Mist',       // 7
+    'Prophecy',   // 8
+    'Runes',      // 9
+    'Terror',     // 0/10
   ];
 
   // ============ DUNGEON ENCOUNTER TABLES ============
@@ -205,17 +220,23 @@ Trap Procedure:
   DungeonGenerator([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
 
-  /// Generate a dungeon name (2d10).
+  /// Generate a dungeon name (3d10).
+  /// Format: "[Dungeon] of the [Description] [Subject]"
+  /// Example: "Ruins of the Shattered Lies"
   DungeonNameResult generateName() {
+    final typeRoll = _rollEngine.rollDie(10);
     final descRoll = _rollEngine.rollDie(10);
     final subjRoll = _rollEngine.rollDie(10);
 
-    final descriptor = dungeonDescriptors[descRoll - 1];
+    final dungeonType = dungeonTypes[typeRoll - 1];
+    final description = dungeonDescriptions[descRoll - 1];
     final subject = dungeonSubjects[subjRoll - 1];
 
     return DungeonNameResult(
-      descriptorRoll: descRoll,
-      descriptor: descriptor,
+      typeRoll: typeRoll,
+      dungeonType: dungeonType,
+      descriptionRoll: descRoll,
+      description: description,
       subjectRoll: subjRoll,
       subject: subject,
     );
@@ -456,30 +477,37 @@ extension DungeonPhaseDisplay on DungeonPhase {
 }
 
 /// Result of dungeon name generation.
+/// Format: "[Dungeon] of the [Description] [Subject]"
 class DungeonNameResult extends RollResult {
-  final int descriptorRoll;
-  final String descriptor;
+  final int typeRoll;
+  final String dungeonType;
+  final int descriptionRoll;
+  final String descriptionWord;
   final int subjectRoll;
   final String subject;
 
   DungeonNameResult({
-    required this.descriptorRoll,
-    required this.descriptor,
+    required this.typeRoll,
+    required this.dungeonType,
+    required this.descriptionRoll,
+    required String description,
     required this.subjectRoll,
     required this.subject,
-  }) : super(
+  }) : descriptionWord = description,
+       super(
           type: RollType.dungeon,
           description: 'Dungeon Name',
-          diceResults: [descriptorRoll, subjectRoll],
-          total: descriptorRoll + subjectRoll,
-          interpretation: 'The $descriptor $subject',
+          diceResults: [typeRoll, descriptionRoll, subjectRoll],
+          total: typeRoll + descriptionRoll + subjectRoll,
+          interpretation: '$dungeonType of the $description $subject',
           metadata: {
-            'descriptor': descriptor,
+            'dungeonType': dungeonType,
+            'description': description,
             'subject': subject,
           },
         );
 
-  String get name => 'The $descriptor $subject';
+  String get name => '$dungeonType of the $descriptionWord $subject';
 
   @override
   String toString() => 'Dungeon: $name';

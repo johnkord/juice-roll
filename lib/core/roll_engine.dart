@@ -8,10 +8,32 @@ class RollEngine {
   RollEngine([Random? random]) : _random = random ?? Random();
 
   /// Roll a single die with [sides] sides (1 to sides inclusive).
-  int rollDie(int sides) {
+  /// Supports optional skew for advantage (higher) or disadvantage (lower).
+  int rollDie(int sides, {dynamic skew}) {
     if (sides < 1) {
       throw ArgumentError('Dice must have at least 1 side');
     }
+    
+    // Handle skew parameter - can be SkewType enum or other types
+    if (skew == null) {
+      return _random.nextInt(sides) + 1;
+    }
+    
+    // Check for SkewType enum by string representation
+    final skewStr = skew.toString();
+    if (skewStr.contains('advantage')) {
+      // Roll twice, take higher
+      final r1 = _random.nextInt(sides) + 1;
+      final r2 = _random.nextInt(sides) + 1;
+      return r1 >= r2 ? r1 : r2;
+    } else if (skewStr.contains('disadvantage')) {
+      // Roll twice, take lower
+      final r1 = _random.nextInt(sides) + 1;
+      final r2 = _random.nextInt(sides) + 1;
+      return r1 <= r2 ? r1 : r2;
+    }
+    
+    // No skew or unrecognized - straight roll
     return _random.nextInt(sides) + 1;
   }
 

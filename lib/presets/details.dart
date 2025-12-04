@@ -108,31 +108,83 @@ class Details {
     );
   }
 
-  /// Roll for a detail modifier.
-  DetailResult rollDetail() {
-    final roll = _rollEngine.rollDie(10);
+  /// Roll for TWO properties with intensity (d10 + d6 each).
+  /// Per instructions: "Roll 1d10 to pick a property, then 1d6 to pick an intensity. Do this twice."
+  DualPropertyResult rollTwoProperties() {
+    final prop1 = rollProperty();
+    final prop2 = rollProperty();
+    return DualPropertyResult(property1: prop1, property2: prop2);
+  }
+
+  /// Roll for a detail modifier with optional skew.
+  /// Advantage: More positive outcomes (Favors PC, Thread, NPC, Positive Emotion)
+  /// Disadvantage: More negative outcomes (Disfavors PC, Thread, NPC, Negative Emotion)
+  DetailResult rollDetail({SkewType skew = SkewType.none}) {
+    int roll;
+    int? secondRoll;
+    
+    if (skew == SkewType.advantage) {
+      final result = _rollEngine.rollWithAdvantage(1, 10);
+      roll = result.chosenSum;
+      secondRoll = result.sum2;
+    } else if (skew == SkewType.disadvantage) {
+      final result = _rollEngine.rollWithDisadvantage(1, 10);
+      roll = result.chosenSum;
+      secondRoll = result.sum2;
+    } else {
+      roll = _rollEngine.rollDie(10);
+    }
+    
     final index = roll == 10 ? 9 : roll - 1;
     final detail = detailModifiers[index];
 
     return DetailResult(
       detailType: DetailType.detail,
       roll: roll,
+      secondRoll: secondRoll,
       result: detail,
+      skew: skew,
+      requiresFollowUp: detail == 'History' || detail == 'Property',
     );
   }
 
-  /// Roll for history context.
-  DetailResult rollHistory() {
-    final roll = _rollEngine.rollDie(10);
+  /// Roll for history context with optional skew.
+  /// Advantage: Closer to the present
+  /// Disadvantage: Further into the past
+  DetailResult rollHistory({SkewType skew = SkewType.none}) {
+    int roll;
+    int? secondRoll;
+    
+    if (skew == SkewType.advantage) {
+      final result = _rollEngine.rollWithAdvantage(1, 10);
+      roll = result.chosenSum;
+      secondRoll = result.sum2;
+    } else if (skew == SkewType.disadvantage) {
+      final result = _rollEngine.rollWithDisadvantage(1, 10);
+      roll = result.chosenSum;
+      secondRoll = result.sum2;
+    } else {
+      roll = _rollEngine.rollDie(10);
+    }
+    
     final index = roll == 10 ? 9 : roll - 1;
     final history = histories[index];
 
     return DetailResult(
       detailType: DetailType.history,
       roll: roll,
+      secondRoll: secondRoll,
       result: history,
+      skew: skew,
     );
   }
+}
+
+/// Skew type for rolls
+enum SkewType {
+  none,
+  advantage,
+  disadvantage,
 }
 
 /// Type of detail being rolled.
@@ -162,24 +214,32 @@ extension DetailTypeDisplay on DetailType {
 class DetailResult extends RollResult {
   final DetailType detailType;
   final int roll;
+  final int? secondRoll;
   final String result;
   final String? emoji;
+  final SkewType skew;
+  final bool requiresFollowUp;
 
   DetailResult({
     required this.detailType,
     required this.roll,
+    this.secondRoll,
     required this.result,
     this.emoji,
+    this.skew = SkewType.none,
+    this.requiresFollowUp = false,
   }) : super(
           type: RollType.details,
           description: detailType.displayText,
-          diceResults: [roll],
+          diceResults: secondRoll != null ? [roll, secondRoll] : [roll],
           total: roll,
           interpretation: emoji != null ? '$emoji $result' : result,
           metadata: {
             'detailType': detailType.name,
             'result': result,
             if (emoji != null) 'emoji': emoji,
+            if (skew != SkewType.none) 'skew': skew.name,
+            'requiresFollowUp': requiresFollowUp,
           },
         );
 
@@ -215,15 +275,15 @@ class PropertyResult extends RollResult {
       case 1:
         return 'Minimal';
       case 2:
-        return 'Mundane';
-      case 3:
         return 'Minor';
+      case 3:
+        return 'Mundane';
       case 4:
         return 'Moderate';
       case 5:
         return 'Major';
       case 6:
-        return 'Massive';
+        return 'Maximum';
       default:
         return 'Unknown';
     }
@@ -233,4 +293,36 @@ class PropertyResult extends RollResult {
 
   @override
   String toString() => 'Property: $property ($intensityDescription)';
+}
+
+/// Result of rolling two properties (the standard way per instructions).
+class DualPropertyResult extends RollResult {
+  final PropertyResult property1;
+  final PropertyResult property2;
+
+  DualPropertyResult({
+    required this.property1,
+    required this.property2,
+  }) : super(
+          type: RollType.details,
+          description: 'Properties',
+          diceResults: [
+            property1.propertyRoll, 
+            property1.intensityRoll,
+            property2.propertyRoll,
+            property2.intensityRoll,
+          ],
+          total: property1.propertyRoll + property2.propertyRoll,
+          interpretation: '${property1.interpretation} + ${property2.interpretation}',
+          metadata: {
+            'property1': property1.property,
+            'intensity1': property1.intensityRoll,
+            'property2': property2.property,
+            'intensity2': property2.intensityRoll,
+          },
+        );
+
+  @override
+  String toString() => 
+      'Properties: ${property1.property} (${property1.intensityDescription}) + ${property2.property} (${property2.intensityDescription})';
 }

@@ -1,5 +1,6 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
+import 'details.dart' show SkewType;
 
 /// Object and Treasure generator preset for the Juice Oracle.
 /// Uses object-treasure.md for generating treasure details.
@@ -187,119 +188,177 @@ class ObjectTreasure {
   ObjectTreasure([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
 
-  /// Roll for treasure type (d6) then generate that type.
-  ObjectTreasureResult generateRandom() {
-    final typeRoll = _rollEngine.rollDie(6);
-    return generateByType(typeRoll);
+  /// Roll 4d6 for a complete treasure as per Juice instructions.
+  /// First die = category, next 3 dice = properties.
+  /// Skew: advantage = better item, disadvantage = worse item.
+  ObjectTreasureResult generate({SkewType skew = SkewType.none}) {
+    // Roll 4d6 with optional skew
+    final die1 = _rollEngine.rollDie(6, skew: skew);
+    final die2 = _rollEngine.rollDie(6, skew: skew);
+    final die3 = _rollEngine.rollDie(6, skew: skew);
+    final die4 = _rollEngine.rollDie(6, skew: skew);
+    
+    return generateFromRolls(die1, die2, die3, die4);
   }
-
-  /// Generate treasure of a specific type (1-6).
-  ObjectTreasureResult generateByType(int type) {
-    switch (type) {
+  
+  /// Generate treasure from specific 4d6 rolls.
+  /// die1 = category, die2/die3/die4 = properties.
+  ObjectTreasureResult generateFromRolls(int die1, int die2, int die3, int die4) {
+    switch (die1) {
       case 1:
-        return generateTrinket();
+        return _createTrinket(die2, die3, die4);
       case 2:
-        return generateTreasure();
+        return _createTreasure(die2, die3, die4);
       case 3:
-        return generateDocument();
+        return _createDocument(die2, die3, die4);
       case 4:
-        return generateAccessory();
+        return _createAccessory(die2, die3, die4);
       case 5:
-        return generateWeapon();
+        return _createWeapon(die2, die3, die4);
       case 6:
-        return generateArmor();
+        return _createArmor(die2, die3, die4);
       default:
-        return generateTrinket();
+        return _createTrinket(die2, die3, die4);
     }
   }
 
-  /// Generate a trinket (3d6).
-  ObjectTreasureResult generateTrinket() {
-    final qualityRoll = _rollEngine.rollDie(6);
-    final materialRoll = _rollEngine.rollDie(6);
-    final typeRoll = _rollEngine.rollDie(6);
+  /// Generate treasure of a specific type (1-6) with skew.
+  ObjectTreasureResult generateByType(int type, {SkewType skew = SkewType.none}) {
+    switch (type) {
+      case 1:
+        return generateTrinket(skew: skew);
+      case 2:
+        return generateTreasure(skew: skew);
+      case 3:
+        return generateDocument(skew: skew);
+      case 4:
+        return generateAccessory(skew: skew);
+      case 5:
+        return generateWeapon(skew: skew);
+      case 6:
+        return generateArmor(skew: skew);
+      default:
+        return generateTrinket(skew: skew);
+    }
+  }
 
+  /// Generate a trinket (3d6 for properties).
+  ObjectTreasureResult generateTrinket({SkewType skew = SkewType.none}) {
+    final qualityRoll = _rollEngine.rollDie(6, skew: skew);
+    final materialRoll = _rollEngine.rollDie(6, skew: skew);
+    final typeRoll = _rollEngine.rollDie(6, skew: skew);
+
+    return _createTrinket(qualityRoll, materialRoll, typeRoll);
+  }
+  
+  ObjectTreasureResult _createTrinket(int qualityRoll, int materialRoll, int typeRoll) {
     return ObjectTreasureResult(
       category: 'Trinket',
       quality: trinketQualities[qualityRoll - 1],
       material: trinketMaterials[materialRoll - 1],
       itemType: trinketTypes[typeRoll - 1],
-      rolls: [qualityRoll, materialRoll, typeRoll],
+      rolls: [1, qualityRoll, materialRoll, typeRoll],
+      columnLabels: ['Quality', 'Material', 'Type'],
     );
   }
 
-  /// Generate treasure (container + contents) (3d6).
-  ObjectTreasureResult generateTreasure() {
-    final qualityRoll = _rollEngine.rollDie(6);
-    final containerRoll = _rollEngine.rollDie(6);
-    final contentsRoll = _rollEngine.rollDie(6);
+  /// Generate treasure (container + contents) (3d6 for properties).
+  ObjectTreasureResult generateTreasure({SkewType skew = SkewType.none}) {
+    final qualityRoll = _rollEngine.rollDie(6, skew: skew);
+    final containerRoll = _rollEngine.rollDie(6, skew: skew);
+    final contentsRoll = _rollEngine.rollDie(6, skew: skew);
 
+    return _createTreasure(qualityRoll, containerRoll, contentsRoll);
+  }
+  
+  ObjectTreasureResult _createTreasure(int qualityRoll, int containerRoll, int contentsRoll) {
     return ObjectTreasureResult(
       category: 'Treasure',
       quality: treasureQualities[qualityRoll - 1],
       material: treasureContainers[containerRoll - 1],
       itemType: treasureContents[contentsRoll - 1],
-      rolls: [qualityRoll, containerRoll, contentsRoll],
+      rolls: [2, qualityRoll, containerRoll, contentsRoll],
+      columnLabels: ['Quality', 'Container', 'Contents'],
     );
   }
 
-  /// Generate a document (3d6).
-  ObjectTreasureResult generateDocument() {
-    final typeRoll = _rollEngine.rollDie(6);
-    final contentRoll = _rollEngine.rollDie(6);
-    final subjectRoll = _rollEngine.rollDie(6);
+  /// Generate a document (3d6 for properties).
+  ObjectTreasureResult generateDocument({SkewType skew = SkewType.none}) {
+    final typeRoll = _rollEngine.rollDie(6, skew: skew);
+    final contentRoll = _rollEngine.rollDie(6, skew: skew);
+    final subjectRoll = _rollEngine.rollDie(6, skew: skew);
 
+    return _createDocument(typeRoll, contentRoll, subjectRoll);
+  }
+  
+  ObjectTreasureResult _createDocument(int typeRoll, int contentRoll, int subjectRoll) {
     return ObjectTreasureResult(
       category: 'Document',
       quality: documentTypes[typeRoll - 1],
       material: documentContents[contentRoll - 1],
       itemType: documentSubjects[subjectRoll - 1],
-      rolls: [typeRoll, contentRoll, subjectRoll],
+      rolls: [3, typeRoll, contentRoll, subjectRoll],
+      columnLabels: ['Type', 'Content', 'Subject'],
     );
   }
 
-  /// Generate an accessory (3d6).
-  ObjectTreasureResult generateAccessory() {
-    final qualityRoll = _rollEngine.rollDie(6);
-    final materialRoll = _rollEngine.rollDie(6);
-    final typeRoll = _rollEngine.rollDie(6);
+  /// Generate an accessory (3d6 for properties).
+  ObjectTreasureResult generateAccessory({SkewType skew = SkewType.none}) {
+    final qualityRoll = _rollEngine.rollDie(6, skew: skew);
+    final materialRoll = _rollEngine.rollDie(6, skew: skew);
+    final typeRoll = _rollEngine.rollDie(6, skew: skew);
 
+    return _createAccessory(qualityRoll, materialRoll, typeRoll);
+  }
+  
+  ObjectTreasureResult _createAccessory(int qualityRoll, int materialRoll, int typeRoll) {
     return ObjectTreasureResult(
       category: 'Accessory',
       quality: accessoryQualities[qualityRoll - 1],
       material: accessoryMaterials[materialRoll - 1],
       itemType: accessoryTypes[typeRoll - 1],
-      rolls: [qualityRoll, materialRoll, typeRoll],
+      rolls: [4, qualityRoll, materialRoll, typeRoll],
+      columnLabels: ['Quality', 'Material', 'Type'],
     );
   }
 
-  /// Generate a weapon (3d6).
-  ObjectTreasureResult generateWeapon() {
-    final qualityRoll = _rollEngine.rollDie(6);
-    final materialRoll = _rollEngine.rollDie(6);
-    final typeRoll = _rollEngine.rollDie(6);
+  /// Generate a weapon (3d6 for properties).
+  ObjectTreasureResult generateWeapon({SkewType skew = SkewType.none}) {
+    final qualityRoll = _rollEngine.rollDie(6, skew: skew);
+    final materialRoll = _rollEngine.rollDie(6, skew: skew);
+    final typeRoll = _rollEngine.rollDie(6, skew: skew);
 
+    return _createWeapon(qualityRoll, materialRoll, typeRoll);
+  }
+  
+  ObjectTreasureResult _createWeapon(int qualityRoll, int materialRoll, int typeRoll) {
     return ObjectTreasureResult(
       category: 'Weapon',
       quality: weaponQualities[qualityRoll - 1],
       material: weaponMaterials[materialRoll - 1],
       itemType: weaponTypes[typeRoll - 1],
-      rolls: [qualityRoll, materialRoll, typeRoll],
+      rolls: [5, qualityRoll, materialRoll, typeRoll],
+      columnLabels: ['Quality', 'Material', 'Type'],
     );
   }
 
-  /// Generate armor (3d6).
-  ObjectTreasureResult generateArmor() {
-    final qualityRoll = _rollEngine.rollDie(6);
-    final materialRoll = _rollEngine.rollDie(6);
-    final typeRoll = _rollEngine.rollDie(6);
+  /// Generate armor (3d6 for properties).
+  ObjectTreasureResult generateArmor({SkewType skew = SkewType.none}) {
+    final qualityRoll = _rollEngine.rollDie(6, skew: skew);
+    final materialRoll = _rollEngine.rollDie(6, skew: skew);
+    final typeRoll = _rollEngine.rollDie(6, skew: skew);
 
+    return _createArmor(qualityRoll, materialRoll, typeRoll);
+  }
+  
+  ObjectTreasureResult _createArmor(int qualityRoll, int materialRoll, int typeRoll) {
     return ObjectTreasureResult(
       category: 'Armor',
       quality: armorQualities[qualityRoll - 1],
       material: armorMaterials[materialRoll - 1],
       itemType: armorTypes[typeRoll - 1],
-      rolls: [qualityRoll, materialRoll, typeRoll],
+      rolls: [6, qualityRoll, materialRoll, typeRoll],
+      columnLabels: ['Quality', 'Material', 'Type'],
     );
   }
 }
@@ -311,6 +370,7 @@ class ObjectTreasureResult extends RollResult {
   final String material;
   final String itemType;
   final List<int> rolls;
+  final List<String> columnLabels;
 
   ObjectTreasureResult({
     required this.category,
@@ -318,21 +378,53 @@ class ObjectTreasureResult extends RollResult {
     required this.material,
     required this.itemType,
     required this.rolls,
+    this.columnLabels = const ['Quality', 'Material', 'Type'],
   }) : super(
           type: RollType.objectTreasure,
           description: category,
           diceResults: rolls,
           total: rolls.reduce((a, b) => a + b),
-          interpretation: '$quality $material $itemType',
+          interpretation: _buildInterpretation(category, quality, material, itemType, columnLabels),
           metadata: {
             'category': category,
             'quality': quality,
             'material': material,
             'itemType': itemType,
+            'columnLabels': columnLabels,
           },
         );
+  
+  static String _buildInterpretation(String category, String quality, String material, String itemType, List<String> labels) {
+    // Build descriptive output based on category
+    switch (category) {
+      case 'Treasure':
+        // Treasure: quality container with contents
+        if (material == 'None') {
+          return '$quality $itemType';
+        }
+        return '$quality $material full of $itemType';
+      case 'Document':
+        // Document: type with content about subject
+        return '$quality $material $itemType';
+      default:
+        // Default: quality material type
+        return '$quality $material $itemType';
+    }
+  }
 
-  String get fullDescription => '$quality $material $itemType';
+  String get fullDescription => interpretation ?? '$quality $material $itemType';
+  
+  /// Get formatted roll details showing each column
+  String get rollDetails {
+    final parts = <String>[];
+    parts.add('Category: $category (${rolls[0]})');
+    if (rolls.length >= 4) {
+      parts.add('${columnLabels[0]}: $quality (${rolls[1]})');
+      parts.add('${columnLabels[1]}: $material (${rolls[2]})');
+      parts.add('${columnLabels[2]}: $itemType (${rolls[3]})');
+    }
+    return parts.join('\n');
+  }
 
   @override
   String toString() => '$category: $fullDescription';

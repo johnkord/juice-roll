@@ -184,6 +184,69 @@ void main() {
     test('eventFocusTypes list has 10 entries', () {
       expect(RandomEvent.eventFocusTypes.length, equals(10));
     });
+
+    test('rollModifier returns valid modifier', () {
+      final randomEvent = RandomEvent(RollEngine(SeededRandom(42)));
+      final result = randomEvent.rollModifier();
+
+      expect(result.tableName, equals('Modifier'));
+      expect(result.result.isNotEmpty, isTrue);
+      expect(RandomEvent.modifierWords, contains(result.result));
+    });
+
+    test('rollIdea returns valid idea', () {
+      final randomEvent = RandomEvent(RollEngine(SeededRandom(42)));
+      final result = randomEvent.rollIdea();
+
+      expect(result.tableName, equals('Idea'));
+      expect(result.result.isNotEmpty, isTrue);
+      expect(RandomEvent.ideaWords, contains(result.result));
+    });
+
+    test('rollEvent returns valid event', () {
+      final randomEvent = RandomEvent(RollEngine(SeededRandom(42)));
+      final result = randomEvent.rollEvent();
+
+      expect(result.tableName, equals('Event'));
+      expect(result.result.isNotEmpty, isTrue);
+      expect(RandomEvent.eventWords, contains(result.result));
+    });
+
+    test('rollPerson returns valid person', () {
+      final randomEvent = RandomEvent(RollEngine(SeededRandom(42)));
+      final result = randomEvent.rollPerson();
+
+      expect(result.tableName, equals('Person'));
+      expect(result.result.isNotEmpty, isTrue);
+      expect(RandomEvent.personWords, contains(result.result));
+    });
+
+    test('rollObject returns valid object', () {
+      final randomEvent = RandomEvent(RollEngine(SeededRandom(42)));
+      final result = randomEvent.rollObject();
+
+      expect(result.tableName, equals('Object'));
+      expect(result.result.isNotEmpty, isTrue);
+      expect(RandomEvent.objectWords, contains(result.result));
+    });
+
+    test('rollModifierPlusIdea returns Modifier + Idea pair', () {
+      final randomEvent = RandomEvent(RollEngine(SeededRandom(42)));
+      final result = randomEvent.rollModifierPlusIdea();
+
+      expect(result.modifier.isNotEmpty, isTrue);
+      expect(result.idea.isNotEmpty, isTrue);
+      expect(result.ideaCategory, equals('Idea'));
+      expect(RandomEvent.modifierWords, contains(result.modifier));
+      expect(RandomEvent.ideaWords, contains(result.idea));
+    });
+
+    test('all individual tables have 10 entries', () {
+      expect(RandomEvent.ideaWords.length, equals(10));
+      expect(RandomEvent.eventWords.length, equals(10));
+      expect(RandomEvent.personWords.length, equals(10));
+      expect(RandomEvent.objectWords.length, equals(10));
+    });
   });
 
   group('DiscoverMeaning', () {
@@ -269,9 +332,46 @@ void main() {
       final quest = Quest(RollEngine(SeededRandom(42)));
       final result = quest.generate();
 
-      expect(result.diceResults.length, equals(5)); // 5d10
+      // At minimum 5 rolls (objective, description, focus, preposition, location)
+      // Plus optional sub-rolls for italicized entries
+      expect(result.diceResults.length, greaterThanOrEqualTo(5));
       expect(result.questSentence.isNotEmpty, isTrue);
       expect(result.questSentence, contains(' '));
+    });
+
+    test('expands italicized focus entries', () {
+      // Test with various seeds to hit different focus values
+      for (var seed = 0; seed < 100; seed++) {
+        final quest = Quest(RollEngine(SeededRandom(seed)));
+        final result = quest.generate();
+        
+        // If focus is one that needs expansion, verify it was expanded
+        final italicFocuses = {'Monster', 'Event', 'Environment', 'Person', 'Location', 'Object'};
+        if (italicFocuses.contains(result.focus)) {
+          expect(result.focusExpanded, isNotNull, reason: 'Focus "${result.focus}" should be expanded');
+          expect(result.focusSubRoll, isNotNull);
+          expect(result.focusDisplay, contains('('));
+        }
+      }
+    });
+
+    test('expands italicized location entries', () {
+      // Test with various seeds to hit different location values
+      for (var seed = 0; seed < 100; seed++) {
+        final quest = Quest(RollEngine(SeededRandom(seed)));
+        final result = quest.generate();
+        
+        // If location is one that needs expansion, verify it was expanded
+        final italicLocations = {
+          'Dungeon Feature', 'Dungeon', 'Environment', 'Event',
+          'Natural Hazard', 'Settlement', 'Wilderness Feature'
+        };
+        if (italicLocations.contains(result.location)) {
+          expect(result.locationExpanded, isNotNull, reason: 'Location "${result.location}" should be expanded');
+          expect(result.locationSubRoll, isNotNull);
+          expect(result.locationDisplay, contains('('));
+        }
+      }
     });
   });
 
@@ -334,9 +434,9 @@ void main() {
       expect(result.itemType.isNotEmpty, isTrue);
     });
 
-    test('generateRandom returns treasure from any category', () {
+    test('generate returns treasure from any category', () {
       final treasure = ObjectTreasure(RollEngine(SeededRandom(42)));
-      final result = treasure.generateRandom();
+      final result = treasure.generate();
 
       expect(ObjectTreasure.treasureCategories.contains(result.category), isTrue);
     });
@@ -366,6 +466,44 @@ void main() {
       expect(result.skill.isNotEmpty, isTrue);
       expect(result.challengeType, equals(ChallengeType.mental));
       expect(result.suggestedDc, inInclusiveRange(8, 17));
+    });
+
+    test('rollFullChallenge returns both physical and mental skills', () {
+      final challenge = Challenge(RollEngine(SeededRandom(42)));
+      final result = challenge.rollFullChallenge();
+
+      expect(result.physicalSkill.isNotEmpty, isTrue);
+      expect(result.mentalSkill.isNotEmpty, isTrue);
+      expect(result.dc, inInclusiveRange(8, 17));
+      expect(Challenge.physicalChallenges, contains(result.physicalSkill));
+      expect(Challenge.mentalChallenges, contains(result.mentalSkill));
+    });
+
+    test('rollDc returns valid DC with different skews', () {
+      final challenge = Challenge(RollEngine(SeededRandom(42)));
+      
+      // Test random DC
+      final randomDc = challenge.rollDc();
+      expect(randomDc.dc, inInclusiveRange(8, 17));
+      expect(randomDc.method, contains('Random'));
+      
+      // Test easy DC (advantage)
+      final easyDc = challenge.rollDc(skew: DcSkew.advantage);
+      expect(easyDc.dc, inInclusiveRange(8, 17));
+      expect(easyDc.method, contains('Easy'));
+      
+      // Test hard DC (disadvantage)
+      final hardDc = challenge.rollDc(skew: DcSkew.disadvantage);
+      expect(hardDc.dc, inInclusiveRange(8, 17));
+      expect(hardDc.method, contains('Hard'));
+    });
+
+    test('rollBalancedDc returns valid DC using bell curve', () {
+      final challenge = Challenge(RollEngine(SeededRandom(42)));
+      final result = challenge.rollBalancedDc();
+
+      expect(result.dc, inInclusiveRange(8, 17));
+      expect(result.method, contains('Balanced'));
     });
   });
 
@@ -410,8 +548,16 @@ void main() {
 
       expect(result.negativeEmotion.isNotEmpty, isTrue);
       expect(result.positiveEmotion.isNotEmpty, isTrue);
-      expect(result.where.isNotEmpty, isTrue);
       expect(result.cause.isNotEmpty, isTrue);
+    });
+
+    test('generateSensoryDetail includes where location', () {
+      final immersion = Immersion(RollEngine(SeededRandom(42)));
+      final result = immersion.generateSensoryDetail();
+
+      expect(result.sense.isNotEmpty, isTrue);
+      expect(result.detail.isNotEmpty, isTrue);
+      expect(result.where.isNotEmpty, isTrue);
     });
 
     test('generateFullImmersion returns both sensory and emotional', () {

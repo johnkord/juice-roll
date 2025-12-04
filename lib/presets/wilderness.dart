@@ -47,18 +47,35 @@ class Wilderness {
   ];
 
   /// Encounter types (d10)
-  static const List<String> encounters = [
-    'Natural Hazard',    // 1
-    'Monster',           // 2
-    'Weather',           // 3
-    'Challenge',         // 4
-    'Dungeon',           // 5
-    'River/Road',        // 6
-    'Feature',           // 7
-    'Settlement/Camp',   // 8
-    'Advance Plot',      // 9
-    'Destination/Lost',  // 10
+  /// Italicized encounters in the reference table are marked with isItalic: true
+  /// These represent: Natural Hazard, Monster, Weather, Challenge, Dungeon, Feature, and Settlement (but not Camp)
+  static const List<Map<String, dynamic>> encounters = [
+    {'name': 'Natural Hazard', 'isItalic': true},    // 1
+    {'name': 'Monster', 'isItalic': true},           // 2
+    {'name': 'Weather', 'isItalic': true},           // 3
+    {'name': 'Challenge', 'isItalic': true},         // 4
+    {'name': 'Dungeon', 'isItalic': true},           // 5
+    {'name': 'River/Road', 'isItalic': false},       // 6
+    {'name': 'Feature', 'isItalic': true},           // 7
+    {'name': 'Settlement/Camp', 'isItalic': true, 'partialItalic': 'Settlement'},   // 8 - Only "Settlement" is italic
+    {'name': 'Advance Plot', 'isItalic': false},     // 9
+    {'name': 'Destination/Lost', 'isItalic': false}, // 10
   ];
+
+  /// Get encounter name by index (for backwards compatibility)
+  static String getEncounterName(int index) {
+    return encounters[index]['name'] as String;
+  }
+
+  /// Check if encounter should be displayed in italics
+  static bool isEncounterItalic(int index) {
+    return encounters[index]['isItalic'] as bool;
+  }
+  
+  /// For partial italic (Settlement/Camp), get the italic portion
+  static String? getPartialItalic(int index) {
+    return encounters[index]['partialItalic'] as String?;
+  }
 
   /// Weather conditions (rows 1-10)
   static const List<String> weatherTypes = [
@@ -261,7 +278,10 @@ class Wilderness {
     }
     
     final index = roll == 10 ? 9 : roll - 1;
-    final encounter = encounters[index];
+    final encounterData = encounters[index];
+    final encounter = encounterData['name'] as String;
+    final isItalic = encounterData['isItalic'] as bool;
+    final partialItalic = encounterData['partialItalic'] as String?;
     
     // Check for Lost/Found state transitions
     bool becameLost = false;
@@ -292,6 +312,8 @@ class Wilderness {
       wasLost: _state?.isLost ?? false,
       becameLost: becameLost,
       becameFound: becameFound,
+      isItalic: isItalic,
+      partialItalic: partialItalic,
     );
   }
 
@@ -512,6 +534,8 @@ class WildernessEncounterResult extends RollResult {
   final bool wasLost;
   final bool becameLost;
   final bool becameFound;
+  final bool isItalic;
+  final String? partialItalic;
 
   WildernessEncounterResult({
     required this.roll,
@@ -523,6 +547,8 @@ class WildernessEncounterResult extends RollResult {
     this.wasLost = false,
     this.becameLost = false,
     this.becameFound = false,
+    this.isItalic = false,
+    this.partialItalic,
   }) : super(
           type: RollType.encounter,
           description: 'Wilderness Encounter',
@@ -537,6 +563,8 @@ class WildernessEncounterResult extends RollResult {
             'wasLost': wasLost,
             'becameLost': becameLost,
             'becameFound': becameFound,
+            'isItalic': isItalic,
+            if (partialItalic != null) 'partialItalic': partialItalic,
           },
         );
 

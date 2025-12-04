@@ -1,14 +1,32 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
+import 'interrupt_plot_point.dart';
 
 /// Next Scene preset for the Juice Oracle.
 /// Uses the Next Scene column from the Fate Check table (2dF).
 /// Determines if the next scene proceeds normally, is altered, or is interrupted.
 class NextScene {
   final RollEngine _rollEngine;
+  final InterruptPlotPoint _plotPoint;
+
+  /// Focus table - d10 (from quest.md Focus column)
+  /// Entries in italics reference other tables but we keep them simple here.
+  static const List<String> focuses = [
+    'Enemy',       // 1
+    'Monster',     // 2
+    'Event',       // 3
+    'Environment', // 4
+    'Community',   // 5
+    'Person',      // 6
+    'Information', // 7
+    'Location',    // 8
+    'Object',      // 9
+    'Ally',        // 0/10
+  ];
 
   NextScene([RollEngine? rollEngine])
-      : _rollEngine = rollEngine ?? RollEngine();
+      : _rollEngine = rollEngine ?? RollEngine(),
+        _plotPoint = InterruptPlotPoint(rollEngine);
 
   /// Determine the next scene type using 2dF.
   NextSceneResult determineScene() {
@@ -25,6 +43,42 @@ class NextScene {
       fateDice: fateDice,
       fateSum: fateSum,
       sceneType: sceneType,
+    );
+  }
+
+  /// Determine the next scene with automatic follow-up rolls.
+  /// Returns NextSceneWithFollowUpResult which includes the focus or plot point.
+  NextSceneWithFollowUpResult determineSceneWithFollowUp() {
+    final sceneResult = determineScene();
+    
+    // Generate follow-up based on scene type
+    FocusResult? focusResult;
+    InterruptPlotPointResult? plotPointResult;
+    
+    if (sceneResult.sceneType == SceneType.alterAdd || 
+        sceneResult.sceneType == SceneType.alterRemove) {
+      focusResult = rollFocus();
+    } else if (sceneResult.sceneType == SceneType.interruptFavorable ||
+               sceneResult.sceneType == SceneType.interruptUnfavorable) {
+      plotPointResult = _plotPoint.generate();
+    }
+    
+    return NextSceneWithFollowUpResult(
+      sceneResult: sceneResult,
+      focusResult: focusResult,
+      plotPointResult: plotPointResult,
+    );
+  }
+
+  /// Roll on the Focus table (1d10).
+  FocusResult rollFocus() {
+    final roll = _rollEngine.rollDie(10);
+    final index = roll == 10 ? 9 : roll - 1;
+    final focus = focuses[index];
+    
+    return FocusResult(
+      roll: roll,
+      focus: focus,
     );
   }
 
@@ -68,9 +122,9 @@ extension SceneTypeDisplay on SceneType {
       case SceneType.normal:
         return 'Normal';
       case SceneType.alterAdd:
-        return 'Alter (Add)';
+        return 'Alter (Add Focus)';
       case SceneType.alterRemove:
-        return 'Alter (Remove)';
+        return 'Alter (Remove Focus)';
       case SceneType.interruptFavorable:
         return 'Interrupt (Favorable)';
       case SceneType.interruptUnfavorable:
@@ -83,13 +137,13 @@ extension SceneTypeDisplay on SceneType {
       case SceneType.normal:
         return 'The scene proceeds as expected.';
       case SceneType.alterAdd:
-        return 'The scene is modified - add an element. Roll Modifier + Idea.';
+        return 'The scene is modified - add an element. Roll on the Focus table.';
       case SceneType.alterRemove:
-        return 'The scene is modified - remove an element. Roll Modifier + Idea.';
+        return 'The scene is modified - remove an element. Roll on the Focus table.';
       case SceneType.interruptFavorable:
-        return 'The scene is replaced by something favorable. Roll Random Event.';
+        return 'The expected scene is interrupted by something favorable. Roll on the Plot Point table.';
       case SceneType.interruptUnfavorable:
-        return 'The scene is replaced by something unfavorable. Roll Random Event.';
+        return 'The expected scene is interrupted by something unfavorable. Roll on the Plot Point table.';
     }
   }
 
@@ -105,10 +159,10 @@ extension SceneTypeDisplay on SceneType {
         return null;
       case SceneType.alterAdd:
       case SceneType.alterRemove:
-        return 'Modifier + Idea';
+        return 'Focus';
       case SceneType.interruptFavorable:
       case SceneType.interruptUnfavorable:
-        return 'Random Event';
+        return 'Plot Point';
     }
   }
 }
@@ -159,6 +213,97 @@ class NextSceneResult extends RollResult {
     buffer.writeln('  Result: ${sceneType.displayText}');
     if (sceneType.requiresFollowUp) {
       buffer.write('  Follow-up: ${sceneType.followUpRoll}');
+    }
+    return buffer.toString();
+  }
+}
+
+/// Result of a Focus table roll (1d10).
+class FocusResult extends RollResult {
+  final int roll;
+  final String focus;
+
+  FocusResult({
+    required this.roll,
+    required this.focus,
+  }) : super(
+          type: RollType.nextScene,
+          description: 'Focus',
+          diceResults: [roll],
+          total: roll,
+          interpretation: focus,
+          metadata: {
+            'focus': focus,
+          },
+        );
+
+  @override
+  String toString() => 'Focus: $focus';
+}
+
+/// Result of a Next Scene roll with automatic follow-up.
+class NextSceneWithFollowUpResult extends RollResult {
+  final NextSceneResult sceneResult;
+  final FocusResult? focusResult;
+  final InterruptPlotPointResult? plotPointResult;
+
+  NextSceneWithFollowUpResult({
+    required this.sceneResult,
+    this.focusResult,
+    this.plotPointResult,
+  }) : super(
+          type: RollType.nextScene,
+          description: 'Next Scene',
+          diceResults: [
+            ...sceneResult.fateDice,
+            if (focusResult != null) focusResult.roll,
+            if (plotPointResult != null) ...[plotPointResult.categoryRoll, plotPointResult.eventRoll],
+          ],
+          total: sceneResult.fateSum,
+          interpretation: _buildInterpretation(sceneResult, focusResult, plotPointResult),
+          metadata: {
+            'sceneType': sceneResult.sceneType.name,
+            if (focusResult != null) 'focus': focusResult.focus,
+            if (plotPointResult != null) 'plotPoint': '${plotPointResult.category}: ${plotPointResult.event}',
+          },
+        );
+
+  static String _buildInterpretation(
+    NextSceneResult scene,
+    FocusResult? focus,
+    InterruptPlotPointResult? plotPoint,
+  ) {
+    final buffer = StringBuffer(scene.sceneType.displayText);
+    if (focus != null) {
+      buffer.write(' → ${focus.focus}');
+    }
+    if (plotPoint != null) {
+      buffer.write(' → ${plotPoint.category}: ${plotPoint.event}');
+    }
+    return buffer.toString();
+  }
+
+  /// Get the follow-up text for display.
+  String? get followUpText {
+    if (focusResult != null) {
+      return focusResult!.focus;
+    }
+    if (plotPointResult != null) {
+      return '${plotPointResult!.category}: ${plotPointResult!.event}';
+    }
+    return null;
+  }
+
+  @override
+  String toString() {
+    final buffer = StringBuffer();
+    buffer.writeln('Next Scene: [${sceneResult.fateSymbols}]');
+    buffer.writeln('  Result: ${sceneResult.sceneType.displayText}');
+    if (focusResult != null) {
+      buffer.writeln('  Focus: ${focusResult!.focus}');
+    }
+    if (plotPointResult != null) {
+      buffer.write('  Plot Point: ${plotPointResult!.category} - ${plotPointResult!.event}');
     }
     return buffer.toString();
   }

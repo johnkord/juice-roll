@@ -614,7 +614,7 @@ Weather is environment-modified:
 
 | Scenario | Tables Used | Dice | Description |
 |----------|-------------|------|-------------|
-| **Dungeon Name** | `natural-hazard-feature-dungeon.md` | 2d10 | Description (Bloodstained, Chaotic, Fallen, etc.) + Subject (Blades, Blight, Darkness, etc.). |
+| **Dungeon Name** | `natural-hazard-feature-dungeon.md` | 3d10 | Format: "[Dungeon] of the [Description] [Subject]". E.g., "Ruins of the Shattered Lies". |
 | **Dungeon Next Area** | `dungeon-generator.md` | 1d10@- / 1d10@+ | Stateful: Roll @- until doubles, then @+. Results: Passage, Chamber, Lock, Exit, etc. |
 | **Passage Type** | `dungeon-generator.md` | d10 | Passage details: Dead End, Narrow Crawlspace, Bridge, Intersection, etc. |
 | **Room Condition** | `dungeon-generator.md` | d10 | State of area: Collapsed, Flooded, Burned, Pristine, Converted, etc. |

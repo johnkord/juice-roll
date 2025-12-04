@@ -208,6 +208,81 @@ class RandomEvent {
       focus: focus,
     );
   }
+
+  /// Roll on the Modifier table only (d10).
+  SingleTableResult rollModifier() {
+    final roll = _rollEngine.rollDie(10);
+    final index = roll == 10 ? 9 : roll - 1;
+    return SingleTableResult(
+      roll: roll,
+      result: modifierWords[index],
+      tableName: 'Modifier',
+    );
+  }
+
+  /// Roll on the Idea table only (d10).
+  SingleTableResult rollIdea() {
+    final roll = _rollEngine.rollDie(10);
+    final index = roll == 10 ? 9 : roll - 1;
+    return SingleTableResult(
+      roll: roll,
+      result: ideaWords[index],
+      tableName: 'Idea',
+    );
+  }
+
+  /// Roll on the Event table only (d10).
+  SingleTableResult rollEvent() {
+    final roll = _rollEngine.rollDie(10);
+    final index = roll == 10 ? 9 : roll - 1;
+    return SingleTableResult(
+      roll: roll,
+      result: eventWords[index],
+      tableName: 'Event',
+    );
+  }
+
+  /// Roll on the Person table only (d10).
+  SingleTableResult rollPerson() {
+    final roll = _rollEngine.rollDie(10);
+    final index = roll == 10 ? 9 : roll - 1;
+    return SingleTableResult(
+      roll: roll,
+      result: personWords[index],
+      tableName: 'Person',
+    );
+  }
+
+  /// Roll on the Object table only (d10).
+  SingleTableResult rollObject() {
+    final roll = _rollEngine.rollDie(10);
+    final index = roll == 10 ? 9 : roll - 1;
+    return SingleTableResult(
+      roll: roll,
+      result: objectWords[index],
+      tableName: 'Object',
+    );
+  }
+
+  /// Roll Modifier + Idea (2d10) - replaces Random Event in Simple mode.
+  /// Also used when Next Scene is "Altered".
+  IdeaResult rollModifierPlusIdea() {
+    final modifierRoll = _rollEngine.rollDie(10);
+    final modifierIndex = modifierRoll == 10 ? 9 : modifierRoll - 1;
+    final modifier = modifierWords[modifierIndex];
+
+    final ideaRoll = _rollEngine.rollDie(10);
+    final ideaIndex = ideaRoll == 10 ? 9 : ideaRoll - 1;
+    final idea = ideaWords[ideaIndex];
+
+    return IdeaResult(
+      modifierRoll: modifierRoll,
+      modifier: modifier,
+      ideaRoll: ideaRoll,
+      idea: idea,
+      ideaCategory: 'Idea',
+    );
+  }
 }
 
 /// Categories for idea generation
@@ -310,4 +385,30 @@ class RandomEventFocusResult extends RollResult {
 
   @override
   String toString() => 'Random Event: $focus';
+}
+
+/// Result of rolling on a single table (Modifier, Idea, Event, Person, or Object).
+class SingleTableResult extends RollResult {
+  final int roll;
+  final String result;
+  final String tableName;
+
+  SingleTableResult({
+    required this.roll,
+    required this.result,
+    required this.tableName,
+  }) : super(
+          type: RollType.randomEvent,
+          description: tableName,
+          diceResults: [roll],
+          total: roll,
+          interpretation: result,
+          metadata: {
+            'tableName': tableName,
+            'result': result,
+          },
+        );
+
+  @override
+  String toString() => '$tableName: $result';
 }

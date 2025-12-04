@@ -10,7 +10,7 @@ import '../models/roll_result.dart';
 /// Also functions as NPC Behavior generation: assume what an NPC
 /// will likely do, then test it.
 /// 
-/// Uses 2dF + 1d6 (similar to Fate Check structure).
+/// Uses 2dF only (no intensity die, unlike Fate Check).
 class ExpectationCheck {
   final RollEngine _rollEngine;
 
@@ -24,152 +24,173 @@ class ExpectationCheck {
     final primary = fateDice[0];
     final secondary = fateDice[1];
     
-    // Roll Intensity die (1d6)
-    final intensity = _rollEngine.rollDie(6);
-    
     // Interpret the result
     final outcome = _interpretDice(primary, secondary);
 
     return ExpectationCheckResult(
       fateDice: fateDice,
       fateSum: primary + secondary,
-      intensity: intensity,
       outcome: outcome,
     );
   }
 
   /// Interpret dice for expectation check.
-  /// Based on the Expectation/Behavior table pattern.
+  /// Based on the Expectation/Behavior table from Juice instructions (page 55).
   ExpectationOutcome _interpretDice(int primary, int secondary) {
-    // ++ = Expected (fully)
+    // ++ = Expected (Intensified)
     if (primary == 1 && secondary == 1) {
+      return ExpectationOutcome.expectedIntensified;
+    }
+    
+    // +0 = Expected
+    if (primary == 1 && secondary == 0) {
       return ExpectationOutcome.expected;
     }
     
-    // +- or +0 = Favorable (expectation shifted in PC's favor)
-    if (primary == 1) {
-      return ExpectationOutcome.favorable;
+    // +- = Next Most Expected
+    if (primary == 1 && secondary == -1) {
+      return ExpectationOutcome.nextMostExpected;
     }
     
-    // -+ or -0 = Unfavorable (expectation shifted against PC)
-    if (primary == -1) {
-      return ExpectationOutcome.unfavorable;
-    }
-    
-    // -- = Opposite (completely wrong)
-    if (primary == -1 && secondary == -1) {
-      return ExpectationOutcome.opposite;
-    }
-    
-    // 0+ = Favorable variant
+    // 0+ = Favorable
     if (primary == 0 && secondary == 1) {
       return ExpectationOutcome.favorable;
     }
     
-    // 0- = Unfavorable variant
+    // 00 = Modified Idea (roll on Modifier + Idea table)
+    if (primary == 0 && secondary == 0) {
+      return ExpectationOutcome.modifiedIdea;
+    }
+    
+    // 0- = Unfavorable
     if (primary == 0 && secondary == -1) {
       return ExpectationOutcome.unfavorable;
     }
     
-    // 00 = Mixed / roll again or interpret creatively
-    return ExpectationOutcome.mixed;
+    // -+ = Next Most Expected
+    if (primary == -1 && secondary == 1) {
+      return ExpectationOutcome.nextMostExpected;
+    }
+    
+    // -0 = Opposite
+    if (primary == -1 && secondary == 0) {
+      return ExpectationOutcome.opposite;
+    }
+    
+    // -- = Opposite (Intensified)
+    if (primary == -1 && secondary == -1) {
+      return ExpectationOutcome.oppositeIntensified;
+    }
+    
+    // Fallback (should not reach here)
+    return ExpectationOutcome.expected;
   }
 }
 
 /// Possible outcomes from an Expectation Check.
+/// Based on the Expectation table from Juice instructions (page 55).
 enum ExpectationOutcome {
-  expected,
-  favorable,
-  mixed,
-  unfavorable,
-  opposite,
+  expectedIntensified,  // ++
+  expected,             // +0
+  nextMostExpected,     // +- or -+
+  favorable,            // 0+
+  modifiedIdea,         // 00
+  unfavorable,          // 0-
+  opposite,             // -0
+  oppositeIntensified,  // --
 }
 
 extension ExpectationOutcomeDisplay on ExpectationOutcome {
   String get displayText {
     switch (this) {
+      case ExpectationOutcome.expectedIntensified:
+        return 'Expected (Intensified)';
       case ExpectationOutcome.expected:
-        return 'As Expected';
+        return 'Expected';
+      case ExpectationOutcome.nextMostExpected:
+        return 'Next Most Expected';
       case ExpectationOutcome.favorable:
         return 'Favorable';
-      case ExpectationOutcome.mixed:
-        return 'Mixed';
+      case ExpectationOutcome.modifiedIdea:
+        return 'Modified Idea';
       case ExpectationOutcome.unfavorable:
         return 'Unfavorable';
       case ExpectationOutcome.opposite:
-        return 'Opposite!';
+        return 'Opposite';
+      case ExpectationOutcome.oppositeIntensified:
+        return 'Opposite (Intensified)';
     }
   }
 
   String get description {
     switch (this) {
+      case ExpectationOutcome.expectedIntensified:
+        return 'Your expectation is completely correct, with emphasis!';
       case ExpectationOutcome.expected:
-        return 'Your expectation is completely correct.';
+        return 'Your expectation is correct.';
+      case ExpectationOutcome.nextMostExpected:
+        return 'Not your first expectation, but your second choice occurs.';
       case ExpectationOutcome.favorable:
         return 'Your expectation is modified in your favor.';
-      case ExpectationOutcome.mixed:
-        return 'Neither favorable nor unfavorable. Interpret creatively.';
+      case ExpectationOutcome.modifiedIdea:
+        return 'Roll on the Modifier + Idea table to alter your expectation.';
       case ExpectationOutcome.unfavorable:
         return 'Your expectation is modified against your favor.';
       case ExpectationOutcome.opposite:
-        return 'The opposite of your expectation occurs!';
+        return 'The opposite of your expectation occurs.';
+      case ExpectationOutcome.oppositeIntensified:
+        return 'The opposite of your expectation occurs, with emphasis!';
     }
   }
   
   /// For NPC behavior interpretation
   String get npcBehavior {
     switch (this) {
+      case ExpectationOutcome.expectedIntensified:
+        return 'NPC does exactly what you expected, emphatically!';
       case ExpectationOutcome.expected:
-        return 'NPC does exactly what you expected.';
+        return 'NPC does what you expected.';
+      case ExpectationOutcome.nextMostExpected:
+        return 'NPC does your second-most-likely expectation.';
       case ExpectationOutcome.favorable:
         return 'NPC behavior benefits you more than expected.';
-      case ExpectationOutcome.mixed:
-        return 'NPC behavior is ambiguous or neutral.';
+      case ExpectationOutcome.modifiedIdea:
+        return 'Roll Modifier + Idea to determine NPC action.';
       case ExpectationOutcome.unfavorable:
         return 'NPC behavior is less helpful than expected.';
       case ExpectationOutcome.opposite:
-        return 'NPC does the opposite of what you expected!';
+        return 'NPC does the opposite of what you expected.';
+      case ExpectationOutcome.oppositeIntensified:
+        return 'NPC does the opposite of what you expected, emphatically!';
     }
   }
+  
+  /// Whether this outcome requires a follow-up roll on Modifier + Idea
+  bool get requiresFollowUp => this == ExpectationOutcome.modifiedIdea;
 }
 
 /// Result of an Expectation Check.
 class ExpectationCheckResult extends RollResult {
   final List<int> fateDice;
   final int fateSum;
-  final int intensity;
   final ExpectationOutcome outcome;
 
   ExpectationCheckResult({
     required this.fateDice,
     required this.fateSum,
-    required this.intensity,
     required this.outcome,
   }) : super(
           type: RollType.expectationCheck,
           description: 'Expectation Check',
-          diceResults: [...fateDice, intensity],
+          diceResults: fateDice,
           total: fateSum,
-          interpretation: '${outcome.displayText} (${_intensityText(intensity)})',
+          interpretation: outcome.displayText,
           metadata: {
             'fateDice': fateDice,
             'fateSum': fateSum,
-            'intensity': intensity,
             'outcome': outcome.name,
           },
         );
-
-  static String _intensityText(int roll) {
-    switch (roll) {
-      case 1: return 'Minimal';
-      case 2: return 'Mundane';
-      case 3: return 'Minor';
-      case 4: return 'Moderate';
-      case 5: return 'Major';
-      case 6: return 'Massive';
-      default: return 'Unknown';
-    }
-  }
 
   /// Get symbolic representation of the Fate dice.
   String get fateSymbols {
@@ -183,15 +204,12 @@ class ExpectationCheckResult extends RollResult {
     }).join(' ');
   }
 
-  String get intensityDescription => _intensityText(intensity);
-
   @override
   String toString() {
     final buffer = StringBuffer();
     buffer.writeln('Expectation Check:');
-    buffer.writeln('  Dice: [$fateSymbols] + $intensity');
-    buffer.writeln('  Result: ${outcome.displayText}');
-    buffer.write('  Intensity: $intensityDescription');
+    buffer.writeln('  Dice: [$fateSymbols]');
+    buffer.write('  Result: ${outcome.displayText}');
     return buffer.toString();
   }
 }

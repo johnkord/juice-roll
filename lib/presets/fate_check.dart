@@ -80,54 +80,109 @@ class FateCheck {
   }
 
   /// Interpret dice according to Juice Oracle Fate Check rules.
+  /// 
+  /// Normal (Even Odds) column:
+  /// - ++ → Yes And
+  /// - +0 → Yes Because
+  /// - +- → Yes But
+  /// - 0+ → Favorable
+  /// - 00 (primary left) → Yes But + Random Event
+  /// - 00 (primary right) → Invalid Assumption
+  /// - 0- → Unfavorable
+  /// - -+ → No But
+  /// - -0 → No Because
+  /// - -- → No And
+  /// 
+  /// Likely column: If either die is +, result is Yes-like
+  /// - ++ → Yes And
+  /// - +0, 0+, >0 → Yes
+  /// - +-, -+ → Yes But
+  /// - <0 → Yes + Random Event
+  /// - 0-, -0 → No
+  /// - -- → No And
+  /// 
+  /// Unlikely column: If either die is -, result is No-like
+  /// - ++ → Yes And
+  /// - +0, 0+ → Yes
+  /// - +-, -+ → No But
+  /// - <0 → No + Random Event
+  /// - >0, 0-, -0 → No
+  /// - -- → No And
   FateCheckOutcome _interpretDice(
     int primary, 
     int secondary, 
     String likelihood,
     bool isDoubleBlanks,
   ) {
-    // Handle likelihood modifiers first
+    // Handle Likely mode
+    // Rule: If either die is +, result is Yes-like
     if (likelihood == 'Likely') {
-      // If either die is +, result is Yes-like
+      // ++ → Yes And
+      if (primary == 1 && secondary == 1) return FateCheckOutcome.yesAnd;
+      // -- → No And
+      if (primary == -1 && secondary == -1) return FateCheckOutcome.noAnd;
+      // +- or -+ → Yes But (both have a +, so Yes But)
+      if ((primary == 1 && secondary == -1) || (primary == -1 && secondary == 1)) {
+        return FateCheckOutcome.yesBut;
+      }
+      // +0 or 0+ → Yes (either die is +)
       if (primary == 1 || secondary == 1) {
-        if (primary == 1 && secondary == 1) return FateCheckOutcome.yesAnd;
-        if (primary == 1 && secondary == -1) return FateCheckOutcome.yesBut;
-        if (primary == 0 && secondary == 1) return FateCheckOutcome.yesBut;
-        if (primary == -1 && secondary == 1) return FateCheckOutcome.yesBut;
-        if (primary == 1 && secondary == 0) return FateCheckOutcome.yesBut;
+        return FateCheckOutcome.yes; // "Yes" in Likely column
+      }
+      // Double blanks: <0 → Yes + Random Event, >0 → Yes
+      if (isDoubleBlanks) {
+        return FateCheckOutcome.yes;
+      }
+      // 0- or -0 → No (no + present)
+      if ((primary == 0 && secondary == -1) || (primary == -1 && secondary == 0)) {
+        return FateCheckOutcome.no;
       }
     }
     
+    // Handle Unlikely mode
+    // Rule: If either die is -, result is No-like
     if (likelihood == 'Unlikely') {
-      // If either die is -, result is No-like
-      if (primary == -1 || secondary == -1) {
-        if (primary == -1 && secondary == -1) return FateCheckOutcome.noAnd;
-        if (primary == -1 && secondary == 1) return FateCheckOutcome.noBut;
-        if (primary == 0 && secondary == -1) return FateCheckOutcome.noBut;
-        if (primary == 1 && secondary == -1) return FateCheckOutcome.noBut;
-        if (primary == -1 && secondary == 0) return FateCheckOutcome.noBut;
+      // ++ → Yes And (no - present)
+      if (primary == 1 && secondary == 1) return FateCheckOutcome.yesAnd;
+      // -- → No And
+      if (primary == -1 && secondary == -1) return FateCheckOutcome.noAnd;
+      // +- or -+ → No But (both have a -, so No But)
+      if ((primary == 1 && secondary == -1) || (primary == -1 && secondary == 1)) {
+        return FateCheckOutcome.noBut;
+      }
+      // +0 or 0+ → Yes (no - present)
+      if ((primary == 1 && secondary == 0) || (primary == 0 && secondary == 1)) {
+        return FateCheckOutcome.yes;
+      }
+      // 0- or -0 → No (has a -)
+      if ((primary == 0 && secondary == -1) || (primary == -1 && secondary == 0)) {
+        return FateCheckOutcome.no;
+      }
+      // Double blanks: <0 → No + Random Event, >0 → No
+      if (isDoubleBlanks) {
+        return FateCheckOutcome.no;
       }
     }
     
-    // Standard interpretation (Even Odds or after likelihood check)
+    // Standard interpretation (Even Odds)
     
-    // Double blanks special case
+    // Double blanks special case - answer is "Yes But" for Random Event
     if (isDoubleBlanks) {
-      return FateCheckOutcome.yesBut; // Random Event answer is "Yes But"
+      return FateCheckOutcome.yesBut;
     }
     
     // Primary + = Yes-like
     if (primary == 1) {
       if (secondary == 1) return FateCheckOutcome.yesAnd;
       if (secondary == -1) return FateCheckOutcome.yesBut;
-      return FateCheckOutcome.yesBut; // secondary is 0
+      return FateCheckOutcome.yesBecause; // +0 → Yes Because
     }
     
     // Primary - = No-like
     if (primary == -1) {
       if (secondary == -1) return FateCheckOutcome.noAnd;
       if (secondary == 1) return FateCheckOutcome.noBut;
-      return FateCheckOutcome.noBut; // secondary is 0
+      return FateCheckOutcome.noBecause; // -0 → No Because
     }
     
     // Primary 0 = look to secondary
@@ -165,7 +220,7 @@ extension SpecialTriggerDisplay on SpecialTrigger {
   String get description {
     switch (this) {
       case SpecialTrigger.randomEvent:
-        return 'Something unexpected happens. Roll on the Random Event tables. Answer is "Yes But".';
+        return 'Something unexpected happens. Roll on the Random Event tables.';
       case SpecialTrigger.invalidAssumption:
         return 'Your assumption about the situation was wrong. Re-examine what you thought was true.';
     }
@@ -175,10 +230,14 @@ extension SpecialTriggerDisplay on SpecialTrigger {
 /// Possible outcomes from a Fate Check.
 enum FateCheckOutcome {
   noAnd,
+  noBecause,    // -0 result - "No" with a reason to discover
+  no,           // Plain "No" (used in Likely/Unlikely columns)
   noBut,
   unfavorable,  // 0- result
   favorable,    // 0+ result  
   yesBut,
+  yes,          // Plain "Yes" (used in Likely/Unlikely columns)
+  yesBecause,   // +0 result - "Yes" with a reason to discover
   yesAnd,
 }
 
@@ -188,6 +247,10 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
     switch (this) {
       case FateCheckOutcome.noAnd:
         return 'No, and...';
+      case FateCheckOutcome.noBecause:
+        return 'No, because...';
+      case FateCheckOutcome.no:
+        return 'No';
       case FateCheckOutcome.noBut:
         return 'No, but...';
       case FateCheckOutcome.unfavorable:
@@ -196,6 +259,10 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
         return 'Favorable';
       case FateCheckOutcome.yesBut:
         return 'Yes, but...';
+      case FateCheckOutcome.yes:
+        return 'Yes';
+      case FateCheckOutcome.yesBecause:
+        return 'Yes, because...';
       case FateCheckOutcome.yesAnd:
         return 'Yes, and...';
     }
@@ -205,6 +272,10 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
     switch (this) {
       case FateCheckOutcome.noAnd:
         return 'Strong No - with additional negative consequence';
+      case FateCheckOutcome.noBecause:
+        return 'No - use Intensity to determine the reason why';
+      case FateCheckOutcome.no:
+        return 'Plain No answer (Likely/Unlikely mode)';
       case FateCheckOutcome.noBut:
         return 'No - but with a silver lining';
       case FateCheckOutcome.unfavorable:
@@ -213,6 +284,10 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
         return 'The answer is whatever is MOST favorable to your character';
       case FateCheckOutcome.yesBut:
         return 'Yes - but with a complication';
+      case FateCheckOutcome.yes:
+        return 'Plain Yes answer (Likely/Unlikely mode)';
+      case FateCheckOutcome.yesBecause:
+        return 'Yes - use Intensity to determine the reason why';
       case FateCheckOutcome.yesAnd:
         return 'Strong Yes - with additional benefit';
     }
@@ -221,12 +296,16 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
   /// Whether this is fundamentally a "yes" answer.
   bool get isYes {
     return this == FateCheckOutcome.yesBut ||
+           this == FateCheckOutcome.yes ||
+           this == FateCheckOutcome.yesBecause ||
            this == FateCheckOutcome.yesAnd;
   }
 
   /// Whether this is fundamentally a "no" answer.
   bool get isNo {
     return this == FateCheckOutcome.noBut ||
+           this == FateCheckOutcome.no ||
+           this == FateCheckOutcome.noBecause ||
            this == FateCheckOutcome.noAnd;
   }
   
@@ -306,21 +385,21 @@ class FateCheckResult extends RollResult {
   bool get hasSpecialTrigger => specialTrigger != null;
 
   /// Intensity description based on the d6 value.
-  /// Uses the "six M's" from design doc: Minimal, Mundane, Minor, Moderate, Major, Massive
+  /// Uses the "six M's" from design doc: Minimal, Minor, Mundane, Moderate, Major, Maximum
   String get intensityDescription {
     switch (intensity) {
       case 1:
         return 'Minimal';
       case 2:
-        return 'Mundane';
-      case 3:
         return 'Minor';
+      case 3:
+        return 'Mundane';
       case 4:
         return 'Moderate';
       case 5:
         return 'Major';
       case 6:
-        return 'Massive';
+        return 'Maximum';
       default:
         return 'Unknown';
     }
