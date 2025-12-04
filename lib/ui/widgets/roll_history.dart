@@ -215,6 +215,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildIdeaDisplay(result as IdeaResult, theme);
     } else if (result is DiscoverMeaningResult) {
       return _buildDiscoverMeaningDisplay(result as DiscoverMeaningResult, theme);
+    } else if (result is MotiveWithFollowUpResult) {
+      return _buildMotiveWithFollowUpDisplay(result as MotiveWithFollowUpResult, theme);
     } else if (result is NpcActionResult) {
       return _buildNpcActionDisplay(result as NpcActionResult, theme);
     } else if (result is NpcProfileResult) {
@@ -251,6 +253,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildFullImmersionDisplay(result as FullImmersionResult, theme);
     } else if (result is PropertyResult) {
       return _buildPropertyResultDisplay(result as PropertyResult, theme);
+    } else if (result is DetailWithFollowUpResult) {
+      return _buildDetailWithFollowUpDisplay(result as DetailWithFollowUpResult, theme);
     } else if (result is DetailResult) {
       return _buildDetailResultDisplay(result as DetailResult, theme);
     } else if (result is FateRollResult) {
@@ -366,8 +370,8 @@ class _RollHistoryCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: result.specialTrigger == SpecialTrigger.randomEvent
-                  ? Colors.amber.withOpacity(0.2)
-                  : Colors.deepPurple.withOpacity(0.2),
+                  ? Colors.amber.withValues(alpha: 0.2)
+                  : Colors.deepPurple.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: result.specialTrigger == SpecialTrigger.randomEvent
@@ -396,6 +400,40 @@ class _RollHistoryCard extends StatelessWidget {
                         : Colors.deepPurple,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        // Auto-rolled Random Event details
+        if (result.hasRandomEvent) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Focus: ${result.randomEventResult!.focus}',
+                  style: TextStyle(
+                    color: Colors.amber.shade800,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${result.randomEventResult!.modifier} ${result.randomEventResult!.idea}',
+                  style: TextStyle(
+                    color: Colors.amber.shade900,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -623,6 +661,74 @@ class _RollHistoryCard extends StatelessWidget {
         fontStyle: FontStyle.italic,
         color: Colors.orange,
       ),
+    );
+  }
+
+  Widget _buildMotiveWithFollowUpDisplay(MotiveWithFollowUpResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Main motive
+        Row(
+          children: [
+            Chip(
+              label: const Text('Motive'),
+              backgroundColor: Colors.teal.withOpacity(0.2),
+              side: const BorderSide(color: Colors.teal),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              result.motive,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        // Follow-up if present
+        if (result.hasFollowUp) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    result.historyResult != null ? 'History' : 'Focus',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.deepPurple[300],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    result.followUpText ?? '',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.deepPurple[200],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1191,14 +1297,29 @@ class _RollHistoryCard extends StatelessWidget {
             ),
           ],
         ),
-        // Show follow-up hint if needed
-        if (result.outcome.requiresFollowUp) ...[  
+        // Show auto-rolled meaning if present
+        if (result.hasMeaning) ...[  
           const SizedBox(height: 8),
-          Text(
-            'Roll on Modifier + Idea table',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-              color: Colors.grey,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lightbulb_outline, size: 16, color: Colors.orange),
+                const SizedBox(width: 6),
+                Text(
+                  'Modifier + Idea: ${result.meaningResult!.meaning}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1503,6 +1624,92 @@ class _RollHistoryCard extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildDetailWithFollowUpDisplay(DetailWithFollowUpResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Main detail result
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.pink.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.pink.withValues(alpha: 0.4)),
+              ),
+              child: Text(
+                result.detailResult.result,
+                style: TextStyle(
+                  color: Colors.pink.shade700,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            if (result.hasFollowUp) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.arrow_forward, size: 16, color: Colors.grey.shade600),
+            ],
+          ],
+        ),
+        // Follow-up result (History or Property)
+        if (result.historyResult != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.purple.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.history, size: 16, color: Colors.purple.shade600),
+                const SizedBox(width: 6),
+                Text(
+                  result.historyResult!.result,
+                  style: TextStyle(
+                    color: Colors.purple.shade700,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (result.propertyResult != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.teal.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.teal.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.tune, size: 16, color: Colors.teal.shade600),
+                const SizedBox(width: 6),
+                Text(
+                  '${result.propertyResult!.property} (${result.propertyResult!.intensityDescription})',
+                  style: TextStyle(
+                    color: Colors.teal.shade700,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

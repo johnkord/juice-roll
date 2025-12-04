@@ -173,7 +173,7 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
   }
 }
 
-/// A dialog option tile.
+/// A dialog option tile with clear visual affordance for clickability.
 class _DialogOption extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -187,12 +187,57 @@ class _DialogOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(title, style: const TextStyle(fontSize: 13)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 10)),
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

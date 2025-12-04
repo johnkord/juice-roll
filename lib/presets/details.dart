@@ -119,6 +119,9 @@ class Details {
   /// Roll for a detail modifier with optional skew.
   /// Advantage: More positive outcomes (Favors PC, Thread, NPC, Positive Emotion)
   /// Disadvantage: More negative outcomes (Disfavors PC, Thread, NPC, Negative Emotion)
+  /// 
+  /// Note: If result is "History" or "Property", use rollDetailWithFollowUp() 
+  /// to automatically roll on those tables.
   DetailResult rollDetail({SkewType skew = SkewType.none}) {
     int roll;
     int? secondRoll;
@@ -145,6 +148,29 @@ class Details {
       result: detail,
       skew: skew,
       requiresFollowUp: detail == 'History' || detail == 'Property',
+    );
+  }
+
+  /// Roll for a detail modifier with automatic follow-up for History/Property.
+  /// 
+  /// When the result is "History" or "Property", automatically rolls on
+  /// the respective table and includes the result.
+  DetailWithFollowUpResult rollDetailWithFollowUp({SkewType skew = SkewType.none}) {
+    final detailResult = rollDetail(skew: skew);
+    
+    DetailResult? historyResult;
+    PropertyResult? propertyResult;
+    
+    if (detailResult.result == 'History') {
+      historyResult = rollHistory();
+    } else if (detailResult.result == 'Property') {
+      propertyResult = rollProperty();
+    }
+    
+    return DetailWithFollowUpResult(
+      detailResult: detailResult,
+      historyResult: historyResult,
+      propertyResult: propertyResult,
     );
   }
 
@@ -325,4 +351,80 @@ class DualPropertyResult extends RollResult {
   @override
   String toString() => 
       'Properties: ${property1.property} (${property1.intensityDescription}) + ${property2.property} (${property2.intensityDescription})';
+}
+
+/// Result of a detail roll with automatic follow-up for History/Property.
+/// 
+/// When the detail result is "History" or "Property", the follow-up roll
+/// is automatically performed and included in this result.
+class DetailWithFollowUpResult extends RollResult {
+  final DetailResult detailResult;
+  /// Auto-rolled History result when detail is "History"
+  final DetailResult? historyResult;
+  /// Auto-rolled Property result when detail is "Property"
+  final PropertyResult? propertyResult;
+
+  DetailWithFollowUpResult({
+    required this.detailResult,
+    this.historyResult,
+    this.propertyResult,
+  }) : super(
+          type: RollType.details,
+          description: 'Detail',
+          diceResults: [
+            detailResult.roll,
+            if (detailResult.secondRoll != null) detailResult.secondRoll!,
+            if (historyResult != null) historyResult.roll,
+            if (historyResult?.secondRoll != null) historyResult!.secondRoll!,
+            if (propertyResult != null) ...[propertyResult.propertyRoll, propertyResult.intensityRoll],
+          ],
+          total: detailResult.roll,
+          interpretation: _buildInterpretation(detailResult, historyResult, propertyResult),
+          metadata: {
+            'detail': detailResult.result,
+            if (detailResult.skew != SkewType.none) 'skew': detailResult.skew.name,
+            if (historyResult != null) 'history': historyResult.result,
+            if (propertyResult != null) 'property': propertyResult.property,
+            if (propertyResult != null) 'propertyIntensity': propertyResult.intensityRoll,
+          },
+        );
+
+  static String _buildInterpretation(
+    DetailResult detail,
+    DetailResult? history,
+    PropertyResult? property,
+  ) {
+    if (history != null) {
+      return '${detail.result} → ${history.result}';
+    }
+    if (property != null) {
+      return '${detail.result} → ${property.property} (${property.intensityDescription})';
+    }
+    return detail.result;
+  }
+
+  /// Whether this result has an auto-rolled follow-up.
+  bool get hasFollowUp => historyResult != null || propertyResult != null;
+
+  /// Get the follow-up text for display.
+  String? get followUpText {
+    if (historyResult != null) {
+      return historyResult!.result;
+    }
+    if (propertyResult != null) {
+      return '${propertyResult!.property} (${propertyResult!.intensityDescription})';
+    }
+    return null;
+  }
+
+  @override
+  String toString() {
+    if (historyResult != null) {
+      return 'Detail: ${detailResult.result} → ${historyResult!.result}';
+    }
+    if (propertyResult != null) {
+      return 'Detail: ${detailResult.result} → ${propertyResult!.property} (${propertyResult!.intensityDescription})';
+    }
+    return 'Detail: ${detailResult.result}';
+  }
 }

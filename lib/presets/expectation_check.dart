@@ -1,6 +1,7 @@
 import '../core/roll_engine.dart';
 import '../core/fate_dice_formatter.dart';
 import '../models/roll_result.dart';
+import 'discover_meaning.dart';
 
 /// Expectation Check preset for the Juice Oracle.
 /// An alternative to Fate Check for players with existing expectations.
@@ -12,11 +13,16 @@ import '../models/roll_result.dart';
 /// will likely do, then test it.
 /// 
 /// Uses 2dF only (no intensity die, unlike Fate Check).
+/// 
+/// When the result is "O O" (Modified Idea), automatically rolls on the
+/// Modifier + Idea (Discover Meaning) table to provide the modification.
 class ExpectationCheck {
   final RollEngine _rollEngine;
+  final DiscoverMeaning _discoverMeaning;
 
   ExpectationCheck([RollEngine? rollEngine])
-      : _rollEngine = rollEngine ?? RollEngine();
+      : _rollEngine = rollEngine ?? RollEngine(),
+        _discoverMeaning = DiscoverMeaning(rollEngine);
 
   /// Check if an expectation holds.
   ExpectationCheckResult check() {
@@ -27,11 +33,18 @@ class ExpectationCheck {
     
     // Interpret the result
     final outcome = _interpretDice(primary, secondary);
+    
+    // If the outcome is Modified Idea (O O), auto-roll on Discover Meaning table
+    DiscoverMeaningResult? meaningResult;
+    if (outcome == ExpectationOutcome.modifiedIdea) {
+      meaningResult = _discoverMeaning.generate();
+    }
 
     return ExpectationCheckResult(
       fateDice: fateDice,
       fateSum: primary + secondary,
       outcome: outcome,
+      meaningResult: meaningResult,
     );
   }
 
@@ -134,7 +147,7 @@ extension ExpectationOutcomeDisplay on ExpectationOutcome {
       case ExpectationOutcome.favorable:
         return 'Your expectation is modified in your favor.';
       case ExpectationOutcome.modifiedIdea:
-        return 'Roll on the Modifier + Idea table to alter your expectation.';
+        return 'Use the Modifier + Idea result to alter your expectation.';
       case ExpectationOutcome.unfavorable:
         return 'Your expectation is modified against your favor.';
       case ExpectationOutcome.opposite:
@@ -156,7 +169,7 @@ extension ExpectationOutcomeDisplay on ExpectationOutcome {
       case ExpectationOutcome.favorable:
         return 'NPC behavior benefits you more than expected.';
       case ExpectationOutcome.modifiedIdea:
-        return 'Roll Modifier + Idea to determine NPC action.';
+        return 'Use the Modifier + Idea result to determine NPC action.';
       case ExpectationOutcome.unfavorable:
         return 'NPC behavior is less helpful than expected.';
       case ExpectationOutcome.opposite:
@@ -165,9 +178,6 @@ extension ExpectationOutcomeDisplay on ExpectationOutcome {
         return 'NPC does the opposite of what you expected, emphatically!';
     }
   }
-  
-  /// Whether this outcome requires a follow-up roll on Modifier + Idea
-  bool get requiresFollowUp => this == ExpectationOutcome.modifiedIdea;
 }
 
 /// Result of an Expectation Check.
@@ -175,26 +185,38 @@ class ExpectationCheckResult extends RollResult {
   final List<int> fateDice;
   final int fateSum;
   final ExpectationOutcome outcome;
+  /// Auto-rolled Modifier + Idea result when outcome is Modified Idea (O O)
+  final DiscoverMeaningResult? meaningResult;
 
   ExpectationCheckResult({
     required this.fateDice,
     required this.fateSum,
     required this.outcome,
+    this.meaningResult,
   }) : super(
           type: RollType.expectationCheck,
           description: 'Expectation Check',
-          diceResults: fateDice,
+          diceResults: [
+            ...fateDice,
+            if (meaningResult != null) ...[meaningResult.adjectiveRoll, meaningResult.nounRoll],
+          ],
           total: fateSum,
-          interpretation: outcome.displayText,
+          interpretation: meaningResult != null
+              ? '${outcome.displayText}: ${meaningResult.meaning}'
+              : outcome.displayText,
           metadata: {
             'fateDice': fateDice,
             'fateSum': fateSum,
             'outcome': outcome.name,
+            if (meaningResult != null) 'meaning': meaningResult.meaning,
           },
         );
 
   /// Get symbolic representation of the Fate dice.
   String get fateSymbols => FateDiceFormatter.diceToSymbols(fateDice);
+  
+  /// Whether this result has an auto-rolled meaning (for Modified Idea outcome)
+  bool get hasMeaning => meaningResult != null;
 
   @override
   String toString() {
@@ -202,6 +224,9 @@ class ExpectationCheckResult extends RollResult {
     buffer.writeln('Expectation Check:');
     buffer.writeln('  Dice: [$fateSymbols]');
     buffer.write('  Result: ${outcome.displayText}');
+    if (meaningResult != null) {
+      buffer.write('\n  Modifier + Idea: ${meaningResult!.meaning}');
+    }
     return buffer.toString();
   }
 }

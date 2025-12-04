@@ -2,6 +2,7 @@ import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
 import 'details.dart';
 import 'name_generator.dart';
+import 'next_scene.dart';
 
 /// NPC Disposition determines the die size for Action/Combat tables.
 /// Passive NPCs roll d6, Active NPCs roll d10.
@@ -120,8 +121,14 @@ class NpcAction {
     'Power',       // 0/10
   ];
 
+  late final Details _details;
+  late final NextScene _nextScene;
+
   NpcAction([RollEngine? rollEngine])
-      : _rollEngine = rollEngine ?? RollEngine();
+      : _rollEngine = rollEngine ?? RollEngine() {
+    _details = Details(_rollEngine);
+    _nextScene = NextScene(_rollEngine);
+  }
 
   /// Helper to get index from roll (handles 10 -> 9)
   int _getIndex(int roll) => roll == 10 ? 9 : roll - 1;
@@ -229,6 +236,31 @@ class NpcAction {
       column: NpcColumn.motive,
       roll: roll,
       result: motive,
+    );
+  }
+
+  /// Roll for NPC motive/topic with automatic follow-up.
+  /// If result is "History", automatically rolls on the History table.
+  /// If result is "Focus", automatically rolls on the Focus table.
+  MotiveWithFollowUpResult rollMotiveWithFollowUp() {
+    final roll = _rollEngine.rollDie(10);
+    final index = _getIndex(roll);
+    final motive = motives[index];
+
+    DetailResult? historyResult;
+    FocusResult? focusResult;
+
+    if (motive == 'History') {
+      historyResult = _details.rollHistory();
+    } else if (motive == 'Focus') {
+      focusResult = _nextScene.rollFocus();
+    }
+
+    return MotiveWithFollowUpResult(
+      roll: roll,
+      motive: motive,
+      historyResult: historyResult,
+      focusResult: focusResult,
     );
   }
 
@@ -537,6 +569,93 @@ class NpcActionResult extends RollResult {
 
   @override
   String toString() => 'NPC ${column.displayText}: $result';
+}
+
+/// Result of a motive roll with automatic follow-up.
+/// If motive is "History", includes the History table result.
+/// If motive is "Focus", includes the Focus table result.
+class MotiveWithFollowUpResult extends RollResult {
+  final int roll;
+  final String motive;
+  final DetailResult? historyResult;
+  final FocusResult? focusResult;
+
+  MotiveWithFollowUpResult({
+    required this.roll,
+    required this.motive,
+    this.historyResult,
+    this.focusResult,
+  }) : super(
+          type: RollType.npcAction,
+          description: 'NPC Motive',
+          diceResults: _buildDiceResults(roll, historyResult, focusResult),
+          total: roll,
+          interpretation: _buildInterpretation(motive, historyResult, focusResult),
+          metadata: _buildMetadata(motive, historyResult, focusResult),
+        );
+
+  static List<int> _buildDiceResults(
+    int roll,
+    DetailResult? historyResult,
+    FocusResult? focusResult,
+  ) {
+    final results = [roll];
+    if (historyResult != null) {
+      results.addAll(historyResult.diceResults);
+    }
+    if (focusResult != null) {
+      results.addAll(focusResult.diceResults);
+    }
+    return results;
+  }
+
+  static String _buildInterpretation(
+    String motive,
+    DetailResult? historyResult,
+    FocusResult? focusResult,
+  ) {
+    if (historyResult != null) {
+      return 'History → ${historyResult.result}';
+    }
+    if (focusResult != null) {
+      return 'Focus → ${focusResult.focus}';
+    }
+    return motive;
+  }
+
+  static Map<String, dynamic> _buildMetadata(
+    String motive,
+    DetailResult? historyResult,
+    FocusResult? focusResult,
+  ) {
+    return {
+      'column': 'motive',
+      'motive': motive,
+      if (historyResult != null) 'history': historyResult.result,
+      if (focusResult != null) 'focus': focusResult.focus,
+    };
+  }
+
+  /// Whether this result has a follow-up roll.
+  bool get hasFollowUp => historyResult != null || focusResult != null;
+
+  /// The follow-up text (either history or focus result).
+  String? get followUpText {
+    if (historyResult != null) return historyResult!.result;
+    if (focusResult != null) return focusResult!.focus;
+    return null;
+  }
+
+  @override
+  String toString() {
+    if (historyResult != null) {
+      return 'NPC Motive: History → ${historyResult!.result}';
+    }
+    if (focusResult != null) {
+      return 'NPC Motive: Focus → ${focusResult!.focus}';
+    }
+    return 'NPC Motive: $motive';
+  }
 }
 
 /// Result of generating a full NPC profile.

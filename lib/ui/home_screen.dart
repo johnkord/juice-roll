@@ -814,9 +814,9 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
               ),
               _DialogOption(
                 title: 'Motive / Topic',
-                subtitle: 'd10 - For History/Focus, roll those tables',
+                subtitle: 'd10 - Auto-rolls History/Focus tables',
                 onTap: () {
-                  widget.onRoll(widget.npcAction.rollMotive());
+                  widget.onRoll(widget.npcAction.rollMotiveWithFollowUp());
                   Navigator.pop(context);
                 },
               ),
@@ -1770,18 +1770,9 @@ class _DetailsDialog extends StatelessWidget {
           const Divider(),
           _DialogOption(
             title: 'Detail',
-            subtitle: 'd10 - ground meaning to thread/character/emotion',
+            subtitle: 'd10 - ground meaning to thread/character/emotion (auto-rolls History/Property)',
             onTap: () {
-              final result = details.rollDetail();
-              onRoll(result);
-              // If result is History or Property, prompt for follow-up
-              if (result.requiresFollowUp) {
-                if (result.result == 'History') {
-                  onRoll(details.rollHistory());
-                } else if (result.result == 'Property') {
-                  onRoll(details.rollProperty());
-                }
-              }
+              onRoll(details.rollDetailWithFollowUp());
               Navigator.pop(context);
             },
           ),
@@ -1789,15 +1780,7 @@ class _DetailsDialog extends StatelessWidget {
             title: 'Detail (Positive)',
             subtitle: 'd10 advantage - skew toward favorable',
             onTap: () {
-              final result = details.rollDetail(skew: SkewType.advantage);
-              onRoll(result);
-              if (result.requiresFollowUp) {
-                if (result.result == 'History') {
-                  onRoll(details.rollHistory());
-                } else if (result.result == 'Property') {
-                  onRoll(details.rollProperty());
-                }
-              }
+              onRoll(details.rollDetailWithFollowUp(skew: SkewType.advantage));
               Navigator.pop(context);
             },
           ),
@@ -1805,15 +1788,7 @@ class _DetailsDialog extends StatelessWidget {
             title: 'Detail (Negative)',
             subtitle: 'd10 disadvantage - skew toward unfavorable',
             onTap: () {
-              final result = details.rollDetail(skew: SkewType.disadvantage);
-              onRoll(result);
-              if (result.requiresFollowUp) {
-                if (result.result == 'History') {
-                  onRoll(details.rollHistory());
-                } else if (result.result == 'Property') {
-                  onRoll(details.rollProperty());
-                }
-              }
+              onRoll(details.rollDetailWithFollowUp(skew: SkewType.disadvantage));
               Navigator.pop(context);
             },
           ),
@@ -2759,12 +2734,57 @@ class _DialogOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(title),
-      subtitle: subtitle != null ? Text(subtitle!) : null,
-      onTap: onTap,
-      dense: true,
-      contentPadding: EdgeInsets.zero,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

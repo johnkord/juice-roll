@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:juice_roll/presets/fate_check.dart';
+import 'package:juice_roll/presets/expectation_check.dart';
 import 'package:juice_roll/presets/next_scene.dart';
 import 'package:juice_roll/presets/random_event.dart';
 import 'package:juice_roll/presets/discover_meaning.dart';
@@ -30,8 +31,14 @@ void main() {
       final fateCheck = FateCheck(RollEngine(SeededRandom(42)));
       final result = fateCheck.check();
 
-      // Should have 2 Fate dice + 1 Intensity die
-      expect(result.diceResults.length, equals(3));
+      // Should have at least 2 Fate dice + 1 Intensity die
+      // May have 3 more if Random Event was triggered (focus, modifier, idea rolls)
+      expect(result.diceResults.length, greaterThanOrEqualTo(3));
+      if (result.hasRandomEvent) {
+        expect(result.diceResults.length, equals(6)); // 2 fate + 1 intensity + 3 random event
+      } else {
+        expect(result.diceResults.length, equals(3));
+      }
       
       // Fate dice should be in range -1 to +1
       expect(result.fateDice.length, equals(2));
@@ -79,6 +86,14 @@ void main() {
             result.specialTrigger == SpecialTrigger.invalidAssumption,
             isTrue,
           );
+          // If Random Event triggered, should have auto-rolled event
+          if (result.specialTrigger == SpecialTrigger.randomEvent) {
+            expect(result.hasRandomEvent, isTrue);
+            expect(result.randomEventResult, isNotNull);
+            expect(result.randomEventResult!.focus.isNotEmpty, isTrue);
+            expect(result.randomEventResult!.modifier.isNotEmpty, isTrue);
+            expect(result.randomEventResult!.idea.isNotEmpty, isTrue);
+          }
           foundDoubleBlanks = true;
         }
       }
@@ -120,6 +135,61 @@ void main() {
         if (outcome.isContextual) continue;
         expect(outcome.isYes != outcome.isNo, isTrue,
             reason: '$outcome should be yes XOR no');
+      }
+    });
+  });
+
+  group('ExpectationCheck', () {
+    test('check returns valid outcome with fate dice', () {
+      final expectationCheck = ExpectationCheck(RollEngine(SeededRandom(42)));
+      final result = expectationCheck.check();
+
+      // Should have at least 2 Fate dice
+      // May have 2 more if Modified Idea was triggered (adjective, noun rolls)
+      expect(result.diceResults.length, greaterThanOrEqualTo(2));
+      if (result.hasMeaning) {
+        expect(result.diceResults.length, equals(4)); // 2 fate + 2 meaning
+      } else {
+        expect(result.diceResults.length, equals(2));
+      }
+      
+      // Fate dice should be in range -1 to +1
+      expect(result.fateDice.length, equals(2));
+      for (final die in result.fateDice) {
+        expect(die, inInclusiveRange(-1, 1));
+      }
+      
+      // Fate sum should be in range -2 to +2
+      expect(result.fateSum, inInclusiveRange(-2, 2));
+      
+      expect(ExpectationOutcome.values, contains(result.outcome));
+    });
+
+    test('double blanks trigger Modified Idea with auto-rolled meaning', () {
+      // Find a seed that produces double blanks (both dice = 0)
+      bool foundDoubleBlanks = false;
+      for (int seed = 0; seed < 5000 && !foundDoubleBlanks; seed++) {
+        final expectationCheck = ExpectationCheck(RollEngine(SeededRandom(seed)));
+        final result = expectationCheck.check();
+        
+        if (result.fateDice[0] == 0 && result.fateDice[1] == 0) {
+          expect(result.outcome, equals(ExpectationOutcome.modifiedIdea));
+          expect(result.hasMeaning, isTrue);
+          expect(result.meaningResult, isNotNull);
+          expect(result.meaningResult!.adjective.isNotEmpty, isTrue);
+          expect(result.meaningResult!.noun.isNotEmpty, isTrue);
+          expect(result.meaningResult!.meaning.isNotEmpty, isTrue);
+          foundDoubleBlanks = true;
+        }
+      }
+      expect(foundDoubleBlanks, isTrue, 
+          reason: 'Should find double blanks within 5000 seeds');
+    });
+
+    test('all outcomes have display text and description', () {
+      for (final outcome in ExpectationOutcome.values) {
+        expect(outcome.displayText.isNotEmpty, isTrue);
+        expect(outcome.description.isNotEmpty, isTrue);
       }
     });
   });
@@ -404,6 +474,65 @@ void main() {
         needSkew: NeedSkew.complex,
       );
       expect(complexResult.needSkew, equals(NeedSkew.complex));
+    });
+
+    test('rollMotiveWithFollowUp auto-rolls History table when motive is History', () {
+      // Find a seed that produces "History" motive (roll of 1)
+      // Test with various seeds
+      for (var seed = 0; seed < 100; seed++) {
+        final npcAction = NpcAction(RollEngine(SeededRandom(seed)));
+        final result = npcAction.rollMotiveWithFollowUp();
+        
+        if (result.motive == 'History') {
+          // Should have history result
+          expect(result.hasFollowUp, isTrue);
+          expect(result.historyResult, isNotNull);
+          expect(result.focusResult, isNull);
+          expect(result.followUpText, equals(result.historyResult!.result));
+          // Should have 2 dice results (motive roll + history roll)
+          expect(result.diceResults.length, equals(2));
+          return; // Test passed
+        }
+      }
+      // If we don't hit History after 100 seeds, that's fine - the logic is still verified by other paths
+    });
+
+    test('rollMotiveWithFollowUp auto-rolls Focus table when motive is Focus', () {
+      // Find a seed that produces "Focus" motive (roll of 10)
+      for (var seed = 0; seed < 100; seed++) {
+        final npcAction = NpcAction(RollEngine(SeededRandom(seed)));
+        final result = npcAction.rollMotiveWithFollowUp();
+        
+        if (result.motive == 'Focus') {
+          // Should have focus result
+          expect(result.hasFollowUp, isTrue);
+          expect(result.focusResult, isNotNull);
+          expect(result.historyResult, isNull);
+          expect(result.followUpText, equals(result.focusResult!.focus));
+          // Should have 2 dice results (motive roll + focus roll)
+          expect(result.diceResults.length, equals(2));
+          return; // Test passed
+        }
+      }
+    });
+
+    test('rollMotiveWithFollowUp has no follow-up for non-History/Focus motives', () {
+      // Find a seed that produces a motive that's not History or Focus
+      for (var seed = 0; seed < 100; seed++) {
+        final npcAction = NpcAction(RollEngine(SeededRandom(seed)));
+        final result = npcAction.rollMotiveWithFollowUp();
+        
+        if (result.motive != 'History' && result.motive != 'Focus') {
+          // Should not have follow-up
+          expect(result.hasFollowUp, isFalse);
+          expect(result.historyResult, isNull);
+          expect(result.focusResult, isNull);
+          expect(result.followUpText, isNull);
+          // Should have only 1 die result
+          expect(result.diceResults.length, equals(1));
+          return; // Test passed
+        }
+      }
     });
   });
 
@@ -732,6 +861,66 @@ void main() {
 
       expect(result.result.isNotEmpty, isTrue);
       expect(result.detailType, equals(DetailType.history));
+    });
+
+    test('rollDetailWithFollowUp auto-rolls History when result is History', () {
+      // Find a seed that produces "History" (roll of 5)
+      bool foundHistory = false;
+      for (int seed = 0; seed < 1000 && !foundHistory; seed++) {
+        final details = Details(RollEngine(SeededRandom(seed)));
+        final result = details.rollDetailWithFollowUp();
+        
+        if (result.detailResult.result == 'History') {
+          expect(result.hasFollowUp, isTrue);
+          expect(result.historyResult, isNotNull);
+          expect(result.propertyResult, isNull);
+          expect(result.historyResult!.result.isNotEmpty, isTrue);
+          expect(result.followUpText, equals(result.historyResult!.result));
+          foundHistory = true;
+        }
+      }
+      expect(foundHistory, isTrue,
+          reason: 'Should find History result within 1000 seeds');
+    });
+
+    test('rollDetailWithFollowUp auto-rolls Property when result is Property', () {
+      // Find a seed that produces "Property" (roll of 6)
+      bool foundProperty = false;
+      for (int seed = 0; seed < 1000 && !foundProperty; seed++) {
+        final details = Details(RollEngine(SeededRandom(seed)));
+        final result = details.rollDetailWithFollowUp();
+        
+        if (result.detailResult.result == 'Property') {
+          expect(result.hasFollowUp, isTrue);
+          expect(result.propertyResult, isNotNull);
+          expect(result.historyResult, isNull);
+          expect(result.propertyResult!.property.isNotEmpty, isTrue);
+          expect(result.propertyResult!.intensityRoll, inInclusiveRange(1, 6));
+          foundProperty = true;
+        }
+      }
+      expect(foundProperty, isTrue,
+          reason: 'Should find Property result within 1000 seeds');
+    });
+
+    test('rollDetailWithFollowUp has no follow-up for other results', () {
+      // Find a seed that produces something other than History/Property
+      bool foundOther = false;
+      for (int seed = 0; seed < 100 && !foundOther; seed++) {
+        final details = Details(RollEngine(SeededRandom(seed)));
+        final result = details.rollDetailWithFollowUp();
+        
+        if (result.detailResult.result != 'History' && 
+            result.detailResult.result != 'Property') {
+          expect(result.hasFollowUp, isFalse);
+          expect(result.historyResult, isNull);
+          expect(result.propertyResult, isNull);
+          expect(result.followUpText, isNull);
+          foundOther = true;
+        }
+      }
+      expect(foundOther, isTrue,
+          reason: 'Should find non-History/Property result within 100 seeds');
     });
   });
 

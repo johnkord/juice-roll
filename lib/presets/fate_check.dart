@@ -1,6 +1,7 @@
 import '../core/roll_engine.dart';
 import '../core/fate_dice_formatter.dart';
 import '../models/roll_result.dart';
+import 'random_event.dart';
 
 /// Fate Check preset for the Juice Oracle.
 /// Uses 2dF (Fate dice) + 1d6 (Intensity) to answer yes/no questions.
@@ -20,8 +21,12 @@ import '../models/roll_result.dart';
 /// - -- = No And, -+ = No But
 /// - 0+ = Favorable, 0- = Unfavorable
 /// - 00 (primary left) = Random Event, 00 (primary right) = Invalid Assumption
+/// 
+/// When a Random Event is triggered (O O with primary on left), automatically
+/// rolls on the Random Event tables to provide the event details.
 class FateCheck {
   final RollEngine _rollEngine;
+  final RandomEvent _randomEvent;
 
   /// Likelihood modes for the Fate Check.
   /// Likely: If either die is +, result is Yes-like
@@ -33,12 +38,16 @@ class FateCheck {
   ];
 
   FateCheck([RollEngine? rollEngine]) 
-      : _rollEngine = rollEngine ?? RollEngine();
+      : _rollEngine = rollEngine ?? RollEngine(),
+        _randomEvent = RandomEvent(rollEngine);
 
   /// Perform a Fate Check with the given likelihood.
   /// 
   /// Rolls 2dF (ordered) + 1d6 Intensity, then interprets the result.
   /// [primaryOnLeft] simulates which die is "primary" for double-blank handling.
+  /// 
+  /// If a Random Event is triggered (O O with primary on left), automatically
+  /// rolls on the Random Event tables and includes the result.
   FateCheckResult check({
     String likelihood = 'Even Odds',
     bool? primaryOnLeft,
@@ -57,6 +66,7 @@ class FateCheck {
     // Check for special triggers (double blanks)
     final isDoubleBlanks = primary == 0 && secondary == 0;
     SpecialTrigger? specialTrigger;
+    RandomEventResult? randomEventResult;
     
     if (isDoubleBlanks) {
       // Primary on left → Random Event (answer is "Yes But")
@@ -64,6 +74,11 @@ class FateCheck {
       specialTrigger = isPrimaryLeft 
           ? SpecialTrigger.randomEvent 
           : SpecialTrigger.invalidAssumption;
+      
+      // Auto-roll Random Event if triggered
+      if (specialTrigger == SpecialTrigger.randomEvent) {
+        randomEventResult = _randomEvent.generate();
+      }
     }
     
     // Determine outcome based on Juice Oracle rules
@@ -77,6 +92,7 @@ class FateCheck {
       outcome: outcome,
       specialTrigger: specialTrigger,
       primaryOnLeft: isPrimaryLeft,
+      randomEventResult: randomEventResult,
     );
   }
 
@@ -221,7 +237,7 @@ extension SpecialTriggerDisplay on SpecialTrigger {
   String get description {
     switch (this) {
       case SpecialTrigger.randomEvent:
-        return 'Something unexpected happens. Roll on the Random Event tables.';
+        return 'Something unexpected happens. See the auto-rolled Random Event below.';
       case SpecialTrigger.invalidAssumption:
         return 'Your assumption about the situation was wrong. Re-examine what you thought was true.';
     }
@@ -326,6 +342,8 @@ class FateCheckResult extends RollResult {
   final FateCheckOutcome outcome;
   final SpecialTrigger? specialTrigger;
   final bool primaryOnLeft;
+  /// Auto-rolled Random Event result when Random Event is triggered (O O with primary on left)
+  final RandomEventResult? randomEventResult;
 
   FateCheckResult({
     required this.likelihood,
@@ -335,12 +353,21 @@ class FateCheckResult extends RollResult {
     required this.outcome,
     this.specialTrigger,
     this.primaryOnLeft = true,
+    this.randomEventResult,
   }) : super(
           type: RollType.fateCheck,
           description: 'Fate Check ($likelihood)',
-          diceResults: [...fateDice, intensity],
+          diceResults: [
+            ...fateDice, 
+            intensity,
+            if (randomEventResult != null) ...[
+              randomEventResult.focusRoll,
+              randomEventResult.modifierRoll,
+              randomEventResult.ideaRoll,
+            ],
+          ],
           total: fateSum,
-          interpretation: _buildInterpretation(outcome, intensity, specialTrigger),
+          interpretation: _buildInterpretation(outcome, intensity, specialTrigger, randomEventResult),
           metadata: {
             'likelihood': likelihood,
             'fateDice': fateDice,
@@ -349,6 +376,11 @@ class FateCheckResult extends RollResult {
             'outcome': outcome.name,
             'specialTrigger': specialTrigger?.name,
             'primaryOnLeft': primaryOnLeft,
+            if (randomEventResult != null) 'randomEvent': {
+              'focus': randomEventResult.focus,
+              'modifier': randomEventResult.modifier,
+              'idea': randomEventResult.idea,
+            },
           },
         );
 
@@ -356,11 +388,16 @@ class FateCheckResult extends RollResult {
     FateCheckOutcome outcome,
     int intensity,
     SpecialTrigger? trigger,
+    RandomEventResult? randomEvent,
   ) {
     final parts = <String>[outcome.displayText];
     
     if (trigger != null) {
       parts.add(trigger.displayText);
+    }
+    
+    if (randomEvent != null) {
+      parts.add('${randomEvent.focus}: ${randomEvent.modifier} ${randomEvent.idea}');
     }
     
     return parts.join(' + ');
@@ -371,6 +408,9 @@ class FateCheckResult extends RollResult {
 
   /// Whether this result triggered a special event.
   bool get hasSpecialTrigger => specialTrigger != null;
+  
+  /// Whether this result has an auto-rolled random event.
+  bool get hasRandomEvent => randomEventResult != null;
 
   /// Intensity description based on the d6 value.
   /// Uses the "six M's" from design doc: Minimal, Minor, Mundane, Moderate, Major, Maximum
@@ -402,6 +442,9 @@ class FateCheckResult extends RollResult {
     buffer.write('  Result: ${outcome.displayText}');
     if (specialTrigger != null) {
       buffer.write(' + ${specialTrigger!.displayText}');
+    }
+    if (randomEventResult != null) {
+      buffer.write('\n  Random Event: ${randomEventResult!.focus}: ${randomEventResult!.modifier} ${randomEventResult!.idea}');
     }
     return buffer.toString();
   }
