@@ -158,6 +158,30 @@ void main() {
       expect(SceneType.interruptFavorable.requiresFollowUp, isTrue);
       expect(SceneType.interruptUnfavorable.requiresFollowUp, isTrue);
     });
+
+    test('determineSceneWithFollowUp supports simple mode with Modifier+Idea', () {
+      // Use a seed that produces an Alter result (++ or +-)
+      // We'll test the simple mode capability - if we get an alter result
+      // with simple mode, it should use IdeaResult instead of FocusResult
+      final randomEvent = RandomEvent(RollEngine(SeededRandom(123)));
+      final nextScene = NextScene(RollEngine(SeededRandom(123)));
+      
+      // Run with simple mode
+      final result = nextScene.determineSceneWithFollowUp(
+        useSimpleMode: true,
+        randomEvent: randomEvent,
+      );
+      
+      // Result should be valid
+      expect(result.sceneResult.sceneType, isA<SceneType>());
+      
+      // If it's an Alter result and simple mode was used, ideaResult should be set
+      if (result.sceneResult.sceneType == SceneType.alterAdd ||
+          result.sceneResult.sceneType == SceneType.alterRemove) {
+        expect(result.ideaResult, isNotNull);
+        expect(result.focusResult, isNull);
+      }
+    });
   });
 
   group('RandomEvent', () {

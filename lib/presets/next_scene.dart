@@ -1,10 +1,14 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
 import 'interrupt_plot_point.dart';
+import 'random_event.dart';
 
 /// Next Scene preset for the Juice Oracle.
 /// Uses the Next Scene column from the Fate Check table (2dF).
 /// Determines if the next scene proceeds normally, is altered, or is interrupted.
+/// 
+/// At the end of a scene, you probably have an idea of what the next scene may look like.
+/// Mythic prompts you to challenge that expectation, and Juice does it in a streamlined fashion.
 class NextScene {
   final RollEngine _rollEngine;
   final InterruptPlotPoint _plotPoint;
@@ -48,16 +52,28 @@ class NextScene {
 
   /// Determine the next scene with automatic follow-up rolls.
   /// Returns NextSceneWithFollowUpResult which includes the focus or plot point.
-  NextSceneWithFollowUpResult determineSceneWithFollowUp() {
+  /// 
+  /// If [useSimpleMode] is true and the result is an Alter, uses Modifier + Idea
+  /// instead of the Focus table.
+  NextSceneWithFollowUpResult determineSceneWithFollowUp({
+    bool useSimpleMode = false,
+    RandomEvent? randomEvent,
+  }) {
     final sceneResult = determineScene();
     
     // Generate follow-up based on scene type
     FocusResult? focusResult;
+    IdeaResult? ideaResult;
     InterruptPlotPointResult? plotPointResult;
     
     if (sceneResult.sceneType == SceneType.alterAdd || 
         sceneResult.sceneType == SceneType.alterRemove) {
-      focusResult = rollFocus();
+      if (useSimpleMode && randomEvent != null) {
+        // Simple mode: Use Modifier + Idea instead of Focus
+        ideaResult = randomEvent.rollModifierPlusIdea();
+      } else {
+        focusResult = rollFocus();
+      }
     } else if (sceneResult.sceneType == SceneType.interruptFavorable ||
                sceneResult.sceneType == SceneType.interruptUnfavorable) {
       plotPointResult = _plotPoint.generate();
@@ -66,6 +82,7 @@ class NextScene {
     return NextSceneWithFollowUpResult(
       sceneResult: sceneResult,
       focusResult: focusResult,
+      ideaResult: ideaResult,
       plotPointResult: plotPointResult,
     );
   }
@@ -245,11 +262,13 @@ class FocusResult extends RollResult {
 class NextSceneWithFollowUpResult extends RollResult {
   final NextSceneResult sceneResult;
   final FocusResult? focusResult;
+  final IdeaResult? ideaResult;
   final InterruptPlotPointResult? plotPointResult;
 
   NextSceneWithFollowUpResult({
     required this.sceneResult,
     this.focusResult,
+    this.ideaResult,
     this.plotPointResult,
   }) : super(
           type: RollType.nextScene,
@@ -257,13 +276,15 @@ class NextSceneWithFollowUpResult extends RollResult {
           diceResults: [
             ...sceneResult.fateDice,
             if (focusResult != null) focusResult.roll,
+            if (ideaResult != null) ...[ideaResult.modifierRoll, ideaResult.ideaRoll],
             if (plotPointResult != null) ...[plotPointResult.categoryRoll, plotPointResult.eventRoll],
           ],
           total: sceneResult.fateSum,
-          interpretation: _buildInterpretation(sceneResult, focusResult, plotPointResult),
+          interpretation: _buildInterpretation(sceneResult, focusResult, ideaResult, plotPointResult),
           metadata: {
             'sceneType': sceneResult.sceneType.name,
             if (focusResult != null) 'focus': focusResult.focus,
+            if (ideaResult != null) 'idea': '${ideaResult.modifier} ${ideaResult.idea}',
             if (plotPointResult != null) 'plotPoint': '${plotPointResult.category}: ${plotPointResult.event}',
           },
         );
@@ -271,11 +292,15 @@ class NextSceneWithFollowUpResult extends RollResult {
   static String _buildInterpretation(
     NextSceneResult scene,
     FocusResult? focus,
+    IdeaResult? idea,
     InterruptPlotPointResult? plotPoint,
   ) {
     final buffer = StringBuffer(scene.sceneType.displayText);
     if (focus != null) {
       buffer.write(' → ${focus.focus}');
+    }
+    if (idea != null) {
+      buffer.write(' → ${idea.modifier} ${idea.idea}');
     }
     if (plotPoint != null) {
       buffer.write(' → ${plotPoint.category}: ${plotPoint.event}');
@@ -287,6 +312,9 @@ class NextSceneWithFollowUpResult extends RollResult {
   String? get followUpText {
     if (focusResult != null) {
       return focusResult!.focus;
+    }
+    if (ideaResult != null) {
+      return '${ideaResult!.modifier} ${ideaResult!.idea}';
     }
     if (plotPointResult != null) {
       return '${plotPointResult!.category}: ${plotPointResult!.event}';
@@ -301,6 +329,9 @@ class NextSceneWithFollowUpResult extends RollResult {
     buffer.writeln('  Result: ${sceneResult.sceneType.displayText}');
     if (focusResult != null) {
       buffer.writeln('  Focus: ${focusResult!.focus}');
+    }
+    if (ideaResult != null) {
+      buffer.writeln('  Idea: ${ideaResult!.modifier} ${ideaResult!.idea}');
     }
     if (plotPointResult != null) {
       buffer.write('  Plot Point: ${plotPointResult!.category} - ${plotPointResult!.event}');
