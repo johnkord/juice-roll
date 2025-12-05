@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: juice-roll
-        image: ribacr123.azurecr.io/juice-roll:20251204-130915
+        image: ribacr123.azurecr.io/juice-roll:20251204-215537
         imagePullPolicy: Always
         ports:
         - containerPort: 80
