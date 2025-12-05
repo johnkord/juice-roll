@@ -3548,7 +3548,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                 subtitle: 'Start in a random environment (1d10 + 1dF)',
                 onTap: () {
                   widget.onRoll(widget.wilderness.initializeRandom());
-                  setState(() {});
+                  Navigator.pop(context);
                 },
               ),
               _DialogOption(
@@ -3562,7 +3562,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                 subtitle: 'Move to adjacent area (2dF env + 1dF type)',
                 onTap: () {
                   widget.onRoll(widget.wilderness.transition());
-                  setState(() {});
+                  Navigator.pop(context);
                 },
               ),
               _DialogOption(
@@ -3639,7 +3639,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                         onPressed: () {
                           final result = widget.wilderness.initializeAt(_selectedEnvironment, typeRow: _selectedType);
                           widget.onRoll(result);
-                          setState(() => _showEnvironmentPicker = false);
+                          Navigator.pop(context);
                         },
                         icon: const Icon(Icons.location_on),
                         label: const Text('Set Position'),
@@ -3687,7 +3687,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                   : 'What happens? (d10)',
               onTap: () {
                 _rollEncounterWithFollowUp();
-                setState(() {});
+                Navigator.pop(context);
               },
             ),
             if (isInitialized && state.isLost)
@@ -3696,7 +3696,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                 subtitle: 'Manually reset orientation (back to d10)',
                 onTap: () {
                   widget.wilderness.setLost(false);
-                  setState(() {});
+                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('No longer lost - using d10 for encounters')),
                   );
