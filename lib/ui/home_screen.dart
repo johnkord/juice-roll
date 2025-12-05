@@ -91,6 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Dungeon exploration phase state (persists across dialog opens)
   bool _isDungeonEntering = true;
+  // Dungeon map generation mode: false = One-Pass, true = Two-Pass
+  bool _isDungeonTwoPassMode = false;
   // Two-Pass map generation state (persists across dialog opens)
   bool _twoPassHasFirstDoubles = false;
 
@@ -121,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
         
         // Restore stateful preset states
         _isDungeonEntering = session.dungeonIsEntering;
+        _isDungeonTwoPassMode = session.dungeonIsTwoPassMode;
         _twoPassHasFirstDoubles = session.twoPassHasFirstDoubles;
         
         // Restore wilderness state if available
@@ -152,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
       
       // Restore stateful preset states
       _isDungeonEntering = fullSession.dungeonIsEntering;
+      _isDungeonTwoPassMode = fullSession.dungeonIsTwoPassMode;
       _twoPassHasFirstDoubles = fullSession.twoPassHasFirstDoubles;
       
       // Restore wilderness state
@@ -174,6 +178,11 @@ class _HomeScreenState extends State<HomeScreen> {
     _saveSessionState();
   }
 
+  void _setDungeonTwoPassMode(bool isTwoPassMode) {
+    setState(() => _isDungeonTwoPassMode = isTwoPassMode);
+    _saveSessionState();
+  }
+
   void _setTwoPassFirstDoubles(bool hasFirstDoubles) {
     setState(() => _twoPassHasFirstDoubles = hasFirstDoubles);
     _saveSessionState();
@@ -183,6 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_currentSession == null) return;
     
     _currentSession!.dungeonIsEntering = _isDungeonEntering;
+    _currentSession!.dungeonIsTwoPassMode = _isDungeonTwoPassMode;
     _currentSession!.twoPassHasFirstDoubles = _twoPassHasFirstDoubles;
     
     // Save wilderness state
@@ -586,6 +596,8 @@ class _HomeScreenState extends State<HomeScreen> {
         onRoll: _addToHistory,
         isEntering: _isDungeonEntering,
         onPhaseChange: _setDungeonPhase,
+        isTwoPassMode: _isDungeonTwoPassMode,
+        onTwoPassModeChange: _setDungeonTwoPassMode,
         twoPassHasFirstDoubles: _twoPassHasFirstDoubles,
         onTwoPassFirstDoublesChange: _setTwoPassFirstDoubles,
       ),
@@ -2395,6 +2407,8 @@ class _DungeonDialog extends StatefulWidget {
   final void Function(RollResult) onRoll;
   final bool isEntering;
   final void Function(bool) onPhaseChange;
+  final bool isTwoPassMode;
+  final void Function(bool) onTwoPassModeChange;
   final bool twoPassHasFirstDoubles;
   final void Function(bool) onTwoPassFirstDoublesChange;
 
@@ -2403,6 +2417,8 @@ class _DungeonDialog extends StatefulWidget {
     required this.onRoll,
     required this.isEntering,
     required this.onPhaseChange,
+    required this.isTwoPassMode,
+    required this.onTwoPassModeChange,
     required this.twoPassHasFirstDoubles,
     required this.onTwoPassFirstDoublesChange,
   });
@@ -2413,6 +2429,10 @@ class _DungeonDialog extends StatefulWidget {
 
 class _DungeonDialogState extends State<_DungeonDialog> {
   late bool _isEntering;
+  // Local state for Two-Pass mode (synced with parent on change)
+  late bool _isTwoPassMode;
+  // Local state for first doubles in Two-Pass mode
+  late bool _twoPassHasFirstDoubles;
   // Passage/Condition table die size
   // d6 = Linear/Unoccupied, d10 = Branching/Occupied
   bool _useD6ForPassage = false;
@@ -2426,9 +2446,6 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   // Advantage = Better Encounters, Disadvantage = Worse Encounters
   AdvantageType _encounterSkew = AdvantageType.none;
 
-  // Map generation mode: false = One-Pass, true = Two-Pass
-  bool _isTwoPassMode = false;
-
   // Scroll controller to track scroll position for indicators
   final ScrollController _scrollController = ScrollController();
   bool _canScrollUp = false;
@@ -2438,6 +2455,8 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   void initState() {
     super.initState();
     _isEntering = widget.isEntering;
+    _isTwoPassMode = widget.isTwoPassMode;
+    _twoPassHasFirstDoubles = widget.twoPassHasFirstDoubles;
     _scrollController.addListener(_updateScrollIndicators);
     // Check initial scroll state after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollIndicators());
@@ -2467,6 +2486,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   void _resetMap() {
     if (_isTwoPassMode) {
       // Two-Pass: reset to @+ (before first doubles)
+      setState(() => _twoPassHasFirstDoubles = false);
       widget.onTwoPassFirstDoublesChange(false);
     } else {
       // One-Pass: reset to Entering (@-)
@@ -2474,11 +2494,21 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     }
   }
 
+  void _setTwoPassMode(bool isTwoPassMode) {
+    setState(() => _isTwoPassMode = isTwoPassMode);
+    widget.onTwoPassModeChange(isTwoPassMode);
+  }
+
+  void _setTwoPassFirstDoubles(bool hasFirstDoubles) {
+    setState(() => _twoPassHasFirstDoubles = hasFirstDoubles);
+    widget.onTwoPassFirstDoublesChange(hasFirstDoubles);
+  }
+
   // Get the current advantage state based on mode
   bool get _useAdvantage {
     if (_isTwoPassMode) {
       // Two-Pass: @+ before first doubles, @- after
-      return !widget.twoPassHasFirstDoubles;
+      return !_twoPassHasFirstDoubles;
     } else {
       // One-Pass: @- while entering, @+ while exploring
       return !_isEntering;
@@ -2543,7 +2573,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     final String statusText;
     final Color statusColor;
     if (_isTwoPassMode) {
-      if (widget.twoPassHasFirstDoubles) {
+      if (_twoPassHasFirstDoubles) {
         statusText = '1d10@- (after 1st doubles)';
         statusColor = Colors.orange;
       } else {
@@ -2598,7 +2628,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
             ],
             // Two-Pass doubles indicators
             if (_isTwoPassMode) ...[
-              _buildCompactDoublesIndicator('1st', widget.twoPassHasFirstDoubles, Colors.orange),
+              _buildCompactDoublesIndicator('1st', _twoPassHasFirstDoubles, Colors.orange),
               const SizedBox(width: 4),
               _buildCompactDoublesIndicator('2nd', false, Colors.red),
             ],
@@ -2682,7 +2712,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                               )),
                               selected: !_isTwoPassMode,
                               selectedColor: Colors.blue,
-                              onSelected: (s) => setState(() => _isTwoPassMode = false),
+                              onSelected: (s) => _setTwoPassMode(false),
                               visualDensity: VisualDensity.compact,
                             ),
                             const SizedBox(width: 8),
@@ -2693,7 +2723,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                               )),
                               selected: _isTwoPassMode,
                               selectedColor: Colors.indigo,
-                              onSelected: (s) => setState(() => _isTwoPassMode = true),
+                              onSelected: (s) => _setTwoPassMode(true),
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
@@ -2743,7 +2773,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   if (_isTwoPassMode) {
                     // Two-Pass mode: use generateTwoPassArea
                     final result = widget.dungeonGenerator.generateTwoPassArea(
-                      hasFirstDoubles: widget.twoPassHasFirstDoubles,
+                      hasFirstDoubles: _twoPassHasFirstDoubles,
                       useD6ForPassage: _useD6ForPassage,
                       passageSkew: _passageConditionSkew,
                     );
@@ -2758,8 +2788,8 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                           duration: const Duration(seconds: 4),
                         ),
                       );
-                    } else if (result.isDoubles && !widget.twoPassHasFirstDoubles) {
-                      widget.onTwoPassFirstDoublesChange(true);
+                    } else if (result.isDoubles && !_twoPassHasFirstDoubles) {
+                      _setTwoPassFirstDoubles(true);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
@@ -2800,7 +2830,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   if (_isTwoPassMode) {
                     // Two-Pass mode: use generateTwoPassArea (already includes condition)
                     final result = widget.dungeonGenerator.generateTwoPassArea(
-                      hasFirstDoubles: widget.twoPassHasFirstDoubles,
+                      hasFirstDoubles: _twoPassHasFirstDoubles,
                       useD6ForPassage: _useD6ForPassage,
                       passageSkew: _passageConditionSkew,
                     );
@@ -2815,8 +2845,8 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                           duration: const Duration(seconds: 4),
                         ),
                       );
-                    } else if (result.isDoubles && !widget.twoPassHasFirstDoubles) {
-                      widget.onTwoPassFirstDoublesChange(true);
+                    } else if (result.isDoubles && !_twoPassHasFirstDoubles) {
+                      _setTwoPassFirstDoubles(true);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),

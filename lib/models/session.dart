@@ -14,6 +14,7 @@ class Session {
   int? wildernessTypeRow;
   bool wildernessIsLost;
   bool dungeonIsEntering;
+  bool dungeonIsTwoPassMode;
   bool twoPassHasFirstDoubles;
   
   // Roll history
@@ -29,6 +30,7 @@ class Session {
     this.wildernessTypeRow,
     this.wildernessIsLost = false,
     this.dungeonIsEntering = true,
+    this.dungeonIsTwoPassMode = false,
     this.twoPassHasFirstDoubles = false,
     List<Map<String, dynamic>>? history,
   }) : history = history ?? [];
@@ -58,6 +60,7 @@ class Session {
     int? wildernessTypeRow,
     bool? wildernessIsLost,
     bool? dungeonIsEntering,
+    bool? dungeonIsTwoPassMode,
     bool? twoPassHasFirstDoubles,
     List<Map<String, dynamic>>? history,
   }) {
@@ -71,6 +74,7 @@ class Session {
       wildernessTypeRow: wildernessTypeRow ?? this.wildernessTypeRow,
       wildernessIsLost: wildernessIsLost ?? this.wildernessIsLost,
       dungeonIsEntering: dungeonIsEntering ?? this.dungeonIsEntering,
+      dungeonIsTwoPassMode: dungeonIsTwoPassMode ?? this.dungeonIsTwoPassMode,
       twoPassHasFirstDoubles: twoPassHasFirstDoubles ?? this.twoPassHasFirstDoubles,
       history: history ?? List<Map<String, dynamic>>.from(this.history),
     );
@@ -86,6 +90,7 @@ class Session {
     'wildernessTypeRow': wildernessTypeRow,
     'wildernessIsLost': wildernessIsLost,
     'dungeonIsEntering': dungeonIsEntering,
+    'dungeonIsTwoPassMode': dungeonIsTwoPassMode,
     'twoPassHasFirstDoubles': twoPassHasFirstDoubles,
     'history': history,
   };
@@ -101,6 +106,7 @@ class Session {
       wildernessTypeRow: json['wildernessTypeRow'] as int?,
       wildernessIsLost: json['wildernessIsLost'] as bool? ?? false,
       dungeonIsEntering: json['dungeonIsEntering'] as bool? ?? true,
+      dungeonIsTwoPassMode: json['dungeonIsTwoPassMode'] as bool? ?? false,
       twoPassHasFirstDoubles: json['twoPassHasFirstDoubles'] as bool? ?? false,
       history: (json['history'] as List<dynamic>?)
           ?.map((e) => Map<String, dynamic>.from(e as Map))
@@ -171,6 +177,7 @@ class Session {
         wildernessTypeRow: imported.wildernessTypeRow,
         wildernessIsLost: imported.wildernessIsLost,
         dungeonIsEntering: imported.dungeonIsEntering,
+        dungeonIsTwoPassMode: imported.dungeonIsTwoPassMode,
         twoPassHasFirstDoubles: imported.twoPassHasFirstDoubles,
         history: imported.history,
       );
@@ -225,6 +232,7 @@ class SessionExport {
           wildernessTypeRow: imported.wildernessTypeRow,
           wildernessIsLost: imported.wildernessIsLost,
           dungeonIsEntering: imported.dungeonIsEntering,
+          dungeonIsTwoPassMode: imported.dungeonIsTwoPassMode,
           twoPassHasFirstDoubles: imported.twoPassHasFirstDoubles,
           history: imported.history,
         );
