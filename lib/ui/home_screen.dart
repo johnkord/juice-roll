@@ -2442,10 +2442,34 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   // Map generation mode: false = One-Pass, true = Two-Pass
   bool _isTwoPassMode = false;
 
+  // Scroll controller to track scroll position for indicators
+  final ScrollController _scrollController = ScrollController();
+  bool _canScrollUp = false;
+  bool _canScrollDown = false;
+
   @override
   void initState() {
     super.initState();
     _isEntering = widget.isEntering;
+    _scrollController.addListener(_updateScrollIndicators);
+    // Check initial scroll state after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollIndicators());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_updateScrollIndicators);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateScrollIndicators() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    setState(() {
+      _canScrollUp = position.pixels > 0;
+      _canScrollDown = position.pixels < position.maxScrollExtent;
+    });
   }
 
   void _setPhase(bool isEntering) {
@@ -2549,6 +2573,62 @@ class _DungeonDialogState extends State<_DungeonDialog> {
       }
     }
 
+    // Build the sticky phase indicator
+    Widget buildStickyPhaseIndicator() {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: statusColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.explore, size: 16, color: statusColor),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                statusText,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: statusColor,
+                ),
+              ),
+            ),
+            // Phase toggle chips (One-Pass only) - use Flexible to prevent overflow
+            if (!_isTwoPassMode) ...[
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildCompactPhaseChip('(@-)', _isEntering, Colors.orange, () => _setPhase(true)),
+                    const SizedBox(width: 4),
+                    _buildCompactPhaseChip('(@+)', !_isEntering, Colors.green, () => _setPhase(false)),
+                  ],
+                ),
+              ),
+            ],
+            // Two-Pass doubles indicators
+            if (_isTwoPassMode) ...[
+              _buildCompactDoublesIndicator('1st', widget.twoPassHasFirstDoubles, Colors.orange),
+              const SizedBox(width: 4),
+              _buildCompactDoublesIndicator('2nd', false, Colors.red),
+            ],
+            const SizedBox(width: 4),
+            InkWell(
+              onTap: _resetMap,
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Icons.refresh, size: 16, color: statusColor.withValues(alpha: 0.7)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return AlertDialog(
       title: const Text('Dungeon Generator'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -2556,166 +2636,115 @@ class _DungeonDialogState extends State<_DungeonDialog> {
       content: SizedBox(
         width: 320,
         height: screenHeight * 0.65,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Dungeon Name Section
-              const Text('Dungeon Name', style: TextStyle(fontWeight: FontWeight.bold)),
-              _DialogOption(
-                title: 'Generate Name (3d10)',
-                subtitle: '[Dungeon] of the [Description] [Subject]',
-                onTap: () {
-                  widget.onRoll(widget.dungeonGenerator.generateName());
-                  Navigator.pop(context);
-                },
-              ),
-              const Divider(),
-              
-              // ============ UNIFIED MAP GENERATION SECTION ============
-              const Text('Map Generation', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              
-              // Mode Toggle: One-Pass vs Two-Pass
-              Row(
-                children: [
-                  ChoiceChip(
-                    label: Text('One-Pass', style: TextStyle(
-                      color: !_isTwoPassMode ? Colors.white : null,
-                      fontSize: 12,
-                    )),
-                    selected: !_isTwoPassMode,
-                    selectedColor: Colors.blue,
-                    onSelected: (s) => setState(() => _isTwoPassMode = false),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: Text('Two-Pass', style: TextStyle(
-                      color: _isTwoPassMode ? Colors.white : null,
-                      fontSize: 12,
-                    )),
-                    selected: _isTwoPassMode,
-                    selectedColor: Colors.indigo,
-                    onSelected: (s) => setState(() => _isTwoPassMode = true),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              
-              // Mode-specific explanation
+        child: Column(
+          children: [
+            // Sticky phase indicator at top
+            buildStickyPhaseIndicator(),
+            const SizedBox(height: 8),
+            // Scroll indicator - top fade
+            if (_canScrollUp)
               Container(
-                padding: const EdgeInsets.all(8),
+                height: 12,
                 decoration: BoxDecoration(
-                  color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _isTwoPassMode 
-                        ? 'Two-Pass: Pre-generate map, then explore'
-                        : 'One-Pass: Explore as you generate',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _isTwoPassMode
-                        ? '• Start 1d10@+ → 1st doubles → 1d10@-\n'
-                          '• 2nd doubles → STOP (remaining = dead ends)\n'
-                          '• Roll encounters during exploration phase'
-                        : '• Start 1d10@- → doubles → switch to 1d10@+\n'
-                          '• Roll encounters as you enter each room\n'
-                          '• Mimics "Skyrim" style: long way in, shortcut out',
-                      style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              
-              // Current Status & Phase Controls
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.5)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.info_outline, size: 14, color: statusColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          statusText,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: statusColor.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (_isTwoPassMode) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          _buildDoublesIndicator('1st', widget.twoPassHasFirstDoubles, Colors.orange),
-                          const SizedBox(width: 8),
-                          _buildDoublesIndicator('2nd', false, Colors.red), // 2nd doubles ends generation
-                        ],
-                      ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      JuiceTheme.surface,
+                      JuiceTheme.surface.withValues(alpha: 0),
                     ],
-                    const SizedBox(height: 8),
-                    // Phase toggle (for One-Pass) or Reset (for both)
-                    Row(
-                      children: [
-                        if (!_isTwoPassMode) ...[
-                          ChoiceChip(
-                            label: Text('Entering (@-)', style: TextStyle(
-                              color: _isEntering ? Colors.white : null,
-                              fontSize: 11,
-                            )),
-                            selected: _isEntering,
-                            selectedColor: Colors.orange,
-                            onSelected: (selected) => _setPhase(true),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          const SizedBox(width: 6),
-                          ChoiceChip(
-                            label: Text('Exploring (@+)', style: TextStyle(
-                              color: !_isEntering ? Colors.white : null,
-                              fontSize: 11,
-                            )),
-                            selected: !_isEntering,
-                            selectedColor: Colors.green,
-                            onSelected: (selected) => _setPhase(false),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                        ],
-                        const Spacer(),
-                        TextButton.icon(
-                          onPressed: _resetMap,
-                          icon: const Icon(Icons.refresh, size: 14),
-                          label: const Text('Reset', style: TextStyle(fontSize: 11)),
-                          style: TextButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
+                ),
+                child: Center(
+                  child: Icon(Icons.keyboard_arrow_up, size: 12, color: JuiceTheme.parchmentDark.withValues(alpha: 0.6)),
                 ),
               ),
-              const SizedBox(height: 8),
+            // Main scrollable content
+            Expanded(
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Dungeon Name Section
+                        _buildSectionHeader('Dungeon Name', Icons.castle),
+                        _DialogOption(
+                          title: 'Generate Name (3d10)',
+                          subtitle: '[Dungeon] of the [Description] [Subject]',
+                          onTap: () {
+                            widget.onRoll(widget.dungeonGenerator.generateName());
+                            Navigator.pop(context);
+                          },
+                        ),
+                        const Divider(),
+                        
+                        // ============ UNIFIED MAP GENERATION SECTION ============
+                        _buildSectionHeader('Map Generation', Icons.map),
+                        const SizedBox(height: 8),
+                        
+                        // Mode Toggle: One-Pass vs Two-Pass
+                        Row(
+                          children: [
+                            ChoiceChip(
+                              label: Text('One-Pass', style: TextStyle(
+                                color: !_isTwoPassMode ? Colors.white : null,
+                                fontSize: 12,
+                              )),
+                              selected: !_isTwoPassMode,
+                              selectedColor: Colors.blue,
+                              onSelected: (s) => setState(() => _isTwoPassMode = false),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            const SizedBox(width: 8),
+                            ChoiceChip(
+                              label: Text('Two-Pass', style: TextStyle(
+                                color: _isTwoPassMode ? Colors.white : null,
+                                fontSize: 12,
+                              )),
+                              selected: _isTwoPassMode,
+                              selectedColor: Colors.indigo,
+                              onSelected: (s) => setState(() => _isTwoPassMode = true),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // Mode-specific explanation
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.2)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isTwoPassMode 
+                                  ? 'Two-Pass: Pre-generate map, then explore'
+                                  : 'One-Pass: Explore as you generate',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _isTwoPassMode
+                                  ? '• Start 1d10@+ → 1st doubles → 1d10@-\n'
+                                    '• 2nd doubles → STOP (remaining = dead ends)\n'
+                                    '• Roll encounters during exploration phase'
+                                  : '• Start 1d10@- → doubles → switch to 1d10@+\n'
+                                    '• Roll encounters as you enter each room\n'
+                                    '• Mimics "Skyrim" style: long way in, shortcut out',
+                                style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
               
               // Map Generation Buttons
               _DialogOption(
@@ -2915,9 +2944,9 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                 ),
               ),
               
-              const Divider(),
-              // Encounter Settings
-              const Text('Dungeon Encounter', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Divider(),
+                        // Encounter Settings
+                        _buildSectionHeader('Dungeon Encounter', Icons.warning_amber_rounded),
               Container(
                 padding: const EdgeInsets.all(8),
                 margin: const EdgeInsets.symmetric(vertical: 4),
@@ -2997,8 +3026,8 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
-              const Text('Encounter Details', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Divider(),
+                        _buildSectionHeader('Encounter Details', Icons.pest_control),
               _DialogOption(
                 title: 'Monster (2d10)',
                 subtitle: 'Descriptor + Ability',
@@ -3091,8 +3120,32 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   ],
                 ),
               ),
-            ],
-          ),
+                        const SizedBox(height: 8), // Extra padding at bottom for scroll
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Scroll indicator - bottom fade
+            if (_canScrollDown)
+              Container(
+                height: 16,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      JuiceTheme.surface,
+                      JuiceTheme.surface.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Icon(Icons.keyboard_arrow_down, size: 14, color: JuiceTheme.parchmentDark.withValues(alpha: 0.6)),
+                ),
+              ),
+          ],
         ),
       ),
       actions: [
@@ -3101,6 +3154,76 @@ class _DungeonDialogState extends State<_DungeonDialog> {
           child: const Text('Close'),
         ),
       ],
+    );
+  }
+
+  // Helper to build section headers with icons
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: JuiceTheme.gold),
+          const SizedBox(width: 6),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  // Compact phase chip for sticky header
+  Widget _buildCompactPhaseChip(String label, bool isSelected, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: isSelected ? color : color.withValues(alpha: 0.5)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : color.withValues(alpha: 0.8),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Compact doubles indicator for sticky header
+  Widget _buildCompactDoublesIndicator(String label, bool isActive, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: isActive ? color.withValues(alpha: 0.2) : Colors.transparent,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: isActive ? color : Colors.grey.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isActive ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 10,
+            color: isActive ? color : Colors.grey,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive ? color : Colors.grey,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
