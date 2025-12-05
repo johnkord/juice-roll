@@ -245,7 +245,15 @@ Trap Procedure:
 
   /// Generate the next dungeon area.
   /// [isEntering] determines which phase: true = entering (1d10@-), false = exploring (1d10@+)
-  DungeonAreaResult generateNextArea({bool isEntering = true}) {
+  /// [includePassage] if true and area is "Passage", also rolls on Passage table and embeds result
+  /// [useD6ForPassage] for linear dungeons (d6) vs branching (d10)
+  /// [passageSkew] determines passage size: disadvantage = smaller, advantage = larger
+  DungeonAreaResult generateNextArea({
+    bool isEntering = true,
+    bool includePassage = false,
+    bool useD6ForPassage = false,
+    AdvantageType passageSkew = AdvantageType.none,
+  }) {
     final RollWithAdvantageResult result;
     
     if (isEntering) {
@@ -261,6 +269,12 @@ Trap Procedure:
     
     // Check for doubles (triggers phase change)
     final isDoubles = result.sum1 == result.sum2;
+    
+    // If area is Passage and includePassage is true, roll on Passage table
+    DungeonDetailResult? passage;
+    if (includePassage && areaType == 'Passage') {
+      passage = generatePassage(useD6: useD6ForPassage, skew: passageSkew);
+    }
 
     return DungeonAreaResult(
       phase: isEntering ? DungeonPhase.entering : DungeonPhase.exploring,
@@ -270,6 +284,7 @@ Trap Procedure:
       areaType: areaType,
       isDoubles: isDoubles,
       phaseChange: isDoubles,
+      passage: passage,
     );
   }
 
@@ -339,12 +354,23 @@ Trap Procedure:
   /// [isEntering] determines phase: true = entering (1d10@-), false = exploring (1d10@+)
   /// [isOccupied] determines condition die: true = d10, false = d6
   /// [conditionSkew] determines condition quality: advantage = better, disadvantage = worse
+  /// [includePassage] if true and area is "Passage", also rolls on Passage table
+  /// [useD6ForPassage] for linear dungeons (d6) vs branching (d10)
+  /// [passageSkew] determines passage size: disadvantage = smaller, advantage = larger
   FullDungeonAreaResult generateFullArea({
     bool isEntering = true,
     bool isOccupied = true,
     AdvantageType conditionSkew = AdvantageType.none,
+    bool includePassage = false,
+    bool useD6ForPassage = false,
+    AdvantageType passageSkew = AdvantageType.none,
   }) {
-    final area = generateNextArea(isEntering: isEntering);
+    final area = generateNextArea(
+      isEntering: isEntering,
+      includePassage: includePassage,
+      useD6ForPassage: useD6ForPassage,
+      passageSkew: passageSkew,
+    );
     final condition = generateCondition(useD6: !isOccupied, skew: conditionSkew);
 
     return FullDungeonAreaResult(
@@ -678,6 +704,7 @@ class DungeonAreaResult extends RollResult {
   final String areaType;
   final bool isDoubles;
   final bool phaseChange;
+  final DungeonDetailResult? passage;
 
   DungeonAreaResult({
     required this.phase,
@@ -687,19 +714,25 @@ class DungeonAreaResult extends RollResult {
     required this.areaType,
     required this.isDoubles,
     required this.phaseChange,
+    this.passage,
     DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Area (${phase.displayText})',
-          diceResults: [roll1, roll2],
+          diceResults: [
+            roll1, 
+            roll2,
+            if (passage != null) ...passage.diceResults,
+          ],
           total: chosenRoll,
-          interpretation: _buildInterpretation(areaType, isDoubles, phase),
+          interpretation: _buildInterpretation(areaType, isDoubles, phase, passage),
           timestamp: timestamp,
           metadata: {
             'phase': phase.name,
             'areaType': areaType,
             'isDoubles': isDoubles,
             'phaseChange': phaseChange,
+            if (passage != null) 'passage': passage.metadata,
           },
         );
 
@@ -720,25 +753,33 @@ class DungeonAreaResult extends RollResult {
       areaType: meta['areaType'] as String,
       isDoubles: meta['isDoubles'] as bool,
       phaseChange: meta['phaseChange'] as bool,
+      // Note: passage is not reconstructed from JSON for simplicity
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
   }
 
-  static String _buildInterpretation(String area, bool isDoubles, DungeonPhase phase) {
+  static String _buildInterpretation(String area, bool isDoubles, DungeonPhase phase, DungeonDetailResult? passage) {
+    final buffer = StringBuffer(area);
+    if (passage != null) {
+      buffer.write(': ${passage.result}');
+    }
     if (isDoubles) {
       if (phase == DungeonPhase.entering) {
-        return '$area (DOUBLES! Switch to Exploring)';
+        buffer.write(' (DOUBLES! Switch to Exploring)');
       } else {
-        return '$area (DOUBLES!)';
+        buffer.write(' (DOUBLES!)');
       }
     }
-    return area;
+    return buffer.toString();
   }
 
   @override
   String toString() {
     final buffer = StringBuffer();
     buffer.write('Dungeon Area: $areaType');
+    if (passage != null) {
+      buffer.write(' - ${passage!.result}');
+    }
     if (isDoubles) {
       buffer.write(' [DOUBLES - Phase Change!]');
     }

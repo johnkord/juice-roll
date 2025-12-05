@@ -2485,7 +2485,8 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   // Advantage = Better Encounters, Disadvantage = Worse Encounters
   AdvantageType _encounterSkew = AdvantageType.none;
 
-  // Two-Pass state is managed by parent widget via widget.twoPassHasFirstDoubles
+  // Map generation mode: false = One-Pass, true = Two-Pass
+  bool _isTwoPassMode = false;
 
   @override
   void initState() {
@@ -2496,6 +2497,27 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   void _setPhase(bool isEntering) {
     setState(() => _isEntering = isEntering);
     widget.onPhaseChange(isEntering);
+  }
+
+  void _resetMap() {
+    if (_isTwoPassMode) {
+      // Two-Pass: reset to @+ (before first doubles)
+      widget.onTwoPassFirstDoublesChange(false);
+    } else {
+      // One-Pass: reset to Entering (@-)
+      _setPhase(true);
+    }
+  }
+
+  // Get the current advantage state based on mode
+  bool get _useAdvantage {
+    if (_isTwoPassMode) {
+      // Two-Pass: @+ before first doubles, @- after
+      return !widget.twoPassHasFirstDoubles;
+    } else {
+      // One-Pass: @- while entering, @+ while exploring
+      return !_isEntering;
+    }
   }
 
   String _getPassageDieLabel() => _useD6ForPassage ? 'd6' : 'd10';
@@ -2516,13 +2538,63 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     }
   }
 
+  Widget _buildDoublesIndicator(String label, bool isActive, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: isActive ? color.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: isActive ? color : Colors.grey.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isActive ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 12,
+            color: isActive ? color : Colors.grey,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$label Doubles',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive ? color : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final phaseText = _isEntering
-        ? 'Entering: 1d10@- (Sprawling, Branching)'
-        : 'Exploring: 1d10@+ (Interconnected, More Exits)';
-    
     final screenHeight = MediaQuery.of(context).size.height;
+    
+    // Determine current status text based on mode
+    final String statusText;
+    final Color statusColor;
+    if (_isTwoPassMode) {
+      if (widget.twoPassHasFirstDoubles) {
+        statusText = '1d10@- (after 1st doubles)';
+        statusColor = Colors.orange;
+      } else {
+        statusText = '1d10@+ (until 1st doubles)';
+        statusColor = Colors.green;
+      }
+    } else {
+      if (_isEntering) {
+        statusText = '1d10@- Entering (until doubles)';
+        statusColor = Colors.orange;
+      } else {
+        statusText = '1d10@+ Exploring (after doubles)';
+        statusColor = Colors.green;
+      }
+    }
+
     return AlertDialog(
       title: const Text('Dungeon Generator'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -2535,65 +2607,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Heading explanation from Juice instructions
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'NA: 1d10@- Until Doubles, Then NA: 1d10@+',
-                      style: TextStyle(fontSize: 11, fontFamily: 'monospace', fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(phaseText, style: TextStyle(
-                      fontStyle: FontStyle.italic, 
-                      fontSize: 12,
-                      color: _isEntering ? Colors.orange : Colors.green,
-                    )),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Roll until doubles switch you from Entering to Exploring. '
-                      'Mimics "Skyrim" style: long way in, shortcut out.',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Phase toggle
-              Row(
-                children: [
-                  ChoiceChip(
-                    label: Text('Entering (@-)', style: TextStyle(
-                      color: _isEntering ? Colors.white : null,
-                    )),
-                    selected: _isEntering,
-                    selectedColor: Colors.orange,
-                    onSelected: (selected) => _setPhase(true),
-                  ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: Text('Exploring (@+)', style: TextStyle(
-                      color: !_isEntering ? Colors.white : null,
-                    )),
-                    selected: !_isEntering,
-                    selectedColor: Colors.green,
-                    onSelected: (selected) => _setPhase(false),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () => _setPhase(true),
-                    child: const Text('Reset', style: TextStyle(fontSize: 11)),
-                  ),
-                ],
-              ),
-              const Divider(),
+              // Dungeon Name Section
               const Text('Dungeon Name', style: TextStyle(fontWeight: FontWeight.bold)),
               _DialogOption(
                 title: 'Generate Name (3d10)',
@@ -2604,282 +2618,271 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                 },
               ),
               const Divider(),
-              const Text('Next Area Table', style: TextStyle(fontWeight: FontWeight.bold)),
+              
+              // ============ UNIFIED MAP GENERATION SECTION ============
+              const Text('Map Generation', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              
+              // Mode Toggle: One-Pass vs Two-Pass
+              Row(
+                children: [
+                  ChoiceChip(
+                    label: Text('One-Pass', style: TextStyle(
+                      color: !_isTwoPassMode ? Colors.white : null,
+                      fontSize: 12,
+                    )),
+                    selected: !_isTwoPassMode,
+                    selectedColor: Colors.blue,
+                    onSelected: (s) => setState(() => _isTwoPassMode = false),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: Text('Two-Pass', style: TextStyle(
+                      color: _isTwoPassMode ? Colors.white : null,
+                      fontSize: 12,
+                    )),
+                    selected: _isTwoPassMode,
+                    selectedColor: Colors.indigo,
+                    onSelected: (s) => setState(() => _isTwoPassMode = true),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              
+              // Mode-specific explanation
               Container(
-                padding: const EdgeInsets.all(6),
-                margin: const EdgeInsets.only(top: 4, bottom: 4),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(6),
+                  color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.2)),
                 ),
-                child: const Text(
-                  '@- = Sprawling, Branching Dungeons\n'
-                  '@+ = Interconnected, More Exits',
-                  style: TextStyle(fontSize: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isTwoPassMode 
+                        ? 'Two-Pass: Pre-generate map, then explore'
+                        : 'One-Pass: Explore as you generate',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isTwoPassMode
+                        ? '• Start 1d10@+ → 1st doubles → 1d10@-\n'
+                          '• 2nd doubles → STOP (remaining = dead ends)\n'
+                          '• Roll encounters during exploration phase'
+                        : '• Start 1d10@- → doubles → switch to 1d10@+\n'
+                          '• Roll encounters as you enter each room\n'
+                          '• Mimics "Skyrim" style: long way in, shortcut out',
+                      style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 8),
+              
+              // Current Status & Phase Controls
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 14, color: statusColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_isTwoPassMode) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          _buildDoublesIndicator('1st', widget.twoPassHasFirstDoubles, Colors.orange),
+                          const SizedBox(width: 8),
+                          _buildDoublesIndicator('2nd', false, Colors.red), // 2nd doubles ends generation
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    // Phase toggle (for One-Pass) or Reset (for both)
+                    Row(
+                      children: [
+                        if (!_isTwoPassMode) ...[
+                          ChoiceChip(
+                            label: Text('Entering (@-)', style: TextStyle(
+                              color: _isEntering ? Colors.white : null,
+                              fontSize: 11,
+                            )),
+                            selected: _isEntering,
+                            selectedColor: Colors.orange,
+                            onSelected: (selected) => _setPhase(true),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          const SizedBox(width: 6),
+                          ChoiceChip(
+                            label: Text('Exploring (@+)', style: TextStyle(
+                              color: !_isEntering ? Colors.white : null,
+                              fontSize: 11,
+                            )),
+                            selected: !_isEntering,
+                            selectedColor: Colors.green,
+                            onSelected: (selected) => _setPhase(false),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: _resetMap,
+                          icon: const Icon(Icons.refresh, size: 14),
+                          label: const Text('Reset', style: TextStyle(fontSize: 11)),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // Map Generation Buttons
               _DialogOption(
                 title: 'Next Area',
-                subtitle: _isEntering 
-                    ? '1d10@- (roll until doubles!)'
-                    : '1d10@+ (after doubles)',
+                subtitle: _isTwoPassMode
+                    ? 'Layout only (${_useAdvantage ? "1d10@+" : "1d10@-"})'
+                    : 'Area + Passage if applicable',
                 onTap: () {
-                  final result = widget.dungeonGenerator.generateNextArea(isEntering: _isEntering);
-                  widget.onRoll(result);
-                  // If result is "Passage", also roll on Passage table
-                  if (result.areaType == 'Passage') {
-                    widget.onRoll(widget.dungeonGenerator.generatePassage(
-                      useD6: _useD6ForPassage,
-                      skew: _passageConditionSkew,
-                    ));
-                  }
-                  // Auto-switch phase if doubles while entering
-                  if (result.isDoubles && _isEntering) {
-                    _setPhase(false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
-                        backgroundColor: Colors.green.shade700,
-                      ),
+                  if (_isTwoPassMode) {
+                    // Two-Pass mode: use generateTwoPassArea
+                    final result = widget.dungeonGenerator.generateTwoPassArea(
+                      hasFirstDoubles: widget.twoPassHasFirstDoubles,
+                      useD6ForPassage: _useD6ForPassage,
+                      passageSkew: _passageConditionSkew,
                     );
+                    widget.onRoll(result);
+                    
+                    // Handle doubles transitions
+                    if (result.isSecondDoubles) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
+                          backgroundColor: Colors.red.shade700,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    } else if (result.isDoubles && !widget.twoPassHasFirstDoubles) {
+                      widget.onTwoPassFirstDoublesChange(true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
+                          backgroundColor: Colors.orange.shade700,
+                        ),
+                      );
+                    }
+                  } else {
+                    // One-Pass mode: use generateNextArea
+                    final result = widget.dungeonGenerator.generateNextArea(
+                      isEntering: _isEntering,
+                      includePassage: true,
+                      useD6ForPassage: _useD6ForPassage,
+                      passageSkew: _passageConditionSkew,
+                    );
+                    widget.onRoll(result);
+                    
+                    // Auto-switch phase if doubles while entering
+                    if (result.isDoubles && _isEntering) {
+                      _setPhase(false);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
+                          backgroundColor: Colors.green.shade700,
+                        ),
+                      );
+                    }
                   }
                   Navigator.pop(context);
                 },
               ),
               _DialogOption(
                 title: 'Full Area + Condition',
-                subtitle: 'Next Area + Condition roll',
+                subtitle: _isTwoPassMode
+                    ? 'Area + Condition (no encounters)'
+                    : 'Area + Condition + Passage',
                 onTap: () {
-                  final result = widget.dungeonGenerator.generateFullArea(
-                    isEntering: _isEntering,
-                    isOccupied: !_useD6ForPassage,
-                    conditionSkew: _passageConditionSkew,
-                  );
-                  widget.onRoll(result);
-                  // If result is "Passage", also roll on Passage table
-                  if (result.area.areaType == 'Passage') {
-                    widget.onRoll(widget.dungeonGenerator.generatePassage(
-                      useD6: _useD6ForPassage,
-                      skew: _passageConditionSkew,
-                    ));
-                  }
-                  // Auto-switch phase if doubles while entering
-                  if (result.area.isDoubles && _isEntering) {
-                    _setPhase(false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
-                        backgroundColor: Colors.green.shade700,
-                      ),
+                  if (_isTwoPassMode) {
+                    // Two-Pass mode: use generateTwoPassArea (already includes condition)
+                    final result = widget.dungeonGenerator.generateTwoPassArea(
+                      hasFirstDoubles: widget.twoPassHasFirstDoubles,
+                      useD6ForPassage: _useD6ForPassage,
+                      passageSkew: _passageConditionSkew,
                     );
-                  }
-                  Navigator.pop(context);
-                },
-              ),
-              const Divider(),
-              // Two-Pass Method Section
-              const Text('Two-Pass Method (Map Pre-Generation)', style: TextStyle(fontWeight: FontWeight.bold)),
-              Container(
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.indigo.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.indigo.withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'PASS 1: Pre-generate the entire map (no encounters)',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      '• Start with 1d10@+ (interconnected, more exits)\n'
-                      '• 1st doubles → switch to 1d10@- (adds dead ends)\n'
-                      '• 2nd doubles → STOP (remaining paths = Small Chamber: 1 Door)',
-                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: widget.twoPassHasFirstDoubles 
-                                ? Colors.orange.withValues(alpha: 0.2) 
-                                : Colors.green.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: widget.twoPassHasFirstDoubles ? Colors.orange : Colors.green,
-                            ),
-                          ),
-                          child: Text(
-                            widget.twoPassHasFirstDoubles
-                                ? 'MAP: 1d10@- (after 1st doubles)'
-                                : 'MAP: 1d10@+ (until 1st doubles)',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: widget.twoPassHasFirstDoubles ? Colors.orange.shade800 : Colors.green.shade800,
-                            ),
-                          ),
+                    widget.onRoll(result);
+                    
+                    // Handle doubles transitions
+                    if (result.isSecondDoubles) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
+                          backgroundColor: Colors.red.shade700,
+                          duration: const Duration(seconds: 4),
                         ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () {
-                            widget.onTwoPassFirstDoublesChange(false);
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Reset Map', style: TextStyle(fontSize: 10)),
+                      );
+                    } else if (result.isDoubles && !widget.twoPassHasFirstDoubles) {
+                      widget.onTwoPassFirstDoublesChange(true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
+                          backgroundColor: Colors.orange.shade700,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // Two-Pass Map Generation Buttons
-              _DialogOption(
-                title: 'Next Area (Map)',
-                subtitle: widget.twoPassHasFirstDoubles
-                    ? '1d10@- - layout only, no encounters'
-                    : '1d10@+ - layout only, no encounters',
-                onTap: () {
-                  final result = widget.dungeonGenerator.generateTwoPassArea(
-                    hasFirstDoubles: widget.twoPassHasFirstDoubles,
-                    useD6ForPassage: _useD6ForPassage,
-                    passageSkew: _passageConditionSkew,
-                  );
-                  widget.onRoll(result);
-                  
-                  // Handle doubles transitions
-                  if (result.isSecondDoubles) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
-                        backgroundColor: Colors.red.shade700,
-                        duration: const Duration(seconds: 4),
-                      ),
+                      );
+                    }
+                  } else {
+                    // One-Pass mode: use generateFullArea
+                    final result = widget.dungeonGenerator.generateFullArea(
+                      isEntering: _isEntering,
+                      isOccupied: !_useD6ForPassage,
+                      conditionSkew: _passageConditionSkew,
+                      includePassage: true,
+                      useD6ForPassage: _useD6ForPassage,
+                      passageSkew: _passageConditionSkew,
                     );
-                  } else if (result.isDoubles && !widget.twoPassHasFirstDoubles) {
-                    widget.onTwoPassFirstDoublesChange(true);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
-                        backgroundColor: Colors.orange.shade700,
-                      ),
-                    );
+                    widget.onRoll(result);
+                    
+                    // Auto-switch phase if doubles while entering
+                    if (result.area.isDoubles && _isEntering) {
+                      _setPhase(false);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
+                          backgroundColor: Colors.green.shade700,
+                        ),
+                      );
+                    }
                   }
                   Navigator.pop(context);
                 },
-              ),
-              _DialogOption(
-                title: 'Passage (Map)',
-                subtitle: 'If area is Passage, roll type (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
-                onTap: () {
-                  widget.onRoll(widget.dungeonGenerator.generatePassage(
-                    useD6: _useD6ForPassage,
-                    skew: _passageConditionSkew,
-                  ));
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: 'Condition (Map)',
-                subtitle: 'Room state for map (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
-                onTap: () {
-                  widget.onRoll(widget.dungeonGenerator.generateCondition(
-                    useD6: _useD6ForPassage,
-                    skew: _passageConditionSkew,
-                  ));
-                  Navigator.pop(context);
-                },
-              ),
-              const SizedBox(height: 8),
-              // Pass 2 - Exploration
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.teal.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.teal.withValues(alpha: 0.2)),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'PASS 2: Explore the pre-made map',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'After map is drawn, traverse it room by room.\n'
-                      'Roll encounters when entering each new area.\n'
-                      '(Use Encounter buttons below for this phase)',
-                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              // Passage & Condition Settings
-              const Text('Passage & Condition Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-              Container(
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Passage: d6=Linear, d10=Branching\n'
-                      'Condition: d6=Unoccupied, d10=Occupied\n'
-                      '@-=Smaller/Worse, @+=Larger/Better',
-                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        ChoiceChip(
-                          label: const Text('d6'),
-                          selected: _useD6ForPassage,
-                          onSelected: (s) => setState(() => _useD6ForPassage = true),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('d10'),
-                          selected: !_useD6ForPassage,
-                          onSelected: (s) => setState(() => _useD6ForPassage = false),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        const SizedBox(width: 4),
-                        ChoiceChip(
-                          label: const Text('@-'),
-                          selected: _passageConditionSkew == AdvantageType.disadvantage,
-                          onSelected: (s) => setState(() => _passageConditionSkew = s ? AdvantageType.disadvantage : AdvantageType.none),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('@+'),
-                          selected: _passageConditionSkew == AdvantageType.advantage,
-                          onSelected: (s) => setState(() => _passageConditionSkew = s ? AdvantageType.advantage : AdvantageType.none),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
               _DialogOption(
                 title: 'Passage',
-                subtitle: 'Passage type (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
+                subtitle: 'Manual passage roll (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
                 onTap: () {
                   widget.onRoll(widget.dungeonGenerator.generatePassage(
                     useD6: _useD6ForPassage,
@@ -2899,6 +2902,65 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                   Navigator.pop(context);
                 },
               ),
+              const SizedBox(height: 4),
+              
+              // Passage & Condition Settings (collapsed)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Passage/Condition Settings',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'd6=Linear/Unoccupied, d10=Branching/Occupied\n'
+                      '@-=Smaller/Worse, @+=Larger/Better',
+                      style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('d6', style: TextStyle(fontSize: 11)),
+                          selected: _useD6ForPassage,
+                          onSelected: (s) => setState(() => _useD6ForPassage = true),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        ChoiceChip(
+                          label: const Text('d10', style: TextStyle(fontSize: 11)),
+                          selected: !_useD6ForPassage,
+                          onSelected: (s) => setState(() => _useD6ForPassage = false),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        const SizedBox(width: 4),
+                        ChoiceChip(
+                          label: const Text('@-', style: TextStyle(fontSize: 11)),
+                          selected: _passageConditionSkew == AdvantageType.disadvantage,
+                          onSelected: (s) => setState(() => _passageConditionSkew = s ? AdvantageType.disadvantage : AdvantageType.none),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        ChoiceChip(
+                          label: const Text('@+', style: TextStyle(fontSize: 11)),
+                          selected: _passageConditionSkew == AdvantageType.advantage,
+                          onSelected: (s) => setState(() => _passageConditionSkew = s ? AdvantageType.advantage : AdvantageType.none),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
               const Divider(),
               // Encounter Settings
               const Text('Dungeon Encounter', style: TextStyle(fontWeight: FontWeight.bold)),

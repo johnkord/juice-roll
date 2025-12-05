@@ -22,6 +22,7 @@ import '../../presets/expectation_check.dart';
 import '../../presets/scale.dart';
 import '../../presets/monster_encounter.dart';
 import '../../presets/abstract_icons.dart';
+import '../../presets/dungeon_generator.dart';
 
 /// Scrollable roll history widget.
 class RollHistory extends StatelessWidget {
@@ -274,6 +275,24 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildLocationDisplay(result as LocationResult, theme);
     } else if (result is AbstractIconResult) {
       return _buildAbstractIconDisplay(result as AbstractIconResult, theme);
+    } else if (result is DungeonEncounterResult) {
+      return _buildDungeonEncounterDisplay(result as DungeonEncounterResult, theme);
+    } else if (result is DungeonNameResult) {
+      return _buildDungeonNameDisplay(result as DungeonNameResult, theme);
+    } else if (result is DungeonAreaResult) {
+      return _buildDungeonAreaDisplay(result as DungeonAreaResult, theme);
+    } else if (result is FullDungeonAreaResult) {
+      return _buildFullDungeonAreaDisplay(result as FullDungeonAreaResult, theme);
+    } else if (result is TwoPassAreaResult) {
+      return _buildTwoPassAreaDisplay(result as TwoPassAreaResult, theme);
+    } else if (result is DungeonMonsterResult) {
+      return _buildDungeonMonsterDisplay(result as DungeonMonsterResult, theme);
+    } else if (result is DungeonTrapResult) {
+      return _buildDungeonTrapDisplay(result as DungeonTrapResult, theme);
+    } else if (result is TrapProcedureResult) {
+      return _buildTrapProcedureDisplay(result as TrapProcedureResult, theme);
+    } else if (result is DungeonDetailResult) {
+      return _buildDungeonDetailDisplay(result as DungeonDetailResult, theme);
     }
 
     // Default display
@@ -1103,6 +1122,507 @@ class _RollHistoryCard extends StatelessWidget {
       ),
     );
   }
+
+  // ============ DUNGEON DISPLAY METHODS ============
+
+  Widget _buildDungeonEncounterDisplay(DungeonEncounterResult result, ThemeData theme) {
+    // Build the encounter type with embedded sub-roll using arrow notation
+    final encounterType = result.encounterRoll.result;
+    final encounterDice = result.encounterRoll.diceResults;
+    
+    // Build arrow notation for sub-rolls
+    String? subRollText;
+    String? subResultText;
+    Color? subColor;
+    
+    if (result.monster != null) {
+      subRollText = '${result.monster!.descriptorRoll},${result.monster!.abilityRoll}';
+      subResultText = result.monster!.monsterDescription;
+      subColor = Colors.red;
+    } else if (result.trap != null) {
+      subRollText = '${result.trap!.actionRoll},${result.trap!.subjectRoll}';
+      subResultText = result.trap!.trapDescription;
+      subColor = Colors.orange;
+    } else if (result.feature != null) {
+      subRollText = '${result.feature!.roll}';
+      subResultText = result.feature!.result;
+      subColor = Colors.teal;
+    } else if (result.naturalHazard != null) {
+      subRollText = '${result.naturalHazard!.roll}';
+      subResultText = result.naturalHazard!.result;
+      subColor = Colors.brown;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Main encounter chip
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            _buildQuestChip(
+              encounterDice.length > 1 
+                ? '${encounterDice[0]},${encounterDice[1]}' 
+                : '${encounterDice[0]}',
+              encounterType,
+              Colors.purple,
+              theme,
+            ),
+            // Show sub-roll with arrow if applicable
+            if (subRollText != null && subResultText != null)
+              _buildQuestChip(
+                '→ $subRollText',
+                subResultText,
+                subColor ?? Colors.grey,
+                theme,
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Full interpretation
+        Text(
+          result.interpretation ?? encounterType,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDungeonNameDisplay(DungeonNameResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Roll breakdown
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            _buildQuestChip('${result.typeRoll}', result.dungeonType, Colors.indigo, theme),
+            _buildQuestChip('${result.descriptionRoll}', result.descriptionWord, Colors.purple, theme),
+            _buildQuestChip('${result.subjectRoll}', result.subject, Colors.deepPurple, theme),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Full name
+        Text(
+          result.name,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDungeonAreaDisplay(DungeonAreaResult result, ThemeData theme) {
+    final phaseColor = result.phase == DungeonPhase.entering ? Colors.orange : Colors.green;
+    final phaseLabel = result.phase == DungeonPhase.entering ? '@-' : '@+';
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dice and phase indicator
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: phaseColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: phaseColor.withOpacity(0.5)),
+              ),
+              child: Text(
+                '${result.roll1},${result.roll2} $phaseLabel → ${result.chosenRoll}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: phaseColor,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            // Show embedded passage with arrow notation if present
+            if (result.passage != null)
+              _buildQuestChip(
+                '→ ${result.passage!.diceResults.join(",")}',
+                result.passage!.result,
+                Colors.teal,
+                theme,
+              ),
+            if (result.isDoubles)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.amber),
+                ),
+                child: Text(
+                  '🎲 DOUBLES!',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Area type (with passage if present)
+        Text(
+          result.passage != null 
+            ? '${result.areaType}: ${result.passage!.result}'
+            : result.areaType,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (result.phaseChange)
+          Text(
+            result.phase == DungeonPhase.entering 
+              ? 'Switch to Exploring phase!' 
+              : '',
+            style: TextStyle(
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+              color: Colors.green.shade700,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFullDungeonAreaDisplay(FullDungeonAreaResult result, ThemeData theme) {
+    final area = result.area;
+    final condition = result.condition;
+    final phaseColor = area.phase == DungeonPhase.entering ? Colors.orange : Colors.green;
+    final phaseLabel = area.phase == DungeonPhase.entering ? '@-' : '@+';
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Area roll
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: phaseColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: phaseColor.withOpacity(0.5)),
+              ),
+              child: Text(
+                '${area.roll1},${area.roll2} $phaseLabel → ${area.chosenRoll}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: phaseColor,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            // Embedded passage with arrow notation if present
+            if (area.passage != null)
+              _buildQuestChip(
+                '→ ${area.passage!.diceResults.join(",")}',
+                area.passage!.result,
+                Colors.teal,
+                theme,
+              ),
+            // Condition roll
+            _buildQuestChip(
+              condition.diceResults.length > 1 
+                ? '${condition.diceResults[0]},${condition.diceResults[1]}' 
+                : '${condition.diceResults[0]}',
+              condition.result,
+              Colors.blueGrey,
+              theme,
+            ),
+            if (area.isDoubles)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.amber),
+                ),
+                child: Text(
+                  '🎲 DOUBLES!',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Full result (with passage if present)
+        Text(
+          area.passage != null
+            ? '${area.areaType}: ${area.passage!.result} (${condition.result})'
+            : '${area.areaType} (${condition.result})',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (area.phaseChange)
+          Text(
+            'Switch to Exploring phase!',
+            style: TextStyle(
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+              color: Colors.green.shade700,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTwoPassAreaDisplay(TwoPassAreaResult result, ThemeData theme) {
+    final phaseColor = result.hadFirstDoubles ? Colors.orange : Colors.green;
+    final phaseLabel = result.hadFirstDoubles ? '@-' : '@+';
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Phase indicator
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          margin: const EdgeInsets.only(bottom: 4),
+          decoration: BoxDecoration(
+            color: Colors.indigo.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+          ),
+          child: const Text(
+            'Two-Pass Map Generation',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.indigo),
+          ),
+        ),
+        // Dice rolls
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: phaseColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: phaseColor.withOpacity(0.5)),
+              ),
+              child: Text(
+                '${result.roll1},${result.roll2} $phaseLabel → ${result.chosenRoll}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: phaseColor,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            // Condition
+            _buildQuestChip(
+              result.condition.diceResults.length > 1 
+                ? '${result.condition.diceResults[0]},${result.condition.diceResults[1]}' 
+                : '${result.condition.diceResults[0]}',
+              result.condition.result,
+              Colors.blueGrey,
+              theme,
+            ),
+            // Passage if applicable
+            if (result.passage != null)
+              _buildQuestChip(
+                '→ ${result.passage!.diceResults[0]}',
+                result.passage!.result,
+                Colors.teal,
+                theme,
+              ),
+            // Doubles indicators
+            if (result.isSecondDoubles)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.red),
+                ),
+                child: Text(
+                  '🛑 2nd DOUBLES - STOP!',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+              )
+            else if (result.isDoubles && !result.hadFirstDoubles)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.amber),
+                ),
+                child: Text(
+                  '🎲 1st DOUBLES!',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Full result
+        Text(
+          result.interpretation ?? result.areaType,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDungeonMonsterDisplay(DungeonMonsterResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            _buildQuestChip('${result.descriptorRoll}', result.descriptor, Colors.red, theme),
+            _buildQuestChip('${result.abilityRoll}', result.ability, Colors.deepOrange, theme),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          result.monsterDescription,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDungeonTrapDisplay(DungeonTrapResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            _buildQuestChip('${result.actionRoll}', result.action, Colors.orange, theme),
+            _buildQuestChip('${result.subjectRoll}', result.subject, Colors.amber, theme),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          result.trapDescription,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTrapProcedureDisplay(TrapProcedureResult result, ThemeData theme) {
+    final checkType = result.isSearching ? 'Active (10 min, @+)' : 'Passive';
+    final outcomes = result.isSearching 
+        ? 'Pass=AVOID, Fail=LOCATE' 
+        : 'Pass=LOCATE, Fail=TRIGGER';
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Trap rolls with arrow to DC
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            _buildQuestChip('${result.trap.actionRoll}', result.trap.action, Colors.orange, theme),
+            _buildQuestChip('${result.trap.subjectRoll}', result.trap.subject, Colors.amber, theme),
+            _buildQuestChip(
+              '→ ${result.dcRolls.join(",")}',
+              'DC ${result.dc}',
+              Colors.red,
+              theme,
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Trap description
+        Text(
+          result.trap.trapDescription,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        // Check procedure
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            '$checkType: $outcomes',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDungeonDetailDisplay(DungeonDetailResult result, ThemeData theme) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.teal.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            result.diceResults.length > 1 
+              ? '${result.diceResults[0]},${result.diceResults[1]}' 
+              : '${result.diceResults[0]}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.teal.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            result.result,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============ END DUNGEON DISPLAY METHODS ============
 
   Widget _buildInterruptDisplay(InterruptPlotPointResult result, ThemeData theme) {
     return Row(
