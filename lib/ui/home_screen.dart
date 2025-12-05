@@ -1036,96 +1036,93 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
       content: SizedBox(
         width: 320,
         height: screenHeight * 0.6,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header explanation
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.teal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Disp: d10A/6P; Ctx: @+A/-P',
-                      style: TextStyle(fontSize: 11, fontFamily: 'monospace', fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'WH: ΔCtx, SH: ΔCtx & +/-1',
-                      style: TextStyle(fontSize: 11, fontFamily: 'monospace'),
-                    ),
-                  ],
-                ),
+        child: _ScrollableDialogContent(
+          children: [
+            // Header explanation
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.teal.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              const Divider(),
-              
-              // NPC Creation Section
-              const Text('NPC Creation', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              // Need skew setting
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Need Skew (for people use @+, for monsters use @-)',
-                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                    ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 6,
-                      children: [
-                        ChoiceChip(
-                          label: const Text('None'),
-                          selected: _needSkew == NeedSkew.none,
-                          onSelected: (s) => setState(() => _needSkew = NeedSkew.none),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('@- Primitive'),
-                          selected: _needSkew == NeedSkew.primitive,
-                          onSelected: (s) => setState(() => _needSkew = NeedSkew.primitive),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('@+ Complex'),
-                          selected: _needSkew == NeedSkew.complex,
-                          onSelected: (s) => setState(() => _needSkew = NeedSkew.complex),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Disp: d10A/6P; Ctx: @+A/-P',
+                    style: TextStyle(fontSize: 11, fontFamily: 'monospace', fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'WH: ΔCtx, SH: ΔCtx & +/-1',
+                    style: TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              _DialogOption(
-                title: 'Full Profile',
-                subtitle: 'Personality + Need${_getNeedSkewLabel()} + Motive',
-                onTap: () {
-                  widget.onRoll(widget.npcAction.generateProfile(needSkew: _needSkew));
-                  Navigator.pop(context);
-                },
+            ),
+            const Divider(),
+            
+            // NPC Creation Section
+            const _SectionHeader(title: 'NPC Creation', icon: Icons.person_add),
+            const SizedBox(height: 4),
+            // Need skew setting
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
               ),
-              _DialogOption(
-                title: 'Personality',
-                subtitle: 'd10 - Roll 2 for primary/secondary traits',
-                onTap: () {
-                  widget.onRoll(widget.npcAction.rollPersonality());
-                  Navigator.pop(context);
-                },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Need Skew (for people use @+, for monsters use @-)',
+                    style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('None'),
+                        selected: _needSkew == NeedSkew.none,
+                        onSelected: (s) => setState(() => _needSkew = NeedSkew.none),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      ChoiceChip(
+                        label: const Text('@- Primitive'),
+                        selected: _needSkew == NeedSkew.primitive,
+                        onSelected: (s) => setState(() => _needSkew = NeedSkew.primitive),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      ChoiceChip(
+                        label: const Text('@+ Complex'),
+                        selected: _needSkew == NeedSkew.complex,
+                        onSelected: (s) => setState(() => _needSkew = NeedSkew.complex),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            _DialogOption(
+              title: 'Full Profile',
+              subtitle: 'Personality + Need${_getNeedSkewLabel()} + Motive',
+              onTap: () {
+                widget.onRoll(widget.npcAction.generateProfile(needSkew: _needSkew));
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Personality',
+              subtitle: 'd10 - Roll 2 for primary/secondary traits',
+              onTap: () {
+                widget.onRoll(widget.npcAction.rollPersonality());
+                Navigator.pop(context);
+              },
               ),
               _DialogOption(
                 title: 'Need',
@@ -1195,10 +1192,10 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
+            const Divider(),
               
-              // Action Table Section
-              const Text('Action Table', style: TextStyle(fontWeight: FontWeight.bold)),
+            // Action Table Section
+            const _SectionHeader(title: 'Action Table', icon: Icons.directions_run),
               const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -1268,10 +1265,10 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
+            const Divider(),
               
-              // Combat Table Section
-              const Text('Combat Table', style: TextStyle(fontWeight: FontWeight.bold)),
+            // Combat Table Section
+            const _SectionHeader(title: 'Combat Table', icon: Icons.sports_kabaddi),
               const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -1341,29 +1338,28 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
+            const Divider(),
               
-              // Social Check reminder
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Social Check Effects:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                    Text(
-                      '• Weak Hit: Change Context (Active↔Passive)\n'
-                      '• Strong Hit: Change Context AND +/-1 to roll',
-                      style: TextStyle(fontSize: 9),
-                    ),
-                  ],
-                ),
+            // Social Check reminder
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.purple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
-          ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Social Check Effects:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                  Text(
+                    '• Weak Hit: Change Context (Active↔Passive)\n'
+                    '• Strong Hit: Change Context AND +/-1 to roll',
+                    style: TextStyle(fontSize: 9),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
@@ -1385,14 +1381,15 @@ class _SettlementDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
       title: const Text('Settlement'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      content: SizedBox(
+        width: 320,
+        height: screenHeight * 0.6,
+        child: _ScrollableDialogContent(
           children: [
             // Header explanation from Juice instructions
             Container(
@@ -1408,10 +1405,7 @@ class _SettlementDialog extends StatelessWidget {
               ),
             ),
             const Divider(),
-            const Text(
-              'Generate Settlement',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const _SectionHeader(title: 'Generate Settlement', icon: Icons.location_city),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.all(6),
@@ -1452,10 +1446,7 @@ class _SettlementDialog extends StatelessWidget {
               },
             ),
             const Divider(),
-            const Text(
-              'Individual Rolls',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const _SectionHeader(title: 'Individual Rolls', icon: Icons.casino),
             _DialogOption(
               title: 'Name (2d10)',
               subtitle: 'Also usable for NPC last names',
@@ -1489,10 +1480,7 @@ class _SettlementDialog extends StatelessWidget {
               },
             ),
             const Divider(),
-            const Text(
-              'Naming & Description',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const _SectionHeader(title: 'Naming & Description', icon: Icons.edit),
             Container(
               padding: const EdgeInsets.all(6),
               margin: const EdgeInsets.only(bottom: 4),
@@ -1531,10 +1519,7 @@ class _SettlementDialog extends StatelessWidget {
               },
             ),
             const Divider(),
-            const Text(
-              'News',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const _SectionHeader(title: 'News', icon: Icons.newspaper),
             Container(
               padding: const EdgeInsets.all(6),
               margin: const EdgeInsets.only(bottom: 4),
@@ -1594,14 +1579,15 @@ class _TreasureDialogState extends State<_TreasureDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
       title: const Text('Treasure'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      content: SizedBox(
+        width: 320,
+        height: screenHeight * 0.6,
+        child: _ScrollableDialogContent(
           children: [
             // Item Creation Section (from instructions)
             Container(
@@ -1714,7 +1700,7 @@ class _TreasureDialogState extends State<_TreasureDialog> {
               ),
             ),
             const Divider(),
-            const Text('Roll 4d6', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(title: 'Roll 4d6', icon: Icons.casino),
             _DialogOption(
               title: 'Random Treasure (4d6)',
               subtitle: 'Category + Properties${_skew != SkewType.none ? ' ${_getSkewLabel()}' : ''}',
@@ -1724,7 +1710,7 @@ class _TreasureDialogState extends State<_TreasureDialog> {
               },
             ),
             const Divider(),
-            const Text('By Category (3d6)', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(title: 'By Category (3d6)', icon: Icons.category),
             const SizedBox(height: 4),
             const Text(
               'Pick a specific category and roll 3d6 for properties:',
@@ -1780,7 +1766,7 @@ class _TreasureDialogState extends State<_TreasureDialog> {
             ),
             const Divider(),
             // Examples from Juice instructions
-            const Text('Examples', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+            const _SectionHeader(title: 'Examples', icon: Icons.lightbulb_outline),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -1822,14 +1808,15 @@ class _ChallengeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
       title: const Text('Challenge'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      content: SizedBox(
+        width: 320,
+        height: screenHeight * 0.55,
+        child: _ScrollableDialogContent(
           children: [
             // Explanation from the instructions
             Container(
@@ -1857,7 +1844,7 @@ class _ChallengeDialog extends StatelessWidget {
               ),
             ),
             const Divider(),
-            const Text('Full Challenge', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(title: 'Full Challenge', icon: Icons.fitness_center),
             const SizedBox(height: 4),
             const Text(
               'Rolls 1 Physical + 1 Mental with separate DCs for each:',
@@ -1888,7 +1875,7 @@ class _ChallengeDialog extends StatelessWidget {
               },
             ),
             const Divider(),
-            const Text('DC Methods', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(title: 'DC Methods', icon: Icons.gavel),
             const SizedBox(height: 4),
             const Text(
               '5 ways to generate a DC:',
@@ -1935,7 +1922,7 @@ class _ChallengeDialog extends StatelessWidget {
               },
             ),
             const Divider(),
-            const Text('Individual Skills', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(title: 'Individual Skills', icon: Icons.sports_martial_arts),
             _DialogOption(
               title: 'Physical Challenge',
               subtitle: 'Skill only (no separate DC)',
@@ -1953,7 +1940,7 @@ class _ChallengeDialog extends StatelessWidget {
               },
             ),
             const Divider(),
-            const Text('Examples', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+            const _SectionHeader(title: 'Examples', icon: Icons.lightbulb_outline),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -3228,6 +3215,158 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   }
 }
 
+/// A scrollable content wrapper with scroll indicators for dialogs.
+/// Shows up/down arrows when content can be scrolled.
+class _ScrollableDialogContent extends StatefulWidget {
+  final Widget? child;
+  final List<Widget>? children;
+  final Widget? stickyHeader;
+  final CrossAxisAlignment crossAxisAlignment;
+
+  const _ScrollableDialogContent({
+    this.child,
+    this.children,
+    this.stickyHeader,
+    this.crossAxisAlignment = CrossAxisAlignment.start,
+  }) : assert(child != null || children != null, 'Either child or children must be provided');
+
+  @override
+  State<_ScrollableDialogContent> createState() => _ScrollableDialogContentState();
+}
+
+class _ScrollableDialogContentState extends State<_ScrollableDialogContent> {
+  final ScrollController _scrollController = ScrollController();
+  bool _canScrollUp = false;
+  bool _canScrollDown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_updateScrollIndicators);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollIndicators());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_updateScrollIndicators);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateScrollIndicators() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    setState(() {
+      _canScrollUp = position.pixels > 0;
+      _canScrollDown = position.pixels < position.maxScrollExtent - 1;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Sticky header if provided
+        if (widget.stickyHeader != null) ...[
+          widget.stickyHeader!,
+          const SizedBox(height: 8),
+        ],
+        // Scroll up indicator
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: _canScrollUp ? 16 : 0,
+          child: _canScrollUp
+              ? Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        JuiceTheme.surface,
+                        JuiceTheme.surface.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.keyboard_arrow_up,
+                      size: 14,
+                      color: JuiceTheme.parchmentDark.withValues(alpha: 0.6),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        // Main scrollable content
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: widget.child ?? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: widget.crossAxisAlignment,
+              children: widget.children!,
+            ),
+          ),
+        ),
+        // Scroll down indicator
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: _canScrollDown ? 16 : 0,
+          child: _canScrollDown
+              ? Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        JuiceTheme.surface,
+                        JuiceTheme.surface.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 14,
+                      color: JuiceTheme.parchmentDark.withValues(alpha: 0.6),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+/// Helper widget for section headers with icons.
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color? color;
+
+  const _SectionHeader({
+    required this.title,
+    required this.icon,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final iconColor = color ?? JuiceTheme.gold;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: 6),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
 /// A dialog option button.
 class _DialogOption extends StatelessWidget {
   final String title;
@@ -3329,13 +3468,20 @@ class _WildernessDialogState extends State<_WildernessDialog> {
     
     return AlertDialog(
       title: const Text('Wilderness'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Show current state if initialized
-            if (isInitialized) ...[
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+          maxWidth: 350,
+        ),
+        child: _ScrollableDialogContent(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Show current state if initialized
+              if (isInitialized) ...[
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -3364,7 +3510,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
               ),
               const SizedBox(height: 8),
             ],
-            const Text('Environment', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(icon: Icons.terrain, title: 'Environment'),
             if (!isInitialized) ...[
               _DialogOption(
                 title: 'Initialize Random Area',
@@ -3477,7 +3623,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
               ),
             ],
             const Divider(),
-            const Text('Encounters', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(icon: Icons.explore, title: 'Encounters'),
             // Skew toggles
             Row(
               children: [
@@ -3552,7 +3698,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
               },
             ),
             const Divider(),
-            const Text('Monster Level', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(icon: Icons.pets, title: 'Monster Level'),
             _DialogOption(
               title: 'Roll Monster Level',
               subtitle: isInitialized
@@ -3564,6 +3710,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
               },
             ),
           ],
+        ),
         ),
       ),
       actions: [
@@ -3696,7 +3843,7 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
           maxHeight: MediaQuery.of(context).size.height * 0.7,
           maxWidth: 350,
         ),
-        child: SingleChildScrollView(
+        child: _ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3761,7 +3908,7 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
                 },
               ),
               const Divider(),
-              const Text('Quick Rolls', style: TextStyle(fontWeight: FontWeight.bold)),
+              const _SectionHeader(icon: Icons.flash_on, title: 'Quick Rolls'),
               const SizedBox(height: 4),
               Text(
                 MonsterEncounter.deadlyExplanation,
@@ -3785,7 +3932,7 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
               },
             ),
             const Divider(),
-            const Text('By Difficulty', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(icon: Icons.trending_up, title: 'By Difficulty'),
             _DialogOption(
               title: 'Easy (1-4)',
               subtitle: 'Lower CR monsters',
@@ -3819,7 +3966,7 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
               },
             ),
             const Divider(),
-            const Text('Special Rows', style: TextStyle(fontWeight: FontWeight.bold)),
+            const _SectionHeader(icon: Icons.star, title: 'Special Rows'),
             _DialogOption(
               title: '* (Nature/Plants)',
               subtitle: 'Blights, hags, plant creatures',
@@ -3872,7 +4019,7 @@ class _RandomTablesDialog extends StatelessWidget {
           maxWidth: 350,
           maxHeight: MediaQuery.of(context).size.height * 0.7,
         ),
-        child: SingleChildScrollView(
+        child: _ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3892,10 +4039,7 @@ class _RandomTablesDialog extends StatelessWidget {
               ),
               const Divider(),
               // Simple Mode section
-              const Text(
-                'Simple Mode / Alter Scene',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              const _SectionHeader(icon: Icons.tune, title: 'Simple Mode / Alter Scene'),
               const SizedBox(height: 4),
               const Text(
                 'Modifier + Idea replaces Random Event table in "Simple" mode. '
@@ -3913,10 +4057,7 @@ class _RandomTablesDialog extends StatelessWidget {
               ),
               const Divider(),
               // Individual Tables section
-              const Text(
-                'Individual Tables (d10)',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              const _SectionHeader(icon: Icons.view_list, title: 'Individual Tables (d10)'),
               const SizedBox(height: 4),
               _DialogOption(
                 title: 'Modifier',
@@ -3960,10 +4101,7 @@ class _RandomTablesDialog extends StatelessWidget {
               ),
               const Divider(),
               // Combined with Modifier
-              const Text(
-                'Modifier + Category',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              const _SectionHeader(icon: Icons.merge_type, title: 'Modifier + Category'),
               const SizedBox(height: 4),
               _DialogOption(
                 title: 'Modifier + Random',
@@ -3999,10 +4137,7 @@ class _RandomTablesDialog extends StatelessWidget {
               ),
               const Divider(),
               // Random Event Focus section (for Fate Check triggers)
-              const Text(
-                'Random Event Focus',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              const _SectionHeader(icon: Icons.shuffle, title: 'Random Event Focus'),
               const SizedBox(height: 4),
               const Text(
                 'For double blanks on Fate Check (primary die left). Triggers things easy to forget.',
@@ -4083,9 +4218,13 @@ class _LocationDialog extends StatelessWidget {
     return AlertDialog(
       title: const Text('Location Grid'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 350),
-        child: SingleChildScrollView(
+        constraints: BoxConstraints(
+          maxWidth: 350,
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: _ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4107,7 +4246,7 @@ class _LocationDialog extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              const Text('Compass Method', style: TextStyle(fontWeight: FontWeight.bold)),
+              const _SectionHeader(icon: Icons.explore, title: 'Compass Method'),
               const SizedBox(height: 4),
               const Text(
                 'Imagine your PC at the center. Roll to get:\n'
@@ -4117,7 +4256,7 @@ class _LocationDialog extends StatelessWidget {
                 style: TextStyle(fontSize: 11),
               ),
               const Divider(),
-              const Text('Zoom Method', style: TextStyle(fontWeight: FontWeight.bold)),
+              const _SectionHeader(icon: Icons.zoom_in, title: 'Zoom Method'),
               const SizedBox(height: 4),
               const Text(
                 'Use iterative zooming:\n'
@@ -4335,9 +4474,12 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
       title: const Text('NPC Dialog Grid'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SizedBox(
-        width: 320,
-        child: SingleChildScrollView(
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 320,
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
+        child: _ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4547,15 +4689,16 @@ class _ExtendedNpcConversationDialogState extends State<_ExtendedNpcConversation
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
       title: const Text('Extended NPC Conversation'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SizedBox(
-        width: 320,
-        height: screenHeight * 0.6,
-        child: SingleChildScrollView(
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 320,
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: _ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4586,7 +4729,7 @@ class _ExtendedNpcConversationDialogState extends State<_ExtendedNpcConversation
               const Divider(),
               
               // Information Section
-              const Text('Information (2d100)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const _SectionHeader(icon: Icons.info_outline, title: 'Information (2d100)'),
               const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -4613,7 +4756,7 @@ class _ExtendedNpcConversationDialogState extends State<_ExtendedNpcConversation
               const Divider(),
               
               // Companion Response Section
-              const Text('Companion Response (1d100)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const _SectionHeader(icon: Icons.groups, title: 'Companion Response (1d100)'),
               const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -4676,7 +4819,7 @@ class _ExtendedNpcConversationDialogState extends State<_ExtendedNpcConversation
               const Divider(),
               
               // Dialog Topic Section
-              const Text('Dialog Topic (1d100)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const _SectionHeader(icon: Icons.topic, title: 'Dialog Topic (1d100)'),
               const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -5170,33 +5313,40 @@ class _SessionDetailsDialogState extends State<_SessionDetailsDialog> {
             ),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Stats
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  _DetailRow(
-                    icon: Icons.casino,
-                    label: 'Rolls',
-                    value: '${widget.session.history.length}',
-                  ),
-                  const SizedBox(height: 8),
-                  _DetailRow(
-                    icon: Icons.calendar_today,
-                    label: 'Created',
-                    value: _formatFullDate(widget.session.createdAt),
-                  ),
-                  const SizedBox(height: 8),
-                  _DetailRow(
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+          maxWidth: 350,
+        ),
+        child: _ScrollableDialogContent(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Stats
+              const _SectionHeader(icon: Icons.analytics, title: 'Session Stats'),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    _DetailRow(
+                      icon: Icons.casino,
+                      label: 'Rolls',
+                      value: '${widget.session.history.length}',
+                    ),
+                    const SizedBox(height: 8),
+                    _DetailRow(
+                      icon: Icons.calendar_today,
+                      label: 'Created',
+                      value: _formatFullDate(widget.session.createdAt),
+                    ),
+                    const SizedBox(height: 8),
+                    _DetailRow(
                     icon: Icons.access_time,
                     label: 'Last Played',
                     value: _formatFullDate(widget.session.lastAccessedAt),
@@ -5206,10 +5356,7 @@ class _SessionDetailsDialogState extends State<_SessionDetailsDialog> {
             ),
             const SizedBox(height: 16),
             // Notes
-            const Text(
-              'Notes',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const _SectionHeader(icon: Icons.notes, title: 'Notes'),
             const SizedBox(height: 8),
             if (_isEditing)
               TextField(
@@ -5267,6 +5414,7 @@ class _SessionDetailsDialogState extends State<_SessionDetailsDialog> {
                 ),
               ),
           ],
+        ),
         ),
       ),
       actions: [
