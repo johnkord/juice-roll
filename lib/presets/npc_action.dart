@@ -1,8 +1,12 @@
 import '../core/roll_engine.dart';
 import '../models/roll_result.dart';
 import 'details.dart';
+import 'dungeon_generator.dart';
 import 'name_generator.dart';
 import 'next_scene.dart';
+import 'random_event.dart';
+import 'settlement.dart';
+import 'wilderness.dart';
 
 /// NPC Disposition determines the die size for Action/Combat tables.
 /// Passive NPCs roll d6, Active NPCs roll d10.
@@ -121,8 +125,17 @@ class NpcAction {
     'Power',       // 0/10
   ];
 
+  /// Focus entries that require sub-rolls (italic in the original table)
+  static const Set<String> _italicFocuses = {
+    'Monster', 'Event', 'Environment', 'Person', 'Location', 'Object'
+  };
+
   late final Details _details;
   late final NextScene _nextScene;
+  
+  // Lazy settlement to avoid circular dependency with Settlement -> NpcAction
+  Settlement? _settlement;
+  Settlement get _settlementLazy => _settlement ??= Settlement(_rollEngine);
 
   NpcAction([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine() {
@@ -239,9 +252,59 @@ class NpcAction {
     );
   }
 
+  /// Expand a focus entry by rolling on the appropriate sub-table.
+  /// Returns [subRoll, expandedValue] or null if no expansion needed.
+  /// 
+  /// Italic Focus entries that need expansion:
+  /// - Monster → Monster Descriptors table
+  /// - Event → Event table
+  /// - Environment → Environment table
+  /// - Person → Person table
+  /// - Location → Settlement Name
+  /// - Object → Object table
+  List<dynamic>? _expandFocus(String focus) {
+    if (!_italicFocuses.contains(focus)) return null;
+
+    final subRoll = _rollEngine.rollDie(10);
+    final subIndex = subRoll == 10 ? 9 : subRoll - 1;
+    String expanded;
+
+    switch (focus) {
+      case 'Monster':
+        // Use monster descriptors from dungeon generator
+        expanded = DungeonGenerator.monsterDescriptors[subIndex];
+        break;
+      case 'Event':
+        // Use event words from random event
+        expanded = RandomEvent.eventWords[subIndex];
+        break;
+      case 'Environment':
+        // Use wilderness environments
+        expanded = Wilderness.environments[subIndex];
+        break;
+      case 'Person':
+        // Use person words from random event
+        expanded = RandomEvent.personWords[subIndex];
+        break;
+      case 'Location':
+        // Generate a settlement name for location
+        final name = _settlementLazy.generateName();
+        return [subRoll, name.name];
+      case 'Object':
+        // Use object words from random event
+        expanded = RandomEvent.objectWords[subIndex];
+        break;
+      default:
+        return null;
+    }
+    return [subRoll, expanded];
+  }
+
   /// Roll for NPC motive/topic with automatic follow-up.
   /// If result is "History", automatically rolls on the History table.
-  /// If result is "Focus", automatically rolls on the Focus table.
+  /// If result is "Focus", automatically rolls on the Focus table,
+  /// and if that Focus is italic (Monster/Event/Environment/Person/Location/Object),
+  /// further expands it by rolling on the appropriate sub-table.
   MotiveWithFollowUpResult rollMotiveWithFollowUp() {
     final roll = _rollEngine.rollDie(10);
     final index = _getIndex(roll);
@@ -249,11 +312,20 @@ class NpcAction {
 
     DetailResult? historyResult;
     FocusResult? focusResult;
+    int? focusExpansionRoll;
+    String? focusExpanded;
 
     if (motive == 'History') {
       historyResult = _details.rollHistory();
     } else if (motive == 'Focus') {
       focusResult = _nextScene.rollFocus();
+      
+      // Check if the focus result needs further expansion
+      final expansion = _expandFocus(focusResult.focus);
+      if (expansion != null) {
+        focusExpansionRoll = expansion[0] as int;
+        focusExpanded = expansion[1] as String;
+      }
     }
 
     return MotiveWithFollowUpResult(
@@ -261,6 +333,8 @@ class NpcAction {
       motive: motive,
       historyResult: historyResult,
       focusResult: focusResult,
+      focusExpansionRoll: focusExpansionRoll,
+      focusExpanded: focusExpanded,
     );
   }
 
@@ -305,8 +379,97 @@ class NpcAction {
     );
   }
 
-  /// Generate a full NPC profile (personality + need + motive).
+  /// Generate a full NPC profile.
+  /// Per instructions (page 128-129): Full NPC profile includes:
+  /// - 2 Personality traits (primary + secondary)
+  /// - Need (with optional skew - advantage for people, disadvantage for monsters)
+  /// - Motive (with automatic expansion for History/Focus)
+  /// - Color (1d10)
+  /// - Two Properties (1d10+1d6 each)
   NpcProfileResult generateProfile({NeedSkew needSkew = NeedSkew.none}) {
+    // Two personality traits
+    final persRoll1 = _rollEngine.rollDie(10);
+    final persRoll2 = _rollEngine.rollDie(10);
+    final primaryPersonality = personalities[_getIndex(persRoll1)];
+    final secondaryPersonality = personalities[_getIndex(persRoll2)];
+    
+    // Handle need with skew
+    int needRoll;
+    List<int> needAllRolls = [];
+    switch (needSkew) {
+      case NeedSkew.primitive:
+        final result = _rollEngine.rollWithDisadvantage(1, 10);
+        needRoll = result.chosenSum;
+        needAllRolls = [result.sum1, result.sum2];
+        break;
+      case NeedSkew.complex:
+        final result = _rollEngine.rollWithAdvantage(1, 10);
+        needRoll = result.chosenSum;
+        needAllRolls = [result.sum1, result.sum2];
+        break;
+      case NeedSkew.none:
+        needRoll = _rollEngine.rollDie(10);
+        needAllRolls = [needRoll];
+    }
+    
+    final motiveRoll = _rollEngine.rollDie(10);
+
+    final need = needs[_getIndex(needRoll)];
+    final motive = motives[_getIndex(motiveRoll)];
+    
+    // Handle motive expansion for History and Focus
+    DetailResult? historyResult;
+    FocusResult? focusResult;
+    int? focusExpansionRoll;
+    String? focusExpanded;
+    
+    if (motive == 'History') {
+      historyResult = _details.rollHistory();
+    } else if (motive == 'Focus') {
+      focusResult = _nextScene.rollFocus();
+      // Check if the focus result needs further expansion
+      final expansion = _expandFocus(focusResult.focus);
+      if (expansion != null) {
+        focusExpansionRoll = expansion[0] as int;
+        focusExpanded = expansion[1] as String;
+      }
+    }
+    
+    // Color (1d10)
+    final colorResult = _details.rollColor();
+    
+    // Two Properties (1d10+1d6 each)
+    final property1 = _details.rollProperty();
+    final property2 = _details.rollProperty();
+
+    return NpcProfileResult(
+      primaryPersonalityRoll: persRoll1,
+      primaryPersonality: primaryPersonality,
+      secondaryPersonalityRoll: persRoll2,
+      secondaryPersonality: secondaryPersonality,
+      needRoll: needRoll,
+      need: need,
+      motiveRoll: motiveRoll,
+      motive: motive,
+      needSkew: needSkew,
+      needAllRolls: needAllRolls,
+      historyResult: historyResult,
+      focusResult: focusResult,
+      focusExpansionRoll: focusExpansionRoll,
+      focusExpanded: focusExpanded,
+      color: colorResult,
+      property1: property1,
+      property2: property2,
+    );
+  }
+
+  /// Generate a simple NPC profile (personality + need + motive only).
+  /// Per instructions (page 128): Simple NPC has just:
+  /// - 1 Personality trait
+  /// - Need
+  /// - Motive (with automatic expansion for History/Focus)
+  /// Used for NPCs like shop owners where you don't need full detail.
+  SimpleNpcProfileResult generateSimpleProfile({NeedSkew needSkew = NeedSkew.none}) {
     final persRoll = _rollEngine.rollDie(10);
     
     // Handle need with skew
@@ -333,8 +496,26 @@ class NpcAction {
     final personality = personalities[_getIndex(persRoll)];
     final need = needs[_getIndex(needRoll)];
     final motive = motives[_getIndex(motiveRoll)];
+    
+    // Handle motive expansion for History and Focus
+    DetailResult? historyResult;
+    FocusResult? focusResult;
+    int? focusExpansionRoll;
+    String? focusExpanded;
+    
+    if (motive == 'History') {
+      historyResult = _details.rollHistory();
+    } else if (motive == 'Focus') {
+      focusResult = _nextScene.rollFocus();
+      // Check if the focus result needs further expansion
+      final expansion = _expandFocus(focusResult.focus);
+      if (expansion != null) {
+        focusExpansionRoll = expansion[0] as int;
+        focusExpanded = expansion[1] as String;
+      }
+    }
 
-    return NpcProfileResult(
+    return SimpleNpcProfileResult(
       personalityRoll: persRoll,
       personality: personality,
       needRoll: needRoll,
@@ -343,6 +524,10 @@ class NpcAction {
       motive: motive,
       needSkew: needSkew,
       needAllRolls: needAllRolls,
+      historyResult: historyResult,
+      focusResult: focusResult,
+      focusExpansionRoll: focusExpansionRoll,
+      focusExpanded: focusExpanded,
     );
   }
 
@@ -369,7 +554,7 @@ class NpcAction {
   /// - Name (via NameGenerator)
   /// - 2 Personality traits (primary, optionally secondary)
   /// - Need (with advantage for people, disadvantage for monsters)
-  /// - Motive
+  /// - Motive (with automatic expansion for History/Focus)
   /// - Color (1d10)
   /// - Two Properties (1d10+1d6 each)
   /// 
@@ -421,9 +606,27 @@ class NpcAction {
     }
     final need = needs[_getIndex(needRoll)];
     
-    // Motive
+    // Motive with expansion for History/Focus
     final motiveRoll = _rollEngine.rollDie(10);
     final motive = motives[_getIndex(motiveRoll)];
+    
+    // Handle motive expansion for History and Focus
+    DetailResult? historyResult;
+    FocusResult? focusResult;
+    int? focusExpansionRoll;
+    String? focusExpanded;
+    
+    if (motive == 'History') {
+      historyResult = _details.rollHistory();
+    } else if (motive == 'Focus') {
+      focusResult = _nextScene.rollFocus();
+      // Check if the focus result needs further expansion
+      final expansion = _expandFocus(focusResult.focus);
+      if (expansion != null) {
+        focusExpansionRoll = expansion[0] as int;
+        focusExpanded = expansion[1] as String;
+      }
+    }
     
     // Color (1d10)
     final colorResult = details.rollColor();
@@ -444,6 +647,10 @@ class NpcAction {
       needAllRolls: needAllRolls,
       motiveRoll: motiveRoll,
       motive: motive,
+      historyResult: historyResult,
+      focusResult: focusResult,
+      focusExpansionRoll: focusExpansionRoll,
+      focusExpanded: focusExpanded,
       color: colorResult,
       property1: property1,
       property2: property2,
@@ -613,27 +820,35 @@ class NpcActionResult extends RollResult {
 
 /// Result of a motive roll with automatic follow-up.
 /// If motive is "History", includes the History table result.
-/// If motive is "Focus", includes the Focus table result.
+/// If motive is "Focus", includes the Focus table result, and if that Focus
+/// is italic (Monster/Event/Environment/Person/Location/Object), includes
+/// the expanded value from the appropriate sub-table.
 class MotiveWithFollowUpResult extends RollResult {
   final int roll;
   final String motive;
   final DetailResult? historyResult;
   final FocusResult? focusResult;
+  /// Sub-roll for expanding italic Focus entries
+  final int? focusExpansionRoll;
+  /// Expanded value from the sub-table (e.g., "Noble" for Person)
+  final String? focusExpanded;
 
   MotiveWithFollowUpResult({
     required this.roll,
     required this.motive,
     this.historyResult,
     this.focusResult,
+    this.focusExpansionRoll,
+    this.focusExpanded,
     DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: 'NPC Motive',
-          diceResults: _buildDiceResults(roll, historyResult, focusResult),
+          diceResults: _buildDiceResults(roll, historyResult, focusResult, focusExpansionRoll),
           total: roll,
-          interpretation: _buildInterpretation(motive, historyResult, focusResult),
+          interpretation: _buildInterpretation(motive, historyResult, focusResult, focusExpanded),
           timestamp: timestamp,
-          metadata: _buildMetadataMap(roll, motive, historyResult, focusResult),
+          metadata: _buildMetadataMap(roll, motive, historyResult, focusResult, focusExpansionRoll, focusExpanded),
         );
 
   @override
@@ -644,6 +859,8 @@ class MotiveWithFollowUpResult extends RollResult {
     return MotiveWithFollowUpResult(
       roll: meta['roll'] as int? ?? (json['diceResults'] as List).first as int,
       motive: meta['motive'] as String,
+      focusExpansionRoll: meta['focusExpansionRoll'] as int?,
+      focusExpanded: meta['focusExpanded'] as String?,
       // Note: historyResult and focusResult cannot be fully reconstructed
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
@@ -653,6 +870,7 @@ class MotiveWithFollowUpResult extends RollResult {
     int roll,
     DetailResult? historyResult,
     FocusResult? focusResult,
+    int? focusExpansionRoll,
   ) {
     final results = [roll];
     if (historyResult != null) {
@@ -661,6 +879,9 @@ class MotiveWithFollowUpResult extends RollResult {
     if (focusResult != null) {
       results.addAll(focusResult.diceResults);
     }
+    if (focusExpansionRoll != null) {
+      results.add(focusExpansionRoll);
+    }
     return results;
   }
 
@@ -668,11 +889,15 @@ class MotiveWithFollowUpResult extends RollResult {
     String motive,
     DetailResult? historyResult,
     FocusResult? focusResult,
+    String? focusExpanded,
   ) {
     if (historyResult != null) {
       return 'History → ${historyResult.result}';
     }
     if (focusResult != null) {
+      if (focusExpanded != null) {
+        return 'Focus → ${focusResult.focus} → $focusExpanded';
+      }
       return 'Focus → ${focusResult.focus}';
     }
     return motive;
@@ -683,6 +908,8 @@ class MotiveWithFollowUpResult extends RollResult {
     String motive,
     DetailResult? historyResult,
     FocusResult? focusResult,
+    int? focusExpansionRoll,
+    String? focusExpanded,
   ) {
     return {
       'column': 'motive',
@@ -690,16 +917,26 @@ class MotiveWithFollowUpResult extends RollResult {
       'motive': motive,
       if (historyResult != null) 'history': historyResult.result,
       if (focusResult != null) 'focus': focusResult.focus,
+      if (focusExpansionRoll != null) 'focusExpansionRoll': focusExpansionRoll,
+      if (focusExpanded != null) 'focusExpanded': focusExpanded,
     };
   }
 
   /// Whether this result has a follow-up roll.
   bool get hasFollowUp => historyResult != null || focusResult != null;
 
-  /// The follow-up text (either history or focus result).
+  /// Whether the focus was further expanded.
+  bool get hasFocusExpansion => focusExpanded != null;
+
+  /// The follow-up text (either history or focus result, with expansion if available).
   String? get followUpText {
     if (historyResult != null) return historyResult!.result;
-    if (focusResult != null) return focusResult!.focus;
+    if (focusResult != null) {
+      if (focusExpanded != null) {
+        return '${focusResult!.focus} → $focusExpanded';
+      }
+      return focusResult!.focus;
+    }
     return null;
   }
 
@@ -709,14 +946,21 @@ class MotiveWithFollowUpResult extends RollResult {
       return 'NPC Motive: History → ${historyResult!.result}';
     }
     if (focusResult != null) {
+      if (focusExpanded != null) {
+        return 'NPC Motive: Focus → ${focusResult!.focus} → $focusExpanded';
+      }
       return 'NPC Motive: Focus → ${focusResult!.focus}';
     }
     return 'NPC Motive: $motive';
   }
 }
 
-/// Result of generating a full NPC profile.
-class NpcProfileResult extends RollResult {
+/// Result of generating a simple NPC profile.
+/// Per instructions (page 128): Simple NPC includes just:
+/// - 1 Personality trait
+/// - Need
+/// - Motive (with automatic expansion for History/Focus)
+class SimpleNpcProfileResult extends RollResult {
   final int personalityRoll;
   final String personality;
   final int needRoll;
@@ -725,8 +969,16 @@ class NpcProfileResult extends RollResult {
   final String motive;
   final NeedSkew? needSkew;
   final List<int>? needAllRolls;
+  /// History result when motive is "History"
+  final DetailResult? historyResult;
+  /// Focus result when motive is "Focus"
+  final FocusResult? focusResult;
+  /// Sub-roll for expanding italic Focus entries
+  final int? focusExpansionRoll;
+  /// Expanded value from the sub-table (e.g., "Noble" for Person)
+  final String? focusExpanded;
 
-  NpcProfileResult({
+  SimpleNpcProfileResult({
     required this.personalityRoll,
     required this.personality,
     required this.needRoll,
@@ -735,15 +987,19 @@ class NpcProfileResult extends RollResult {
     required this.motive,
     this.needSkew,
     this.needAllRolls,
+    this.historyResult,
+    this.focusResult,
+    this.focusExpansionRoll,
+    this.focusExpanded,
     DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: needSkew != null && needSkew != NeedSkew.none
-              ? 'NPC Profile (Need: ${needSkew == NeedSkew.primitive ? '@- Primitive' : '@+ Complex'})'
-              : 'NPC Profile',
-          diceResults: [personalityRoll, needRoll, motiveRoll],
+              ? 'NPC Simple Profile (Need: ${needSkew == NeedSkew.primitive ? '@- Primitive' : '@+ Complex'})'
+              : 'NPC Simple Profile',
+          diceResults: _buildDiceResults(personalityRoll, needRoll, motiveRoll, historyResult, focusResult, focusExpansionRoll),
           total: personalityRoll + needRoll + motiveRoll,
-          interpretation: '$personality / $need / $motive',
+          interpretation: _buildInterpretation(personality, need, motive, historyResult, focusResult, focusExpanded),
           timestamp: timestamp,
           metadata: {
             'personality': personality,
@@ -754,16 +1010,62 @@ class NpcProfileResult extends RollResult {
             'motiveRoll': motiveRoll,
             if (needSkew != null) 'needSkew': needSkew.name,
             if (needAllRolls != null) 'needAllRolls': needAllRolls,
+            if (historyResult != null) 'history': historyResult.result,
+            if (focusResult != null) 'focus': focusResult.focus,
+            if (focusExpansionRoll != null) 'focusExpansionRoll': focusExpansionRoll,
+            if (focusExpanded != null) 'focusExpanded': focusExpanded,
           },
         );
 
-  @override
-  String get className => 'NpcProfileResult';
+  static List<int> _buildDiceResults(
+    int personalityRoll,
+    int needRoll,
+    int motiveRoll,
+    DetailResult? historyResult,
+    FocusResult? focusResult,
+    int? focusExpansionRoll,
+  ) {
+    final results = [personalityRoll, needRoll, motiveRoll];
+    if (historyResult != null) {
+      results.addAll(historyResult.diceResults);
+    }
+    if (focusResult != null) {
+      results.addAll(focusResult.diceResults);
+    }
+    if (focusExpansionRoll != null) {
+      results.add(focusExpansionRoll);
+    }
+    return results;
+  }
 
-  factory NpcProfileResult.fromJson(Map<String, dynamic> json) {
+  static String _buildInterpretation(
+    String personality,
+    String need,
+    String motive,
+    DetailResult? historyResult,
+    FocusResult? focusResult,
+    String? focusExpanded,
+  ) {
+    String motiveDisplay = motive;
+    if (historyResult != null) {
+      motiveDisplay = 'History → ${historyResult.result}';
+    } else if (focusResult != null) {
+      if (focusExpanded != null) {
+        motiveDisplay = 'Focus → ${focusResult.focus} → $focusExpanded';
+      } else {
+        motiveDisplay = 'Focus → ${focusResult.focus}';
+      }
+    }
+    return '$personality / $need / $motiveDisplay';
+  }
+
+  @override
+  String get className => 'SimpleNpcProfileResult';
+
+  factory SimpleNpcProfileResult.fromJson(Map<String, dynamic> json) {
     final meta = json['metadata'] as Map<String, dynamic>;
     final diceResults = (json['diceResults'] as List).cast<int>();
-    return NpcProfileResult(
+    return SimpleNpcProfileResult(
       personalityRoll: meta['personalityRoll'] as int? ?? diceResults[0],
       personality: meta['personality'] as String,
       needRoll: meta['needRoll'] as int? ?? diceResults[1],
@@ -774,13 +1076,243 @@ class NpcProfileResult extends RollResult {
           ? NeedSkew.values.firstWhere((e) => e.name == meta['needSkew'])
           : null,
       needAllRolls: (meta['needAllRolls'] as List?)?.cast<int>(),
+      focusExpansionRoll: meta['focusExpansionRoll'] as int?,
+      focusExpanded: meta['focusExpanded'] as String?,
+      // Note: historyResult and focusResult cannot be fully reconstructed
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
   }
 
+  /// Get the full motive display text (with expansion if available).
+  String get motiveDisplay {
+    if (historyResult != null) {
+      return 'History → ${historyResult!.result}';
+    }
+    if (focusResult != null) {
+      if (focusExpanded != null) {
+        return 'Focus → ${focusResult!.focus} → $focusExpanded';
+      }
+      return 'Focus → ${focusResult!.focus}';
+    }
+    return motive;
+  }
+
   @override
   String toString() =>
-      'NPC Profile: $personality (needs $need, motivated by $motive)';
+      'NPC Simple Profile: $personality (needs $need, motivated by $motiveDisplay)';
+}
+
+/// Result of generating a full NPC profile.
+/// Per instructions (page 128-129): Full NPC profile includes:
+/// - 2 Personality traits (primary + secondary)
+/// - Need (with optional skew)
+/// - Motive (with automatic expansion for History/Focus)
+/// - Color (1d10)
+/// - Two Properties (1d10+1d6 each)
+class NpcProfileResult extends RollResult {
+  final int primaryPersonalityRoll;
+  final String primaryPersonality;
+  final int secondaryPersonalityRoll;
+  final String secondaryPersonality;
+  final int needRoll;
+  final String need;
+  final int motiveRoll;
+  final String motive;
+  final NeedSkew? needSkew;
+  final List<int>? needAllRolls;
+  /// History result when motive is "History"
+  final DetailResult? historyResult;
+  /// Focus result when motive is "Focus"
+  final FocusResult? focusResult;
+  /// Sub-roll for expanding italic Focus entries
+  final int? focusExpansionRoll;
+  /// Expanded value from the sub-table (e.g., "Noble" for Person)
+  final String? focusExpanded;
+  /// Color (1d10)
+  final DetailResult color;
+  /// First property (1d10+1d6)
+  final PropertyResult property1;
+  /// Second property (1d10+1d6)
+  final PropertyResult property2;
+
+  NpcProfileResult({
+    required this.primaryPersonalityRoll,
+    required this.primaryPersonality,
+    required this.secondaryPersonalityRoll,
+    required this.secondaryPersonality,
+    required this.needRoll,
+    required this.need,
+    required this.motiveRoll,
+    required this.motive,
+    this.needSkew,
+    this.needAllRolls,
+    this.historyResult,
+    this.focusResult,
+    this.focusExpansionRoll,
+    this.focusExpanded,
+    required this.color,
+    required this.property1,
+    required this.property2,
+    DateTime? timestamp,
+  }) : super(
+          type: RollType.npcAction,
+          description: needSkew != null && needSkew != NeedSkew.none
+              ? 'NPC Full Profile (Need: ${needSkew == NeedSkew.primitive ? '@- Primitive' : '@+ Complex'})'
+              : 'NPC Full Profile',
+          diceResults: _buildDiceResults(
+            primaryPersonalityRoll, secondaryPersonalityRoll, needRoll, motiveRoll, 
+            historyResult, focusResult, focusExpansionRoll, color, property1, property2,
+          ),
+          total: primaryPersonalityRoll + secondaryPersonalityRoll + needRoll + motiveRoll,
+          interpretation: _buildInterpretation(
+            primaryPersonality, secondaryPersonality, need, motive, 
+            historyResult, focusResult, focusExpanded, color, property1, property2,
+          ),
+          timestamp: timestamp,
+          metadata: {
+            'primaryPersonality': primaryPersonality,
+            'primaryPersonalityRoll': primaryPersonalityRoll,
+            'secondaryPersonality': secondaryPersonality,
+            'secondaryPersonalityRoll': secondaryPersonalityRoll,
+            'need': need,
+            'needRoll': needRoll,
+            'motive': motive,
+            'motiveRoll': motiveRoll,
+            if (needSkew != null) 'needSkew': needSkew.name,
+            if (needAllRolls != null) 'needAllRolls': needAllRolls,
+            if (historyResult != null) 'history': historyResult.result,
+            if (focusResult != null) 'focus': focusResult.focus,
+            if (focusExpansionRoll != null) 'focusExpansionRoll': focusExpansionRoll,
+            if (focusExpanded != null) 'focusExpanded': focusExpanded,
+            'color': color.result,
+            'property1': '${property1.intensityDescription} ${property1.property}',
+            'property2': '${property2.intensityDescription} ${property2.property}',
+          },
+        );
+
+  static List<int> _buildDiceResults(
+    int persRoll1, int persRoll2, int needRoll, int motiveRoll,
+    DetailResult? historyResult, FocusResult? focusResult, int? focusExpansionRoll,
+    DetailResult color, PropertyResult prop1, PropertyResult prop2,
+  ) {
+    final results = [persRoll1, persRoll2, needRoll, motiveRoll];
+    if (historyResult != null) {
+      results.addAll(historyResult.diceResults);
+    }
+    if (focusResult != null) {
+      results.addAll(focusResult.diceResults);
+    }
+    if (focusExpansionRoll != null) {
+      results.add(focusExpansionRoll);
+    }
+    results.add(color.roll);
+    results.addAll([prop1.propertyRoll, prop1.intensityRoll]);
+    results.addAll([prop2.propertyRoll, prop2.intensityRoll]);
+    return results;
+  }
+
+  static String _buildInterpretation(
+    String primaryPersonality, String secondaryPersonality,
+    String need, String motive,
+    DetailResult? historyResult, FocusResult? focusResult, String? focusExpanded,
+    DetailResult color, PropertyResult prop1, PropertyResult prop2,
+  ) {
+    String motiveDisplay = motive;
+    if (historyResult != null) {
+      motiveDisplay = 'History → ${historyResult.result}';
+    } else if (focusResult != null) {
+      if (focusExpanded != null) {
+        motiveDisplay = 'Focus → ${focusResult.focus} → $focusExpanded';
+      } else {
+        motiveDisplay = 'Focus → ${focusResult.focus}';
+      }
+    }
+    return '$primaryPersonality, yet $secondaryPersonality / $need / $motiveDisplay\n'
+           '${color.emoji ?? ''} ${color.result}\n'
+           '${prop1.intensityDescription} ${prop1.property} + ${prop2.intensityDescription} ${prop2.property}';
+  }
+
+  @override
+  String get className => 'NpcProfileResult';
+
+  factory NpcProfileResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    
+    // For backward compatibility, check if old format (single personality)
+    final hasSinglePersonality = meta.containsKey('personality') && !meta.containsKey('primaryPersonality');
+    
+    return NpcProfileResult(
+      primaryPersonalityRoll: meta['primaryPersonalityRoll'] as int? ?? 
+          (hasSinglePersonality ? meta['personalityRoll'] as int? ?? diceResults[0] : diceResults[0]),
+      primaryPersonality: meta['primaryPersonality'] as String? ?? 
+          (hasSinglePersonality ? meta['personality'] as String : 'Unknown'),
+      secondaryPersonalityRoll: meta['secondaryPersonalityRoll'] as int? ?? diceResults[1],
+      secondaryPersonality: meta['secondaryPersonality'] as String? ?? 'Unknown',
+      needRoll: meta['needRoll'] as int? ?? diceResults[2],
+      need: meta['need'] as String,
+      motiveRoll: meta['motiveRoll'] as int? ?? diceResults[3],
+      motive: meta['motive'] as String,
+      needSkew: meta['needSkew'] != null
+          ? NeedSkew.values.firstWhere((e) => e.name == meta['needSkew'])
+          : null,
+      needAllRolls: (meta['needAllRolls'] as List?)?.cast<int>(),
+      focusExpansionRoll: meta['focusExpansionRoll'] as int?,
+      focusExpanded: meta['focusExpanded'] as String?,
+      // Note: historyResult, focusResult, color, property1, property2 cannot be fully reconstructed
+      color: DetailResult(
+        detailType: DetailType.color,
+        roll: 0,
+        result: meta['color'] as String? ?? 'Unknown',
+      ),
+      property1: PropertyResult(
+        propertyRoll: 0,
+        intensityRoll: 1,
+        property: 'Unknown',
+      ),
+      property2: PropertyResult(
+        propertyRoll: 0,
+        intensityRoll: 1,
+        property: 'Unknown',
+      ),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
+
+  /// Get personality display text.
+  /// If both personalities are the same, show "Very [Personality]" instead of "X, yet X"
+  String get personalityDisplay => primaryPersonality == secondaryPersonality
+      ? 'Very $primaryPersonality'
+      : '$primaryPersonality, yet $secondaryPersonality';
+
+  /// Get the full motive display text (with expansion if available).
+  String get motiveDisplay {
+    if (historyResult != null) {
+      return 'History → ${historyResult!.result}';
+    }
+    if (focusResult != null) {
+      if (focusExpanded != null) {
+        return 'Focus → ${focusResult!.focus} → $focusExpanded';
+      }
+      return 'Focus → ${focusResult!.focus}';
+    }
+    return motive;
+  }
+
+  /// Get properties display text.
+  String get propertiesDisplay =>
+      '${property1.intensityDescription} ${property1.property} + ${property2.intensityDescription} ${property2.property}';
+
+  @override
+  String toString() {
+    final buffer = StringBuffer();
+    buffer.writeln('Personality: $personalityDisplay');
+    buffer.writeln('Need: $need');
+    buffer.writeln('Motive: $motiveDisplay');
+    buffer.writeln('Color: ${color.emoji ?? ''} ${color.result}');
+    buffer.writeln('Properties: $propertiesDisplay');
+    return buffer.toString().trim();
+  }
 }
 
 /// Result of rolling dual personality traits.
@@ -818,7 +1350,7 @@ class DualPersonalityResult extends RollResult {
 /// - Name (optional)
 /// - 2 Personality traits (primary + optional secondary)
 /// - Need (with advantage for people, disadvantage for monsters)
-/// - Motive
+/// - Motive (with automatic expansion for History/Focus)
 /// - Color (1d10)
 /// - Two Properties (1d10+1d6 each)
 class ComplexNpcResult extends RollResult {
@@ -833,6 +1365,14 @@ class ComplexNpcResult extends RollResult {
   final List<int> needAllRolls;
   final int motiveRoll;
   final String motive;
+  /// History result when motive is "History"
+  final DetailResult? historyResult;
+  /// Focus result when motive is "Focus"
+  final FocusResult? focusResult;
+  /// Sub-roll for expanding italic Focus entries
+  final int? focusExpansionRoll;
+  /// Expanded value from the sub-table (e.g., "Noble" for Person)
+  final String? focusExpanded;
   final DetailResult color;
   final PropertyResult property1;
   final PropertyResult property2;
@@ -849,6 +1389,10 @@ class ComplexNpcResult extends RollResult {
     required this.needAllRolls,
     required this.motiveRoll,
     required this.motive,
+    this.historyResult,
+    this.focusResult,
+    this.focusExpansionRoll,
+    this.focusExpanded,
     required this.color,
     required this.property1,
     required this.property2,
@@ -857,22 +1401,27 @@ class ComplexNpcResult extends RollResult {
           description: 'Complex NPC',
           diceResults: _buildDiceResults(
             name, primaryPersonalityRoll, secondaryPersonalityRoll, 
-            needAllRolls, motiveRoll, color, property1, property2,
+            needAllRolls, motiveRoll, historyResult, focusResult, focusExpansionRoll,
+            color, property1, property2,
           ),
           total: primaryPersonalityRoll + needRoll + motiveRoll,
           interpretation: _buildInterpretation(
             name, primaryPersonality, secondaryPersonality, need, motive,
+            historyResult, focusResult, focusExpanded,
             color, property1, property2,
           ),
           metadata: _buildMetadata(
             name, primaryPersonality, secondaryPersonality, need, motive,
+            historyResult, focusResult, focusExpansionRoll, focusExpanded,
             needSkew, color, property1, property2,
           ),
         );
 
   static List<int> _buildDiceResults(
     NameResult? name, int persRoll1, int? persRoll2,
-    List<int> needRolls, int motiveRoll, DetailResult color,
+    List<int> needRolls, int motiveRoll,
+    DetailResult? historyResult, FocusResult? focusResult, int? focusExpansionRoll,
+    DetailResult color,
     PropertyResult prop1, PropertyResult prop2,
   ) {
     return [
@@ -881,6 +1430,9 @@ class ComplexNpcResult extends RollResult {
       if (persRoll2 != null) persRoll2,
       ...needRolls,
       motiveRoll,
+      if (historyResult != null) ...historyResult.diceResults,
+      if (focusResult != null) ...focusResult.diceResults,
+      if (focusExpansionRoll != null) focusExpansionRoll,
       color.roll,
       prop1.propertyRoll, prop1.intensityRoll,
       prop2.propertyRoll, prop2.intensityRoll,
@@ -889,21 +1441,35 @@ class ComplexNpcResult extends RollResult {
 
   static String _buildInterpretation(
     NameResult? name, String primary, String? secondary,
-    String need, String motive, DetailResult color,
+    String need, String motive,
+    DetailResult? historyResult, FocusResult? focusResult, String? focusExpanded,
+    DetailResult color,
     PropertyResult prop1, PropertyResult prop2,
   ) {
     final namePart = name != null ? '${name.name}: ' : '';
     final personalityPart = secondary != null 
         ? '$primary, yet $secondary' 
         : primary;
-    return '$namePart$personalityPart / $need / $motive\n'
+    String motiveDisplay = motive;
+    if (historyResult != null) {
+      motiveDisplay = 'History → ${historyResult.result}';
+    } else if (focusResult != null) {
+      if (focusExpanded != null) {
+        motiveDisplay = 'Focus → ${focusResult.focus} → $focusExpanded';
+      } else {
+        motiveDisplay = 'Focus → ${focusResult.focus}';
+      }
+    }
+    return '$namePart$personalityPart / $need / $motiveDisplay\n'
            '${color.emoji ?? ''} ${color.result}\n'
            '${prop1.intensityDescription} ${prop1.property} + ${prop2.intensityDescription} ${prop2.property}';
   }
 
   static Map<String, dynamic> _buildMetadata(
     NameResult? name, String primary, String? secondary,
-    String need, String motive, NeedSkew needSkew,
+    String need, String motive,
+    DetailResult? historyResult, FocusResult? focusResult, int? focusExpansionRoll, String? focusExpanded,
+    NeedSkew needSkew,
     DetailResult color, PropertyResult prop1, PropertyResult prop2,
   ) {
     return {
@@ -912,6 +1478,10 @@ class ComplexNpcResult extends RollResult {
       if (secondary != null) 'secondaryPersonality': secondary,
       'need': need,
       'motive': motive,
+      if (historyResult != null) 'history': historyResult.result,
+      if (focusResult != null) 'focus': focusResult.focus,
+      if (focusExpansionRoll != null) 'focusExpansionRoll': focusExpansionRoll,
+      if (focusExpanded != null) 'focusExpanded': focusExpanded,
       'needSkew': needSkew.name,
       'color': color.result,
       'property1': '${prop1.intensityDescription} ${prop1.property}',
@@ -920,9 +1490,26 @@ class ComplexNpcResult extends RollResult {
   }
 
   /// Get personality display text.
-  String get personalityDisplay => secondaryPersonality != null
-      ? '$primaryPersonality, yet $secondaryPersonality'
-      : primaryPersonality;
+  /// If both personalities are the same, show "Very [Personality]" instead of "X, yet X"
+  String get personalityDisplay {
+    if (secondaryPersonality == null) return primaryPersonality;
+    if (primaryPersonality == secondaryPersonality) return 'Very $primaryPersonality';
+    return '$primaryPersonality, yet $secondaryPersonality';
+  }
+
+  /// Get the full motive display text (with expansion if available).
+  String get motiveDisplay {
+    if (historyResult != null) {
+      return 'History → ${historyResult!.result}';
+    }
+    if (focusResult != null) {
+      if (focusExpanded != null) {
+        return 'Focus → ${focusResult!.focus} → $focusExpanded';
+      }
+      return 'Focus → ${focusResult!.focus}';
+    }
+    return motive;
+  }
 
   /// Get properties display text.
   String get propertiesDisplay =>
@@ -936,7 +1523,7 @@ class ComplexNpcResult extends RollResult {
     }
     buffer.writeln('Personality: $personalityDisplay');
     buffer.writeln('Need: $need (${needSkew.name})');
-    buffer.writeln('Motive: $motive');
+    buffer.writeln('Motive: $motiveDisplay');
     buffer.writeln('Color: ${color.emoji ?? ''} ${color.result}');
     buffer.writeln('Properties: $propertiesDisplay');
     return buffer.toString().trim();

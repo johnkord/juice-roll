@@ -190,7 +190,7 @@ class Settlement {
   /// Per instructions: "For each establishment, generate a simple NPC as the owner."
   SimpleNpcResult generateSimpleNpc({NeedSkew needSkew = NeedSkew.none}) {
     final nameResult = _nameGenerator.generate();
-    final profileResult = _npcAction.generateProfile(needSkew: needSkew);
+    final profileResult = _npcAction.generateSimpleProfile(needSkew: needSkew);
     
     return SimpleNpcResult(
       name: nameResult,
@@ -786,7 +786,7 @@ class SettlementPropertiesResult extends RollResult {
 /// Per instructions: "For each establishment, generate a simple NPC as the owner."
 class SimpleNpcResult extends RollResult {
   final NameResult name;
-  final NpcProfileResult profile;
+  final SimpleNpcProfileResult profile;
 
   SimpleNpcResult({
     required this.name,
@@ -824,7 +824,7 @@ class SimpleNpcResult extends RollResult {
         style: NameStyle.neutral,
         method: NameMethod.simple,
       ),
-      profile: NpcProfileResult(
+      profile: SimpleNpcProfileResult(
         personalityRoll: 1,
         personality: meta['personality'] as String,
         needRoll: 1,

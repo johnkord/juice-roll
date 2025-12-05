@@ -271,6 +271,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildNpcActionDisplay(result as NpcActionResult, theme);
     } else if (result is NpcProfileResult) {
       return _buildNpcProfileDisplay(result as NpcProfileResult, theme);
+    } else if (result is ComplexNpcResult) {
+      return _buildComplexNpcDisplay(result as ComplexNpcResult, theme);
     } else if (result is PayThePriceResult) {
       return _buildPayThePriceDisplay(result as PayThePriceResult, theme);
     } else if (result is QuestResult) {
@@ -1011,6 +1013,27 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildNpcProfileDisplay(NpcProfileResult result, ThemeData theme) {
+    // Build dice roll string with all the rolls
+    final diceRollParts = <String>[
+      '${result.primaryPersonalityRoll}',
+      '${result.secondaryPersonalityRoll}',
+      '${result.needRoll}',
+      '${result.motiveRoll}',
+    ];
+    // Add follow-up rolls if present
+    if (result.historyResult != null) {
+      diceRollParts.add('${result.historyResult!.roll}');
+    }
+    if (result.focusResult != null) {
+      diceRollParts.add('${result.focusResult!.roll}');
+      if (result.focusExpansionRoll != null) {
+        diceRollParts.add('${result.focusExpansionRoll}');
+      }
+    }
+    diceRollParts.add('${result.color.roll}');
+    diceRollParts.add('${result.property1.propertyRoll}+${result.property1.intensityRoll}');
+    diceRollParts.add('${result.property2.propertyRoll}+${result.property2.intensityRoll}');
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1018,11 +1041,11 @@ class _RollHistoryCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.teal.withOpacity(0.1),
+            color: Colors.teal.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            '3d10: ${result.personalityRoll}, ${result.needRoll}, ${result.motiveRoll}',
+            diceRollParts.join(', '),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontFamily: 'monospace',
               fontWeight: FontWeight.bold,
@@ -1030,19 +1053,170 @@ class _RollHistoryCard extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 8),
+        // Labeled fields for clarity
+        _buildLabeledRow('Personality', result.personalityDisplay, theme),
+        const SizedBox(height: 4),
+        _buildLabeledRow('Need', result.need, theme),
+        const SizedBox(height: 4),
+        _buildLabeledRow('Motive', result.motiveDisplay, theme),
         const SizedBox(height: 6),
-        Text(
-          result.personality,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        // Color with emoji
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 70,
+              child: Text(
+                'Color:',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (result.color.emoji != null) ...[
+              Text(result.color.emoji!, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 4),
+            ],
+            Expanded(
+              child: Text(
+                result.color.result,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
-        Text(
-          'Needs ${result.need}, motivated by ${result.motive}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
+        // Properties
+        _buildLabeledRow(
+          'Properties',
+          '${result.property1.intensityDescription} ${result.property1.property}, ${result.property2.intensityDescription} ${result.property2.property}',
+          theme,
+        ),
+      ],
+    );
+  }
+
+  /// Helper to build a labeled row for NPC display
+  Widget _buildLabeledRow(String label, String value, ThemeData theme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 70,
+          child: Text(
+            '$label:',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
           ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildComplexNpcDisplay(ComplexNpcResult result, ThemeData theme) {
+    // Build dice roll parts
+    final diceRollParts = <String>[];
+    if (result.name != null) {
+      diceRollParts.addAll(result.name!.diceResults.map((r) => r.toString()));
+    }
+    diceRollParts.add('${result.primaryPersonalityRoll}');
+    if (result.secondaryPersonalityRoll != null) {
+      diceRollParts.add('${result.secondaryPersonalityRoll}');
+    }
+    diceRollParts.addAll(result.needAllRolls.map((r) => r.toString()));
+    diceRollParts.add('${result.motiveRoll}');
+    if (result.historyResult != null) {
+      diceRollParts.add('${result.historyResult!.roll}');
+    }
+    if (result.focusResult != null) {
+      diceRollParts.add('${result.focusResult!.roll}');
+      if (result.focusExpansionRoll != null) {
+        diceRollParts.add('${result.focusExpansionRoll}');
+      }
+    }
+    diceRollParts.add('${result.color.roll}');
+    diceRollParts.add('${result.property1.propertyRoll}+${result.property1.intensityRoll}');
+    diceRollParts.add('${result.property2.propertyRoll}+${result.property2.intensityRoll}');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dice rolls display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.teal.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            diceRollParts.join(', '),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.teal.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Name (if present) as header
+        if (result.name != null) ...[
+          Text(
+            result.name!.name,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Divider(height: 12),
+        ],
+        // Labeled fields for clarity
+        _buildLabeledRow('Personality', result.personalityDisplay, theme),
+        const SizedBox(height: 4),
+        _buildLabeledRow('Need', result.need, theme),
+        const SizedBox(height: 4),
+        _buildLabeledRow('Motive', result.motiveDisplay, theme),
+        const SizedBox(height: 6),
+        // Color with emoji
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 70,
+              child: Text(
+                'Color:',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (result.color.emoji != null) ...[
+              Text(result.color.emoji!, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 4),
+            ],
+            Expanded(
+              child: Text(
+                result.color.result,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Properties
+        _buildLabeledRow(
+          'Properties',
+          '${result.property1.intensityDescription} ${result.property1.property}, ${result.property2.intensityDescription} ${result.property2.property}',
+          theme,
         ),
       ],
     );

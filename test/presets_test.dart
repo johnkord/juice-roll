@@ -364,13 +364,26 @@ void main() {
   });
 
   group('NpcAction', () {
-    test('generateProfile returns complete profile', () {
+    test('generateProfile returns complete full profile with all fields', () {
       final npcAction = NpcAction(RollEngine(SeededRandom(42)));
       final result = npcAction.generateProfile();
 
-      expect(result.personality.isNotEmpty, isTrue);
+      // Dual personality
+      expect(result.primaryPersonality.isNotEmpty, isTrue);
+      expect(result.secondaryPersonality.isNotEmpty, isTrue);
+      expect(result.personalityDisplay, contains(', yet '));
+      
+      // Need and Motive
       expect(result.need.isNotEmpty, isTrue);
       expect(result.motive.isNotEmpty, isTrue);
+      
+      // Color
+      expect(result.color.result.isNotEmpty, isTrue);
+      
+      // Properties
+      expect(result.property1.property.isNotEmpty, isTrue);
+      expect(result.property2.property.isNotEmpty, isTrue);
+      expect(result.propertiesDisplay.isNotEmpty, isTrue);
     });
 
     test('rollPersonality returns valid result', () {
@@ -508,9 +521,10 @@ void main() {
           expect(result.hasFollowUp, isTrue);
           expect(result.focusResult, isNotNull);
           expect(result.historyResult, isNull);
-          expect(result.followUpText, equals(result.focusResult!.focus));
-          // Should have 2 dice results (motive roll + focus roll)
-          expect(result.diceResults.length, equals(2));
+          // followUpText includes expansion if focus is italic (Monster, Event, etc.)
+          expect(result.followUpText, contains(result.focusResult!.focus));
+          // Should have at least 2 dice results (motive roll + focus roll, possibly more if expanded)
+          expect(result.diceResults.length, greaterThanOrEqualTo(2));
           return; // Test passed
         }
       }

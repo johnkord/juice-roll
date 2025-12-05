@@ -1120,14 +1120,59 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
               ),
             ),
             const SizedBox(height: 4),
+            // Complex NPC Section - moved up since it's the most complete option
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.purple.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+              ),
+              child: const Text(
+                'Complex NPCs (sidekicks, important characters):\n'
+                'Name + 2 Personalities + Need + Motive + Color + 2 Properties.\n'
+                'Use @+ for people, @- for monsters.',
+                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+              ),
+            ),
+            const SizedBox(height: 4),
             _DialogOption(
-              title: 'Full Profile',
-              subtitle: 'Personality + Need${_getNeedSkewLabel()} + Motive',
+              title: '⭐ Complex NPC (Person)',
+              subtitle: 'Name + 2 Personalities + Need@+ + Motive + Color + Properties',
+              onTap: () {
+                widget.onRoll(widget.npcAction.generateComplexNpc(
+                  needSkew: NeedSkew.complex,
+                  includeName: true,
+                  dualPersonality: true,
+                ));
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: '⭐ Complex NPC (Monster)',
+              subtitle: 'Name + 2 Personalities + Need@- + Motive + Color + Properties',
+              onTap: () {
+                widget.onRoll(widget.npcAction.generateComplexNpc(
+                  needSkew: NeedSkew.primitive,
+                  includeName: true,
+                  dualPersonality: true,
+                ));
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Profile Only (No Name)',
+              subtitle: '2 Personalities + Need${_getNeedSkewLabel()} + Motive + Color + Properties',
               onTap: () {
                 widget.onRoll(widget.npcAction.generateProfile(needSkew: _needSkew));
                 Navigator.pop(context);
               },
             ),
+            const Divider(),
+            
+            // Individual Rolls Section
+            const _SectionHeader(title: 'Individual Rolls', icon: Icons.casino),
+            const SizedBox(height: 4),
             _DialogOption(
               title: 'Personality',
               subtitle: 'd10 - Roll 2 for primary/secondary traits',
@@ -1135,75 +1180,31 @@ class _NpcActionDialogState extends State<_NpcActionDialog> {
                 widget.onRoll(widget.npcAction.rollPersonality());
                 Navigator.pop(context);
               },
-              ),
-              _DialogOption(
-                title: 'Need',
-                subtitle: 'd10${_getNeedSkewLabel()}',
-                onTap: () {
-                  widget.onRoll(widget.npcAction.rollNeed(skew: _needSkew));
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: 'Motive / Topic',
-                subtitle: 'd10 - Auto-rolls History/Focus tables',
-                onTap: () {
-                  widget.onRoll(widget.npcAction.rollMotiveWithFollowUp());
-                  Navigator.pop(context);
-                },
-              ),
-              const Divider(),
-              
-              // Complex NPC Section
-              const Text('Complex NPC (Sidekick)', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
-                ),
-                child: const Text(
-                  'For complex NPCs like sidekicks: Name + 2 Personalities + '
-                  'Need + Motive + Color + 2 Properties.\n'
-                  'Use @+ for people, @- for monsters.',
-                  style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                ),
-              ),
-              const SizedBox(height: 4),
-              _DialogOption(
-                title: 'Complex NPC (Person)',
-                subtitle: 'Name + 2 Personalities + Need@+ + Motive + Color + Properties',
-                onTap: () {
-                  widget.onRoll(widget.npcAction.generateComplexNpc(
-                    needSkew: NeedSkew.complex,
-                    includeName: true,
-                    dualPersonality: true,
-                  ));
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: 'Complex NPC (Monster)',
-                subtitle: 'Name + 2 Personalities + Need@- + Motive + Color + Properties',
-                onTap: () {
-                  widget.onRoll(widget.npcAction.generateComplexNpc(
-                    needSkew: NeedSkew.primitive,
-                    includeName: true,
-                    dualPersonality: true,
-                  ));
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: 'Dual Personality',
-                subtitle: '2d10 - "Primary, yet Secondary" (e.g., "Confident, yet Reserved")',
-                onTap: () {
-                  widget.onRoll(widget.npcAction.rollDualPersonality());
-                  Navigator.pop(context);
-                },
-              ),
+            ),
+            _DialogOption(
+              title: 'Dual Personality',
+              subtitle: '2d10 - "Primary, yet Secondary" (e.g., "Confident, yet Reserved")',
+              onTap: () {
+                widget.onRoll(widget.npcAction.rollDualPersonality());
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Need',
+              subtitle: 'd10${_getNeedSkewLabel()}',
+              onTap: () {
+                widget.onRoll(widget.npcAction.rollNeed(skew: _needSkew));
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Motive / Topic',
+              subtitle: 'd10 - Auto-rolls History/Focus tables',
+              onTap: () {
+                widget.onRoll(widget.npcAction.rollMotiveWithFollowUp());
+                Navigator.pop(context);
+              },
+            ),
             const Divider(),
               
             // Action Table Section
