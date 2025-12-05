@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../ui/theme/juice_theme.dart';
 
 /// Utility class for formatting and displaying Fate dice results consistently
 /// across all parts of the application.
@@ -42,15 +43,17 @@ class FateDiceFormatter {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.grey.withOpacity(0.1),
+        color: backgroundColor ?? JuiceTheme.ink.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.2)),
       ),
       child: Text(
         diceToSymbols(dice),
         style: textStyle ?? theme.textTheme.titleMedium?.copyWith(
-          fontFamily: 'monospace',
+          fontFamily: JuiceTheme.fontFamilyMono,
           fontWeight: FontWeight.bold,
           letterSpacing: letterSpacing ?? 4,
+          color: JuiceTheme.parchment,
         ),
       ),
     );
@@ -65,10 +68,10 @@ class FateDiceFormatter {
     return Text(
       diceToSymbols(dice),
       style: theme.textTheme.bodyMedium?.copyWith(
-        fontFamily: 'monospace',
+        fontFamily: JuiceTheme.fontFamilyMono,
         fontWeight: FontWeight.bold,
         letterSpacing: 2,
-        color: color,
+        color: color ?? JuiceTheme.parchment,
       ),
     );
   }
@@ -83,24 +86,26 @@ class FateDiceFormatter {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.grey.withOpacity(0.1),
+        color: backgroundColor ?? JuiceTheme.ink.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.2)),
       ),
       child: Text(
         '$label: ${diceToSymbols(dice)}',
         style: theme.textTheme.bodyMedium?.copyWith(
-          fontFamily: 'monospace',
+          fontFamily: JuiceTheme.fontFamilyMono,
+          color: JuiceTheme.parchment,
         ),
       ),
     );
   }
 
   /// Get a color based on the overall result of the fate dice.
-  /// Positive sum -> green, negative sum -> red, zero -> grey.
+  /// Positive sum -> success, negative sum -> danger, zero -> neutral.
   static Color getResultColor(List<int> dice) {
     final sum = dice.fold<int>(0, (a, b) => a + b);
-    if (sum > 0) return Colors.green;
-    if (sum < 0) return Colors.red;
-    return Colors.grey;
+    if (sum > 0) return JuiceTheme.success;
+    if (sum < 0) return JuiceTheme.danger;
+    return JuiceTheme.parchmentDark;
   }
 }

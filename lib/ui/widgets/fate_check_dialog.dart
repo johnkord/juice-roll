@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../presets/fate_check.dart';
 import '../../models/roll_result.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for performing a Fate Check.
 class FateCheckDialog extends StatefulWidget {
@@ -23,14 +24,23 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Fate Check'),
+      title: Text(
+        'Fate Check',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'How likely is it?',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: JuiceTheme.parchment,
+            ),
           ),
           const SizedBox(height: 8),
           ...FateCheck.likelihoods.map((likelihood) {
@@ -38,8 +48,14 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
             final description = _getLikelihoodDescription(likelihood);
 
             return RadioListTile<String>(
-              title: Text(likelihood),
-              subtitle: Text(description),
+              title: Text(
+                likelihood,
+                style: TextStyle(color: JuiceTheme.parchment),
+              ),
+              subtitle: Text(
+                description,
+                style: TextStyle(color: JuiceTheme.parchmentDark),
+              ),
               value: likelihood,
               groupValue: _selectedLikelihood,
               onChanged: (value) {
@@ -49,15 +65,16 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               },
               dense: true,
               selected: isSelected,
+              activeColor: JuiceTheme.gold,
             );
           }),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Rolls 2dF + 1d6 Intensity',
             style: TextStyle(
               fontSize: 12,
               fontStyle: FontStyle.italic,
-              color: Colors.grey,
+              color: JuiceTheme.parchmentDark,
             ),
           ),
         ],
@@ -65,12 +82,22 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: JuiceTheme.parchmentDark),
+          ),
         ),
         ElevatedButton.icon(
           onPressed: _performCheck,
-          icon: const Icon(Icons.help_outline),
-          label: const Text('Check Fate'),
+          icon: Icon(Icons.help_outline, color: JuiceTheme.gold),
+          label: Text(
+            'Check Fate',
+            style: TextStyle(color: JuiceTheme.gold),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: JuiceTheme.surface,
+            side: BorderSide(color: JuiceTheme.gold.withOpacity(0.5)),
+          ),
         ),
       ],
     );

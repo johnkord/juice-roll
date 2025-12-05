@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../presets/next_scene.dart';
 import '../../presets/random_event.dart';
 import '../../models/roll_result.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for determining the next scene.
 /// 
@@ -28,7 +29,13 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Next Scene'),
+      title: Text(
+        'Next Scene',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       content: SingleChildScrollView(
@@ -40,35 +47,45 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: JuiceTheme.info.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: JuiceTheme.info.withOpacity(0.3)),
               ),
-              child: const Text(
+              child: Text(
                 'Challenge your expected next scene. Roll 2dF to see if the scene '
                 'proceeds normally, is altered, or is interrupted.',
-                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  fontSize: 11, 
+                  fontStyle: FontStyle.italic,
+                  color: JuiceTheme.parchment,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Roll 2dF to determine scene transition:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 13,
+                color: JuiceTheme.parchment,
+              ),
             ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: JuiceTheme.ink.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.2)),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('+ + = Alter (Add Focus)', style: TextStyle(fontSize: 11, fontFamily: 'monospace')),
-                  Text('+ − = Alter (Remove Focus)', style: TextStyle(fontSize: 11, fontFamily: 'monospace')),
-                  Text('− + = Interrupt (Favorable)', style: TextStyle(fontSize: 11, fontFamily: 'monospace')),
-                  Text('− − = Interrupt (Unfavorable)', style: TextStyle(fontSize: 11, fontFamily: 'monospace')),
-                  Text('Any ○ = Normal (proceeds as expected)', style: TextStyle(fontSize: 11, fontFamily: 'monospace')),
+                  Text('+ + = Alter (Add Focus)', style: TextStyle(fontSize: 11, fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.parchment)),
+                  Text('+ − = Alter (Remove Focus)', style: TextStyle(fontSize: 11, fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.parchment)),
+                  Text('− + = Interrupt (Favorable)', style: TextStyle(fontSize: 11, fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.parchment)),
+                  Text('− − = Interrupt (Unfavorable)', style: TextStyle(fontSize: 11, fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.parchment)),
+                  Text('Any ○ = Normal (proceeds as expected)', style: TextStyle(fontSize: 11, fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.parchment)),
                 ],
               ),
             ),
@@ -80,16 +97,17 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
                   value: _useSimpleMode,
                   onChanged: (v) => setState(() => _useSimpleMode = v ?? false),
                   visualDensity: VisualDensity.compact,
+                  activeColor: JuiceTheme.gold,
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Simple Mode: Use Modifier + Idea instead of Focus for Alter',
-                    style: TextStyle(fontSize: 10),
+                    style: TextStyle(fontSize: 10, color: JuiceTheme.parchmentDark),
                   ),
                 ),
               ],
             ),
-            const Divider(),
+            Divider(color: JuiceTheme.parchmentDark.withOpacity(0.2)),
             // Main roll options
             _DialogOption(
               title: 'Quick Roll (2dF)',
@@ -119,8 +137,15 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
-            const Text('Follow-up Tables', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            Divider(color: JuiceTheme.parchmentDark.withOpacity(0.2)),
+            Text(
+              'Follow-up Tables', 
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 12,
+                color: JuiceTheme.parchment,
+              ),
+            ),
             const SizedBox(height: 4),
             _DialogOption(
               title: 'Focus (d10)',
@@ -140,24 +165,36 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
+            Divider(color: JuiceTheme.parchmentDark.withOpacity(0.2)),
             // Examples section
-            const Text('Examples', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+            Text(
+              'Examples', 
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 11,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
             Container(
               padding: const EdgeInsets.all(8),
               margin: const EdgeInsets.only(top: 4),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.08),
+                color: JuiceTheme.ink.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.15)),
               ),
-              child: const Text(
+              child: Text(
                 'Your PC rents a room and heads to bed. Expected: wake up in morning.\n\n'
                 '• Normal → Wake up as expected.\n'
                 '• Alter (Add) + "Ally" → A friend knocks on the door.\n'
                 '• Alter (Remove) + "Environment: Arctic" → Hot morning, some stalls closed.\n'
                 '• Interrupt (Favorable) + "Reinforcements" → Sheriff catches a thief next door.\n'
                 '• Interrupt (Unfavorable) + "Battle" → Assassin visits in the night!',
-                style: TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                style: TextStyle(
+                  fontSize: 9, 
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.parchmentDark,
+                ),
               ),
             ),
           ],
@@ -166,7 +203,7 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text('Close', style: TextStyle(color: JuiceTheme.parchmentDark)),
         ),
       ],
     );
@@ -198,11 +235,11 @@ class _DialogOption extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                color: JuiceTheme.gold.withOpacity(0.3),
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(8),
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              color: JuiceTheme.gold.withOpacity(0.08),
             ),
             child: Row(
               children: [
@@ -215,14 +252,14 @@ class _DialogOption extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: JuiceTheme.gold,
                         ),
                       ),
                       Text(
                         subtitle,
                         style: TextStyle(
                           fontSize: 10,
-                          color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8),
+                          color: JuiceTheme.parchmentDark,
                         ),
                       ),
                     ],
@@ -231,7 +268,7 @@ class _DialogOption extends StatelessWidget {
                 Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                  color: JuiceTheme.gold.withOpacity(0.6),
                 ),
               ],
             ),

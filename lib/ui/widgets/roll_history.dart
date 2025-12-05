@@ -23,6 +23,7 @@ import '../../presets/scale.dart';
 import '../../presets/monster_encounter.dart';
 import '../../presets/abstract_icons.dart';
 import '../../presets/dungeon_generator.dart';
+import '../theme/juice_theme.dart';
 
 /// Scrollable roll history widget.
 class RollHistory extends StatelessWidget {
@@ -65,43 +66,90 @@ class _RollHistoryCard extends StatelessWidget {
     this.onSetWildernessPosition,
   });
 
+  Color _getCategoryColor() {
+    switch (result.type) {
+      case RollType.fateCheck:
+      case RollType.randomEvent:
+      case RollType.discoverMeaning:
+      case RollType.expectationCheck:
+        return JuiceTheme.categoryOracle;
+      case RollType.npcAction:
+      case RollType.dialog:
+      case RollType.nameGenerator:
+        return JuiceTheme.categoryCharacter;
+      case RollType.settlement:
+      case RollType.location:
+      case RollType.dungeon:
+      case RollType.encounter:
+      case RollType.weather:
+        return JuiceTheme.categoryWorld;
+      case RollType.challenge:
+        return JuiceTheme.categoryCombat;
+      case RollType.quest:
+      case RollType.nextScene:
+      case RollType.interruptPlotPoint:
+        return JuiceTheme.categoryExplore;
+      default:
+        return JuiceTheme.sepia;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final categoryColor = _getCategoryColor();
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _showDetails(context),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _buildIcon(),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      result.description,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+      decoration: BoxDecoration(
+        color: JuiceTheme.inkDark.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(color: categoryColor, width: 4),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _showDetails(context),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _buildIcon(),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        result.description,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: JuiceTheme.parchment,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    _formatTime(result.timestamp),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
+                    Text(
+                      _formatTime(result.timestamp),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: JuiceTheme.parchmentDark,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _buildResultDisplay(theme),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildResultDisplay(theme),
+              ],
+            ),
           ),
         ),
       ),
@@ -115,83 +163,83 @@ class _RollHistoryCard extends StatelessWidget {
     switch (result.type) {
       case RollType.fateCheck:
         icon = Icons.help_outline;
-        color = Colors.purple;
+        color = JuiceTheme.mystic;
         break;
       case RollType.nextScene:
         icon = Icons.theaters;
-        color = Colors.blue;
+        color = JuiceTheme.info;
         break;
       case RollType.randomEvent:
         icon = Icons.flash_on;
-        color = Colors.amber;
+        color = JuiceTheme.gold;
         break;
       case RollType.discoverMeaning:
         icon = Icons.lightbulb_outline;
-        color = Colors.orange;
+        color = JuiceTheme.gold;
         break;
       case RollType.npcAction:
         icon = Icons.person;
-        color = Colors.teal;
+        color = JuiceTheme.categoryCharacter;
         break;
       case RollType.payThePrice:
         icon = Icons.warning;
-        color = Colors.red;
+        color = JuiceTheme.danger;
         break;
       case RollType.quest:
         icon = Icons.map;
-        color = Colors.brown;
+        color = JuiceTheme.rust;
         break;
       case RollType.interruptPlotPoint:
         icon = Icons.bolt;
-        color = Colors.deepPurple;
+        color = JuiceTheme.juiceOrange;
         break;
       case RollType.weather:
         icon = Icons.wb_sunny;
-        color = Colors.cyan;
+        color = JuiceTheme.info;
         break;
       case RollType.encounter:
         icon = Icons.explore;
-        color = Colors.green;
+        color = JuiceTheme.categoryExplore;
         break;
       case RollType.settlement:
         icon = Icons.location_city;
-        color = Colors.blueGrey;
+        color = JuiceTheme.categoryWorld;
         break;
       case RollType.objectTreasure:
         icon = Icons.diamond;
-        color = Colors.amber;
+        color = JuiceTheme.gold;
         break;
       case RollType.challenge:
         icon = Icons.fitness_center;
-        color = Colors.indigo;
+        color = JuiceTheme.categoryCombat;
         break;
       case RollType.details:
         icon = Icons.palette;
-        color = Colors.pink;
+        color = JuiceTheme.parchmentDark;
         break;
       case RollType.immersion:
         icon = Icons.visibility;
-        color = Colors.deepOrange;
+        color = JuiceTheme.juiceOrange;
         break;
       case RollType.location:
         icon = Icons.grid_on;
-        color = Colors.brown;
+        color = JuiceTheme.rust;
         break;
       case RollType.abstractIcons:
         icon = Icons.image;
-        color = Colors.lime;
+        color = JuiceTheme.success;
         break;
       case RollType.fate:
         icon = Icons.auto_awesome;
-        color = Colors.indigo;
+        color = JuiceTheme.mystic;
         break;
       case RollType.dialog:
         icon = Icons.chat;
-        color = Colors.pink;
+        color = JuiceTheme.categoryCharacter;
         break;
       default:
         icon = Icons.casino;
-        color = Colors.red;
+        color = JuiceTheme.categoryUtility;
     }
 
     return Icon(icon, color: color, size: 20);
@@ -343,16 +391,16 @@ class _RollHistoryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.1),
+                color: JuiceTheme.mystic.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                border: Border.all(color: JuiceTheme.mystic.withOpacity(0.4)),
               ),
               child: Text(
                 '1d6: ${result.intensity}',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontFamily: 'monospace',
                   fontWeight: FontWeight.bold,
-                  color: Colors.purple,
+                  color: JuiceTheme.mystic,
                 ),
               ),
             ),
@@ -361,16 +409,16 @@ class _RollHistoryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: isPositive ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                color: isPositive ? JuiceTheme.success.withOpacity(0.2) : JuiceTheme.danger.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isPositive ? Colors.green : Colors.red,
+                  color: isPositive ? JuiceTheme.success : JuiceTheme.danger,
                 ),
               ),
               child: Text(
                 result.outcome.displayText,
                 style: TextStyle(
-                  color: isPositive ? Colors.green : Colors.red,
+                  color: isPositive ? JuiceTheme.success : JuiceTheme.danger,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -384,13 +432,13 @@ class _RollHistoryCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: result.specialTrigger == SpecialTrigger.randomEvent
-                  ? Colors.amber.withValues(alpha: 0.2)
-                  : Colors.deepPurple.withValues(alpha: 0.2),
+                  ? JuiceTheme.gold.withOpacity(0.2)
+                  : JuiceTheme.mystic.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: result.specialTrigger == SpecialTrigger.randomEvent
-                    ? Colors.amber
-                    : Colors.deepPurple,
+                    ? JuiceTheme.gold
+                    : JuiceTheme.mystic,
               ),
             ),
             child: Row(
@@ -402,16 +450,16 @@ class _RollHistoryCard extends StatelessWidget {
                       : Icons.warning_amber,
                   size: 16,
                   color: result.specialTrigger == SpecialTrigger.randomEvent
-                      ? Colors.amber
-                      : Colors.deepPurple,
+                      ? JuiceTheme.gold
+                      : JuiceTheme.mystic,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   result.specialTrigger!.displayText,
                   style: TextStyle(
                     color: result.specialTrigger == SpecialTrigger.randomEvent
-                        ? Colors.amber.shade800
-                        : Colors.deepPurple,
+                        ? JuiceTheme.gold
+                        : JuiceTheme.mystic,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -426,9 +474,9 @@ class _RollHistoryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.1),
+              color: JuiceTheme.gold.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+              border: Border.all(color: JuiceTheme.gold.withOpacity(0.4)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +484,7 @@ class _RollHistoryCard extends StatelessWidget {
                 Text(
                   'Focus: ${result.randomEventResult!.focus}',
                   style: TextStyle(
-                    color: Colors.amber.shade800,
+                    color: JuiceTheme.gold,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -445,7 +493,7 @@ class _RollHistoryCard extends StatelessWidget {
                 Text(
                   '${result.randomEventResult!.modifier} ${result.randomEventResult!.idea}',
                   style: TextStyle(
-                    color: Colors.amber.shade900,
+                    color: JuiceTheme.parchment,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -459,7 +507,7 @@ class _RollHistoryCard extends StatelessWidget {
         Text(
           'Intensity: ${result.intensityDescription}',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
+            color: JuiceTheme.parchmentDark,
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -471,17 +519,17 @@ class _RollHistoryCard extends StatelessWidget {
     Color chipColor;
     switch (result.sceneType) {
       case SceneType.normal:
-        chipColor = Colors.green;
+        chipColor = JuiceTheme.success;
         break;
       case SceneType.alterAdd:
       case SceneType.alterRemove:
-        chipColor = Colors.amber;
+        chipColor = JuiceTheme.gold;
         break;
       case SceneType.interruptFavorable:
-        chipColor = Colors.blue;
+        chipColor = JuiceTheme.info;
         break;
       case SceneType.interruptUnfavorable:
-        chipColor = Colors.red;
+        chipColor = JuiceTheme.danger;
         break;
     }
 
@@ -498,7 +546,10 @@ class _RollHistoryCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Chip(
-              label: Text(result.sceneType.displayText),
+              label: Text(
+                result.sceneType.displayText,
+                style: TextStyle(color: chipColor, fontWeight: FontWeight.w600),
+              ),
               backgroundColor: chipColor.withOpacity(0.2),
               side: BorderSide(color: chipColor),
               padding: EdgeInsets.zero,
@@ -511,7 +562,7 @@ class _RollHistoryCard extends StatelessWidget {
           Text(
             '→ Roll ${result.sceneType.followUpRoll}',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.grey,
+              color: JuiceTheme.parchmentDark,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -525,17 +576,17 @@ class _RollHistoryCard extends StatelessWidget {
     Color chipColor;
     switch (sceneResult.sceneType) {
       case SceneType.normal:
-        chipColor = Colors.green;
+        chipColor = JuiceTheme.success;
         break;
       case SceneType.alterAdd:
       case SceneType.alterRemove:
-        chipColor = Colors.amber;
+        chipColor = JuiceTheme.gold;
         break;
       case SceneType.interruptFavorable:
-        chipColor = Colors.blue;
+        chipColor = JuiceTheme.info;
         break;
       case SceneType.interruptUnfavorable:
-        chipColor = Colors.red;
+        chipColor = JuiceTheme.danger;
         break;
     }
 
@@ -552,7 +603,10 @@ class _RollHistoryCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Chip(
-              label: Text(sceneResult.sceneType.displayText),
+              label: Text(
+                sceneResult.sceneType.displayText,
+                style: TextStyle(color: chipColor, fontWeight: FontWeight.w600),
+              ),
               backgroundColor: chipColor.withOpacity(0.2),
               side: BorderSide(color: chipColor),
               padding: EdgeInsets.zero,
@@ -565,18 +619,18 @@ class _RollHistoryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+              Icon(Icons.arrow_forward, size: 16, color: JuiceTheme.parchmentDark),
               const SizedBox(width: 4),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: JuiceTheme.ink.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   'd10: ${result.focusResult!.roll}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
+                    fontFamily: JuiceTheme.fontFamilyMono,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -584,12 +638,12 @@ class _RollHistoryCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 'Focus: ',
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                style: theme.textTheme.bodyMedium?.copyWith(color: JuiceTheme.parchmentDark),
               ),
               Chip(
                 label: Text(result.focusResult!.focus),
-                backgroundColor: Colors.teal.withOpacity(0.2),
-                side: const BorderSide(color: Colors.teal),
+                backgroundColor: JuiceTheme.categoryExplore.withOpacity(0.2),
+                side: BorderSide(color: JuiceTheme.categoryExplore),
                 padding: EdgeInsets.zero,
                 visualDensity: VisualDensity.compact,
               ),
@@ -1063,13 +1117,13 @@ class _RollHistoryCard extends StatelessWidget {
           spacing: 6,
           runSpacing: 4,
           children: [
-            _buildQuestChip('${result.objectiveRoll}', result.objective, Colors.blue, theme),
+            _buildQuestChip('${result.objectiveRoll}', result.objective, JuiceTheme.info, theme),
             _buildQuestChip(
               result.descriptionSubRoll != null 
                 ? '${result.descriptionRoll}→${result.descriptionSubRoll}' 
                 : '${result.descriptionRoll}',
               result.descriptionDisplay,
-              Colors.green,
+              JuiceTheme.success,
               theme,
             ),
             _buildQuestChip(
@@ -1077,16 +1131,16 @@ class _RollHistoryCard extends StatelessWidget {
                 ? '${result.focusRoll}→${result.focusSubRoll}' 
                 : '${result.focusRoll}',
               result.focusDisplay,
-              Colors.orange,
+              JuiceTheme.gold,
               theme,
             ),
-            _buildQuestChip('${result.prepositionRoll}', result.preposition, Colors.purple, theme),
+            _buildQuestChip('${result.prepositionRoll}', result.preposition, JuiceTheme.mystic, theme),
             _buildQuestChip(
               result.locationSubRoll != null 
                 ? '${result.locationRoll}→${result.locationSubRoll}' 
                 : '${result.locationRoll}',
               result.locationDisplay,
-              Colors.red,
+              JuiceTheme.rust,
               theme,
             ),
           ],
@@ -1116,7 +1170,9 @@ class _RollHistoryCard extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: theme.textTheme.bodySmall,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: JuiceTheme.parchment,
+            ),
           ),
         ],
       ),
@@ -1201,9 +1257,9 @@ class _RollHistoryCard extends StatelessWidget {
           spacing: 6,
           runSpacing: 4,
           children: [
-            _buildQuestChip('${result.typeRoll}', result.dungeonType, Colors.indigo, theme),
-            _buildQuestChip('${result.descriptionRoll}', result.descriptionWord, Colors.purple, theme),
-            _buildQuestChip('${result.subjectRoll}', result.subject, Colors.deepPurple, theme),
+            _buildQuestChip('${result.typeRoll}', result.dungeonType, JuiceTheme.info, theme),
+            _buildQuestChip('${result.descriptionRoll}', result.descriptionWord, JuiceTheme.mystic, theme),
+            _buildQuestChip('${result.subjectRoll}', result.subject, JuiceTheme.categoryWorld, theme),
           ],
         ),
         const SizedBox(height: 4),
@@ -1220,7 +1276,7 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildDungeonAreaDisplay(DungeonAreaResult result, ThemeData theme) {
-    final phaseColor = result.phase == DungeonPhase.entering ? Colors.orange : Colors.green;
+    final phaseColor = result.phase == DungeonPhase.entering ? JuiceTheme.gold : JuiceTheme.success;
     final phaseLabel = result.phase == DungeonPhase.entering ? '@-' : '@+';
     
     return Column(
@@ -1500,8 +1556,8 @@ class _RollHistoryCard extends StatelessWidget {
           spacing: 6,
           runSpacing: 4,
           children: [
-            _buildQuestChip('${result.descriptorRoll}', result.descriptor, Colors.red, theme),
-            _buildQuestChip('${result.abilityRoll}', result.ability, Colors.deepOrange, theme),
+            _buildQuestChip('${result.descriptorRoll}', result.descriptor, JuiceTheme.danger, theme),
+            _buildQuestChip('${result.abilityRoll}', result.ability, JuiceTheme.rust, theme),
           ],
         ),
         const SizedBox(height: 4),
@@ -1523,8 +1579,8 @@ class _RollHistoryCard extends StatelessWidget {
           spacing: 6,
           runSpacing: 4,
           children: [
-            _buildQuestChip('${result.actionRoll}', result.action, Colors.orange, theme),
-            _buildQuestChip('${result.subjectRoll}', result.subject, Colors.amber, theme),
+            _buildQuestChip('${result.actionRoll}', result.action, JuiceTheme.gold, theme),
+            _buildQuestChip('${result.subjectRoll}', result.subject, JuiceTheme.categoryWorld, theme),
           ],
         ),
         const SizedBox(height: 4),
@@ -1552,12 +1608,12 @@ class _RollHistoryCard extends StatelessWidget {
           spacing: 6,
           runSpacing: 4,
           children: [
-            _buildQuestChip('${result.trap.actionRoll}', result.trap.action, Colors.orange, theme),
-            _buildQuestChip('${result.trap.subjectRoll}', result.trap.subject, Colors.amber, theme),
+            _buildQuestChip('${result.trap.actionRoll}', result.trap.action, JuiceTheme.gold, theme),
+            _buildQuestChip('${result.trap.subjectRoll}', result.trap.subject, JuiceTheme.categoryWorld, theme),
             _buildQuestChip(
               '→ ${result.dcRolls.join(",")}',
               'DC ${result.dc}',
-              Colors.red,
+              JuiceTheme.danger,
               theme,
             ),
           ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/roll_engine.dart';
 import '../../models/roll_result.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for rolling custom dice (NdX, Fate, advantage/disadvantage, skewed).
 class DiceRollDialog extends StatefulWidget {
@@ -29,16 +30,30 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Roll Dice'),
+      title: Text(
+        'Roll Dice',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Dice Type Toggle
             SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: false, label: Text('Standard'), icon: Icon(Icons.casino)),
-                ButtonSegment(value: true, label: Text('Fate'), icon: Icon(Icons.auto_awesome)),
+              segments: [
+                ButtonSegment(
+                  value: false, 
+                  label: Text('Standard', style: TextStyle(color: JuiceTheme.parchment)),
+                  icon: Icon(Icons.casino, color: JuiceTheme.parchmentDark),
+                ),
+                ButtonSegment(
+                  value: true, 
+                  label: Text('Fate', style: TextStyle(color: JuiceTheme.parchment)),
+                  icon: Icon(Icons.auto_awesome, color: JuiceTheme.parchmentDark),
+                ),
               ],
               selected: {_useFateDice},
               onSelectionChanged: (selected) {
@@ -56,19 +71,19 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               // Dice Count
               Row(
                 children: [
-                  const Text('Number of dice:'),
+                  Text('Number of dice:', style: TextStyle(color: JuiceTheme.parchment)),
                   const Spacer(),
                   IconButton(
                     onPressed: _diceCount > 1 ? () => setState(() => _diceCount--) : null,
-                    icon: const Icon(Icons.remove),
+                    icon: Icon(Icons.remove, color: JuiceTheme.parchmentDark),
                   ),
                   Text(
                     '$_diceCount',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: JuiceTheme.gold),
                   ),
                   IconButton(
                     onPressed: _diceCount < 20 ? () => setState(() => _diceCount++) : null,
-                    icon: const Icon(Icons.add),
+                    icon: Icon(Icons.add, color: JuiceTheme.parchmentDark),
                   ),
                 ],
               ),
@@ -76,10 +91,12 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               // Dice Sides
               Row(
                 children: [
-                  const Text('Dice sides:'),
+                  Text('Dice sides:', style: TextStyle(color: JuiceTheme.parchment)),
                   const Spacer(),
                   DropdownButton<int>(
                     value: _diceSides,
+                    dropdownColor: JuiceTheme.surface,
+                    style: TextStyle(color: JuiceTheme.gold, fontWeight: FontWeight.bold),
                     items: const [
                       DropdownMenuItem(value: 4, child: Text('d4')),
                       DropdownMenuItem(value: 6, child: Text('d6')),
@@ -103,7 +120,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Text('Skew:'),
+                    Text('Skew:', style: TextStyle(color: JuiceTheme.parchment)),
                     Expanded(
                       child: Slider(
                         value: _skew.toDouble(),
@@ -118,7 +135,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                     ),
                     Text(
                       _skew == 0 ? 'None' : (_skew > 0 ? '+$_skew' : '$_skew'),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.gold),
                     ),
                   ],
                 ),
@@ -130,7 +147,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 children: [
                   Expanded(
                     child: CheckboxListTile(
-                      title: const Text('Advantage'),
+                      title: Text('Advantage', style: TextStyle(color: JuiceTheme.parchment, fontSize: 13)),
                       value: _advantage,
                       onChanged: (value) {
                         setState(() {
@@ -140,11 +157,12 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                       },
                       contentPadding: EdgeInsets.zero,
                       dense: true,
+                      activeColor: JuiceTheme.gold,
                     ),
                   ),
                   Expanded(
                     child: CheckboxListTile(
-                      title: const Text('Disadvantage'),
+                      title: Text('Disadvantage', style: TextStyle(color: JuiceTheme.parchment, fontSize: 13)),
                       value: _disadvantage,
                       onChanged: (value) {
                         setState(() {
@@ -154,6 +172,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                       },
                       contentPadding: EdgeInsets.zero,
                       dense: true,
+                      activeColor: JuiceTheme.gold,
                     ),
                   ),
                 ],
@@ -162,19 +181,19 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               // Fate Dice Count
               Row(
                 children: [
-                  const Text('Number of Fate dice:'),
+                  Text('Number of Fate dice:', style: TextStyle(color: JuiceTheme.parchment)),
                   const Spacer(),
                   IconButton(
                     onPressed: _diceCount > 1 ? () => setState(() => _diceCount--) : null,
-                    icon: const Icon(Icons.remove),
+                    icon: Icon(Icons.remove, color: JuiceTheme.parchmentDark),
                   ),
                   Text(
                     '$_diceCount',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: JuiceTheme.gold),
                   ),
                   IconButton(
                     onPressed: _diceCount < 10 ? () => setState(() => _diceCount++) : null,
-                    icon: const Icon(Icons.add),
+                    icon: Icon(Icons.add, color: JuiceTheme.parchmentDark),
                   ),
                 ],
               ),
@@ -184,19 +203,19 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Text('Modifier:'),
+                Text('Modifier:', style: TextStyle(color: JuiceTheme.parchment)),
                 const Spacer(),
                 IconButton(
                   onPressed: _modifier > -10 ? () => setState(() => _modifier--) : null,
-                  icon: const Icon(Icons.remove),
+                  icon: Icon(Icons.remove, color: JuiceTheme.parchmentDark),
                 ),
                 Text(
                   _modifier >= 0 ? '+$_modifier' : '$_modifier',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: JuiceTheme.gold),
                 ),
                 IconButton(
                   onPressed: _modifier < 10 ? () => setState(() => _modifier++) : null,
-                  icon: const Icon(Icons.add),
+                  icon: Icon(Icons.add, color: JuiceTheme.parchmentDark),
                 ),
               ],
             ),
@@ -206,15 +225,17 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.2),
+                color: JuiceTheme.ink.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.3)),
               ),
               child: Text(
                 _buildRollDescription(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.gold,
                 ),
               ),
             ),
@@ -224,12 +245,16 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text('Cancel', style: TextStyle(color: JuiceTheme.parchmentDark)),
         ),
         ElevatedButton.icon(
           onPressed: _performRoll,
-          icon: const Icon(Icons.casino),
-          label: const Text('Roll!'),
+          icon: Icon(Icons.casino, color: JuiceTheme.gold),
+          label: Text('Roll!', style: TextStyle(color: JuiceTheme.gold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: JuiceTheme.surface,
+            side: BorderSide(color: JuiceTheme.gold.withOpacity(0.5)),
+          ),
         ),
       ],
     );

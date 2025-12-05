@@ -29,6 +29,8 @@ import '../presets/monster_encounter.dart';
 import '../presets/location.dart';
 import '../presets/extended_npc_conversation.dart';
 import '../presets/abstract_icons.dart';
+import 'theme/juice_theme.dart';
+import 'widgets/roll_button.dart';
 import 'widgets/roll_history.dart';
 import 'widgets/dice_roll_dialog.dart';
 import 'widgets/fate_check_dialog.dart';
@@ -671,16 +673,17 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(
                 Icons.local_drink,
-                color: Colors.deepOrange.shade300,
+                color: JuiceTheme.juiceOrange,
                 size: 24,
               ),
               const SizedBox(width: 4),
               Text(
                 'Juice',
                 style: TextStyle(
+                  fontFamily: JuiceTheme.fontFamilySerif,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.deepOrange.shade300,
+                  color: JuiceTheme.juiceOrange,
                 ),
               ),
             ],
@@ -750,169 +753,169 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // Row 1: Front Page (Details, Immersion) + Left Page (Fate, Scene)
                   _buildButtonRow([
-                    _RollButton(
+                    RollButton(
                       label: 'Details',
                       icon: Icons.palette,
                       onPressed: _showDetailsDialog,
-                      color: Colors.pink,
+                      color: JuiceTheme.parchmentDark,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Immerse',
                       icon: Icons.visibility,
                       onPressed: _showImmersionDialog,
-                      color: Colors.deepOrange,
+                      color: JuiceTheme.juiceOrange,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Fate',
                       icon: Icons.help_outline,
                       onPressed: _showFateCheckDialog,
-                      color: Colors.purple,
+                      color: JuiceTheme.mystic,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Scene',
                       icon: Icons.theaters,
                       onPressed: _showNextSceneDialog,
-                      color: Colors.blue,
+                      color: JuiceTheme.info,
                     ),
                   ]),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   // Row 2: Left Page (Expect, Scale, Interrupt) + Right Page (Meaning)
                   _buildButtonRow([
-                    _RollButton(
+                    RollButton(
                       label: 'Expect',
                       icon: Icons.psychology,
                       onPressed: _showExpectationCheckDialog,
-                      color: Colors.deepPurple,
+                      color: JuiceTheme.mystic,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Scale',
                       icon: Icons.swap_vert,
                       onPressed: _rollScale,
-                      color: Colors.teal,
+                      color: JuiceTheme.categoryCharacter,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Interrupt',
                       icon: Icons.bolt,
                       onPressed: _rollInterruptPlotPoint,
-                      color: Colors.deepOrange,
+                      color: JuiceTheme.juiceOrange,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Meaning',
                       icon: Icons.lightbulb_outline,
                       onPressed: _rollDiscoverMeaning,
-                      color: Colors.orange,
+                      color: JuiceTheme.gold,
                     ),
                   ]),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   // Row 3: Second Inside Folded (Name, Random) + Back Page (Quest, Challenge)
                   _buildButtonRow([
-                    _RollButton(
+                    RollButton(
                       label: 'Name',
                       icon: Icons.badge,
                       onPressed: _showNameGeneratorDialog,
-                      color: Colors.indigo,
+                      color: JuiceTheme.categoryCharacter,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Random',
                       icon: Icons.casino,
                       onPressed: _showRandomTablesDialog,
-                      color: Colors.amber,
+                      color: JuiceTheme.gold,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Quest',
                       icon: Icons.map,
                       onPressed: _rollQuest,
-                      color: Colors.brown,
+                      color: JuiceTheme.rust,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Challenge',
                       icon: Icons.fitness_center,
                       onPressed: _showChallengeDialog,
-                      color: Colors.lime,
+                      color: JuiceTheme.categoryCombat,
                     ),
                   ]),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   // Row 4: Back Page (Price) + First Inside Unfolded (Wilderness, Monster) + Second Inside Unfolded (NPC)
                   _buildButtonRow([
-                    _RollButton(
+                    RollButton(
                       label: 'Price',
                       icon: Icons.warning,
                       onPressed: _showPayThePriceDialog,
-                      color: Colors.red,
+                      color: JuiceTheme.danger,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Wilderness',
                       icon: Icons.forest,
                       onPressed: _showWildernessDialog,
-                      color: Colors.green.shade800,
+                      color: JuiceTheme.categoryExplore,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Monster',
                       icon: Icons.pest_control,
                       onPressed: _showMonsterDialog,
-                      color: Colors.red.shade800,
+                      color: JuiceTheme.danger,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'NPC',
                       icon: Icons.person,
                       onPressed: _showNpcActionDialog,
-                      color: Colors.teal,
+                      color: JuiceTheme.categoryCharacter,
                     ),
                   ]),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   // Row 5: Second Inside Unfolded (Dialog, Settlement) + Third Inside Unfolded (Treasure) + Fourth Inside Unfolded (Dungeon)
                   _buildButtonRow([
-                    _RollButton(
+                    RollButton(
                       label: 'Dialog',
                       icon: Icons.chat,
                       onPressed: _showDialogGeneratorDialog,
-                      color: Colors.cyan,
+                      color: JuiceTheme.categoryCharacter,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Settlement',
                       icon: Icons.location_city,
                       onPressed: _showSettlementDialog,
-                      color: Colors.blueGrey,
+                      color: JuiceTheme.categoryWorld,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Treasure',
                       icon: Icons.diamond,
                       onPressed: _showTreasureDialog,
-                      color: Colors.amber,
+                      color: JuiceTheme.gold,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Dungeon',
                       icon: Icons.castle,
                       onPressed: _showDungeonDialog,
-                      color: Colors.grey,
+                      color: JuiceTheme.categoryUtility,
                     ),
                   ]),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   // Row 6: Fourth Inside Unfolded (Location) + Left Extension (NPC Talk) + Right Extension (Abstract) + Dice Utility
                   _buildButtonRow([
-                    _RollButton(
+                    RollButton(
                       label: 'Location',
                       icon: Icons.grid_on,
                       onPressed: _showLocationDialog,
-                      color: Colors.brown,
+                      color: JuiceTheme.rust,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'NPC Talk',
                       icon: Icons.record_voice_over,
                       onPressed: _showExtendedNpcDialog,
-                      color: Colors.purple,
+                      color: JuiceTheme.mystic,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Abstract',
                       icon: Icons.image,
                       onPressed: _showAbstractIconsDialog,
-                      color: Colors.lime,
+                      color: JuiceTheme.success,
                     ),
-                    _RollButton(
+                    RollButton(
                       label: 'Dice',
                       icon: Icons.casino,
                       onPressed: _showDiceRollDialog,
-                      color: Colors.red,
+                      color: JuiceTheme.categoryUtility,
                     ),
                   ]),
                 ],
@@ -920,26 +923,31 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          const Divider(height: 1),
+          // Subtle divider matching theme
+          Container(
+            height: 1,
+            color: JuiceTheme.parchmentDark.withOpacity(0.2),
+          ),
 
           // History Section
           Expanded(
             flex: 1,
             child: _history.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.casino,
+                          Icons.auto_stories,
                           size: 64,
-                          color: Colors.grey,
+                          color: JuiceTheme.parchmentDark.withOpacity(0.4),
                         ),
                         SizedBox(height: 16),
                         Text(
                           'No rolls yet',
                           style: TextStyle(
-                            color: Colors.grey,
+                            fontFamily: JuiceTheme.fontFamilySerif,
+                            color: JuiceTheme.parchmentDark.withOpacity(0.6),
                             fontSize: 18,
                           ),
                         ),
@@ -947,7 +955,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           'Tap a button above to roll',
                           style: TextStyle(
-                            color: Colors.grey,
+                            color: JuiceTheme.parchmentDark.withOpacity(0.4),
                           ),
                         ),
                       ],
@@ -973,66 +981,12 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 3),
             child: AspectRatio(
-              aspectRatio: 1.0,
+              aspectRatio: 1.03,
               child: btn,
             ),
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-/// A styled roll button.
-class _RollButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color color;
-
-  const _RollButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color.withOpacity(0.3),
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.all(4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: BorderSide(color: color, width: 2),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 22, color: Colors.white, shadows: [
-            Shadow(color: color, blurRadius: 8),
-            Shadow(color: Colors.black, blurRadius: 2),
-          ]),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [
-                Shadow(color: color, blurRadius: 6),
-                Shadow(color: Colors.black, blurRadius: 3),
-              ],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 }
@@ -3176,11 +3130,11 @@ class _DialogOption extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             decoration: BoxDecoration(
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                color: JuiceTheme.gold.withOpacity(0.3),
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(8),
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              color: JuiceTheme.gold.withOpacity(0.08),
             ),
             child: Row(
               children: [
@@ -3192,7 +3146,7 @@ class _DialogOption extends StatelessWidget {
                         title,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: JuiceTheme.gold,
                         ),
                       ),
                       if (subtitle != null)
@@ -3200,7 +3154,7 @@ class _DialogOption extends StatelessWidget {
                           subtitle!,
                           style: TextStyle(
                             fontSize: 11,
-                            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.8),
+                            color: JuiceTheme.parchmentDark,
                           ),
                         ),
                     ],
@@ -3209,7 +3163,7 @@ class _DialogOption extends StatelessWidget {
                 Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                  color: JuiceTheme.gold.withOpacity(0.6),
                 ),
               ],
             ),
