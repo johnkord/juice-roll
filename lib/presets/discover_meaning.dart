@@ -87,17 +87,36 @@ class DiscoverMeaningResult extends RollResult {
     required this.adjective,
     required this.nounRoll,
     required this.noun,
+    DateTime? timestamp,
   }) : super(
           type: RollType.discoverMeaning,
           description: 'Discover Meaning',
           diceResults: [adjectiveRoll, nounRoll],
           total: adjectiveRoll + nounRoll,
           interpretation: '$adjective $noun',
+          timestamp: timestamp,
           metadata: {
             'adjective': adjective,
             'noun': noun,
+            'adjectiveRoll': adjectiveRoll,
+            'nounRoll': nounRoll,
           },
         );
+
+  @override
+  String get className => 'DiscoverMeaningResult';
+
+  factory DiscoverMeaningResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DiscoverMeaningResult(
+      adjectiveRoll: meta['adjectiveRoll'] as int? ?? diceResults[0],
+      adjective: meta['adjective'] as String,
+      nounRoll: meta['nounRoll'] as int? ?? diceResults[1],
+      noun: meta['noun'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   String get meaning => '$adjective $noun';
 

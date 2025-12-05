@@ -195,18 +195,40 @@ class NextSceneResult extends RollResult {
     required this.fateDice,
     required this.fateSum,
     required this.sceneType,
+    DateTime? timestamp,
   }) : super(
           type: RollType.nextScene,
           description: 'Next Scene',
           diceResults: fateDice,
           total: fateSum,
           interpretation: sceneType.displayText,
+          timestamp: timestamp,
           metadata: {
+            'fateDice': fateDice,
+            'fateSum': fateSum,
             'sceneType': sceneType.name,
             'requiresFollowUp': sceneType.requiresFollowUp,
             'followUpRoll': sceneType.followUpRoll,
           },
         );
+
+  @override
+  String get className => 'NextSceneResult';
+
+  factory NextSceneResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final fateDice = (meta['fateDice'] as List?)?.cast<int>() ?? 
+                     (json['diceResults'] as List).cast<int>();
+    return NextSceneResult(
+      fateDice: fateDice,
+      fateSum: meta['fateSum'] as int? ?? json['total'] as int,
+      sceneType: SceneType.values.firstWhere(
+        (e) => e.name == (meta['sceneType'] as String),
+        orElse: () => SceneType.normal,
+      ),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   /// Get symbolic representation of the Fate dice.
   String get fateSymbols => FateDiceFormatter.diceToSymbols(fateDice);
@@ -231,16 +253,31 @@ class FocusResult extends RollResult {
   FocusResult({
     required this.roll,
     required this.focus,
+    DateTime? timestamp,
   }) : super(
           type: RollType.nextScene,
           description: 'Focus',
           diceResults: [roll],
           total: roll,
           interpretation: focus,
+          timestamp: timestamp,
           metadata: {
             'focus': focus,
+            'roll': roll,
           },
         );
+
+  @override
+  String get className => 'FocusResult';
+
+  factory FocusResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return FocusResult(
+      roll: meta['roll'] as int? ?? (json['diceResults'] as List).first as int,
+      focus: meta['focus'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => 'Focus: $focus';
@@ -258,6 +295,7 @@ class NextSceneWithFollowUpResult extends RollResult {
     this.focusResult,
     this.ideaResult,
     this.plotPointResult,
+    DateTime? timestamp,
   }) : super(
           type: RollType.nextScene,
           description: 'Next Scene',
@@ -269,13 +307,37 @@ class NextSceneWithFollowUpResult extends RollResult {
           ],
           total: sceneResult.fateSum,
           interpretation: _buildInterpretation(sceneResult, focusResult, ideaResult, plotPointResult),
+          timestamp: timestamp,
           metadata: {
             'sceneType': sceneResult.sceneType.name,
+            'fateDice': sceneResult.fateDice,
+            'fateSum': sceneResult.fateSum,
             if (focusResult != null) 'focus': focusResult.focus,
             if (ideaResult != null) 'idea': '${ideaResult.modifier} ${ideaResult.idea}',
             if (plotPointResult != null) 'plotPoint': '${plotPointResult.category}: ${plotPointResult.event}',
           },
         );
+
+  @override
+  String get className => 'NextSceneWithFollowUpResult';
+
+  factory NextSceneWithFollowUpResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final fateDice = (meta['fateDice'] as List?)?.cast<int>() ?? 
+                     (json['diceResults'] as List).take(2).cast<int>().toList();
+    return NextSceneWithFollowUpResult(
+      sceneResult: NextSceneResult(
+        fateDice: fateDice,
+        fateSum: meta['fateSum'] as int? ?? fateDice.fold(0, (a, b) => a + b),
+        sceneType: SceneType.values.firstWhere(
+          (e) => e.name == (meta['sceneType'] as String),
+          orElse: () => SceneType.normal,
+        ),
+      ),
+      // Note: sub-results cannot be fully reconstructed without full data
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildInterpretation(
     NextSceneResult scene,

@@ -339,12 +339,15 @@ class NameResult extends RollResult {
     required this.style,
     required this.method,
     this.pattern,
+    List<int>? syllableRolls,
+    DateTime? timestamp,
   }) : super(
           type: RollType.nameGenerator,
           description: _buildDescription(style, method, pattern),
-          diceResults: rolls,
+          diceResults: syllableRolls ?? rolls,
           total: rolls.reduce((a, b) => a + b),
           interpretation: name,
+          timestamp: timestamp,
           metadata: {
             'syllables': syllables,
             'name': name,
@@ -353,6 +356,30 @@ class NameResult extends RollResult {
             if (pattern != null) 'pattern': pattern,
           },
         );
+
+  @override
+  String get className => 'NameResult';
+
+  factory NameResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    final syllables = (meta['syllables'] as List).cast<String>();
+    return NameResult(
+      rolls: diceResults,
+      syllables: syllables,
+      name: meta['name'] as String,
+      style: NameStyle.values.firstWhere(
+        (s) => s.name == meta['style'],
+        orElse: () => NameStyle.neutral,
+      ),
+      method: NameMethod.values.firstWhere(
+        (m) => m.name == meta['method'],
+        orElse: () => NameMethod.simple,
+      ),
+      pattern: meta['pattern'] as String?,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildDescription(NameStyle style, NameMethod method, String? pattern) {
     if (method == NameMethod.pattern && pattern != null) {

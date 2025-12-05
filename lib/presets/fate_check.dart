@@ -354,6 +354,7 @@ class FateCheckResult extends RollResult {
     this.specialTrigger,
     this.primaryOnLeft = true,
     this.randomEventResult,
+    DateTime? timestamp,
   }) : super(
           type: RollType.fateCheck,
           description: 'Fate Check ($likelihood)',
@@ -368,6 +369,7 @@ class FateCheckResult extends RollResult {
           ],
           total: fateSum,
           interpretation: _buildInterpretation(outcome, intensity, specialTrigger, randomEventResult),
+          timestamp: timestamp,
           metadata: {
             'likelihood': likelihood,
             'fateDice': fateDice,
@@ -378,11 +380,47 @@ class FateCheckResult extends RollResult {
             'primaryOnLeft': primaryOnLeft,
             if (randomEventResult != null) 'randomEvent': {
               'focus': randomEventResult.focus,
+              'focusRoll': randomEventResult.focusRoll,
               'modifier': randomEventResult.modifier,
+              'modifierRoll': randomEventResult.modifierRoll,
               'idea': randomEventResult.idea,
+              'ideaRoll': randomEventResult.ideaRoll,
             },
           },
         );
+
+  @override
+  String get className => 'FateCheckResult';
+
+  factory FateCheckResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    RandomEventResult? randomEvent;
+    if (meta['randomEvent'] != null) {
+      final re = meta['randomEvent'] as Map<String, dynamic>;
+      randomEvent = RandomEventResult(
+        focus: re['focus'] as String,
+        focusRoll: re['focusRoll'] as int? ?? 0,
+        modifier: re['modifier'] as String,
+        modifierRoll: re['modifierRoll'] as int? ?? 0,
+        idea: re['idea'] as String,
+        ideaRoll: re['ideaRoll'] as int? ?? 0,
+      );
+    }
+    
+    return FateCheckResult(
+      likelihood: meta['likelihood'] as String,
+      fateDice: (meta['fateDice'] as List<dynamic>).cast<int>(),
+      fateSum: meta['fateSum'] as int,
+      intensity: meta['intensity'] as int,
+      outcome: FateCheckOutcome.values.byName(meta['outcome'] as String),
+      specialTrigger: meta['specialTrigger'] != null 
+          ? SpecialTrigger.values.byName(meta['specialTrigger'] as String) 
+          : null,
+      primaryOnLeft: meta['primaryOnLeft'] as bool? ?? true,
+      randomEventResult: randomEvent,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildInterpretation(
     FateCheckOutcome outcome,

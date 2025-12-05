@@ -193,6 +193,7 @@ class ExpectationCheckResult extends RollResult {
     required this.fateSum,
     required this.outcome,
     this.meaningResult,
+    DateTime? timestamp,
   }) : super(
           type: RollType.expectationCheck,
           description: 'Expectation Check',
@@ -204,6 +205,7 @@ class ExpectationCheckResult extends RollResult {
           interpretation: meaningResult != null
               ? '${outcome.displayText}: ${meaningResult.meaning}'
               : outcome.displayText,
+          timestamp: timestamp,
           metadata: {
             'fateDice': fateDice,
             'fateSum': fateSum,
@@ -211,6 +213,27 @@ class ExpectationCheckResult extends RollResult {
             if (meaningResult != null) 'meaning': meaningResult.meaning,
           },
         );
+
+  @override
+  String get className => 'ExpectationCheckResult';
+
+  factory ExpectationCheckResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final fateDice = (meta['fateDice'] as List?)?.cast<int>() ?? 
+                     (json['diceResults'] as List).take(2).cast<int>().toList();
+    return ExpectationCheckResult(
+      fateDice: fateDice,
+      fateSum: meta['fateSum'] as int? ?? json['total'] as int,
+      outcome: ExpectationOutcome.values.firstWhere(
+        (e) => e.name == (meta['outcome'] as String),
+        orElse: () => ExpectationOutcome.expected,
+      ),
+      meaningResult: meta['meaning'] != null 
+          ? null // Cannot fully reconstruct meaningResult without full data
+          : null,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   /// Get symbolic representation of the Fate dice.
   String get fateSymbols => FateDiceFormatter.diceToSymbols(fateDice);

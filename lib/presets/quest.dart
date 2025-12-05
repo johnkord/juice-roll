@@ -299,6 +299,7 @@ class QuestResult extends RollResult {
     required this.location,
     this.locationSubRoll,
     this.locationExpanded,
+    DateTime? timestamp,
   }) : super(
           type: RollType.quest,
           description: 'Quest',
@@ -324,17 +325,52 @@ class QuestResult extends RollResult {
             objective, description, descriptionExpanded, focus, focusExpanded,
             preposition, location, locationExpanded,
           ),
+          timestamp: timestamp,
           metadata: {
             'objective': objective,
+            'objectiveRoll': objectiveRoll,
             'description': description,
+            'descriptionRoll': descriptionRoll,
             if (descriptionExpanded != null) 'descriptionExpanded': descriptionExpanded,
+            if (descriptionSubRoll != null) 'descriptionSubRoll': descriptionSubRoll,
             'focus': focus,
+            'focusRoll': focusRoll,
             if (focusExpanded != null) 'focusExpanded': focusExpanded,
+            if (focusSubRoll != null) 'focusSubRoll': focusSubRoll,
             'preposition': preposition,
+            'prepositionRoll': prepositionRoll,
             'location': location,
+            'locationRoll': locationRoll,
             if (locationExpanded != null) 'locationExpanded': locationExpanded,
+            if (locationSubRoll != null) 'locationSubRoll': locationSubRoll,
           },
         );
+
+  @override
+  String get className => 'QuestResult';
+
+  factory QuestResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return QuestResult(
+      objectiveRoll: meta['objectiveRoll'] as int? ?? 1,
+      objective: meta['objective'] as String,
+      descriptionRoll: meta['descriptionRoll'] as int? ?? 1,
+      description: meta['description'] as String,
+      descriptionSubRoll: meta['descriptionSubRoll'] as int?,
+      descriptionExpanded: meta['descriptionExpanded'] as String?,
+      focusRoll: meta['focusRoll'] as int? ?? 1,
+      focus: meta['focus'] as String,
+      focusSubRoll: meta['focusSubRoll'] as int?,
+      focusExpanded: meta['focusExpanded'] as String?,
+      prepositionRoll: meta['prepositionRoll'] as int? ?? 1,
+      preposition: meta['preposition'] as String,
+      locationRoll: meta['locationRoll'] as int? ?? 1,
+      location: meta['location'] as String,
+      locationSubRoll: meta['locationSubRoll'] as int?,
+      locationExpanded: meta['locationExpanded'] as String?,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildInterpretation(
     String objective,

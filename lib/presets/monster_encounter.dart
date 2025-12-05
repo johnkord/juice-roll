@@ -50,24 +50,60 @@ class FullMonsterEncounterResult extends RollResult {
     required this.environmentFormula,
     required this.wasDoubles,
     this.isForest = false,
+    DateTime? timestamp,
   }) : super(
           type: RollType.encounter,
           description: 'Monster Encounter',
           diceResults: diceResults,
           total: row + 1,
           interpretation: _buildInterpretation(monsters, hasBoss, bossMonster),
+          timestamp: timestamp,
           metadata: {
             'row': row,
             'difficulty': difficulty.name,
             'hasBoss': hasBoss,
             'bossMonster': bossMonster,
-            'monsters': monsters.map((m) => {'name': m.name, 'count': m.count}).toList(),
+            'monsters': monsters.map((m) => {
+              'name': m.name, 
+              'count': m.count,
+              'code': m.code,
+              'skewSymbol': m.skewSymbol,
+            }).toList(),
             'environmentRow': environmentRow,
             'environmentFormula': environmentFormula,
             'wasDoubles': wasDoubles,
             'isForest': isForest,
           },
         );
+
+  @override
+  String get className => 'FullMonsterEncounterResult';
+
+  factory FullMonsterEncounterResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final monstersList = (meta['monsters'] as List<dynamic>)
+        .map((m) => MonsterCount(
+              name: (m as Map<String, dynamic>)['name'] as String,
+              count: m['count'] as int,
+              code: m['code'] as String? ?? '',
+              skewSymbol: m['skewSymbol'] as String? ?? '',
+            ))
+        .toList();
+    
+    return FullMonsterEncounterResult(
+      diceResults: (json['diceResults'] as List<dynamic>).cast<int>(),
+      row: meta['row'] as int,
+      difficulty: MonsterDifficulty.values.byName(meta['difficulty'] as String),
+      hasBoss: meta['hasBoss'] as bool,
+      bossMonster: meta['bossMonster'] as String?,
+      monsters: monstersList,
+      environmentRow: meta['environmentRow'] as int,
+      environmentFormula: meta['environmentFormula'] as String,
+      wasDoubles: meta['wasDoubles'] as bool,
+      isForest: meta['isForest'] as bool? ?? false,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildInterpretation(List<MonsterCount> monsters, bool hasBoss, String? bossMonster) {
     final parts = <String>[];
@@ -115,20 +151,40 @@ class MonsterEncounterResult extends RollResult {
     required this.isDeadly,
     this.difficultyRoll,
     this.wasDoubles = false,
+    DateTime? timestamp,
   }) : super(
           type: RollType.encounter,
           description: 'Monster Encounter',
           diceResults: diceResults,
           total: row + 1,
           interpretation: _buildInterpretation(monster, isDeadly, wasDoubles),
+          timestamp: timestamp,
           metadata: {
             'row': row,
             'difficulty': difficulty.name,
             'monster': monster,
             'isDeadly': isDeadly,
+            'difficultyRoll': difficultyRoll,
             'wasDoubles': wasDoubles,
           },
         );
+
+  @override
+  String get className => 'MonsterEncounterResult';
+
+  factory MonsterEncounterResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return MonsterEncounterResult(
+      diceResults: (json['diceResults'] as List<dynamic>).cast<int>(),
+      row: meta['row'] as int,
+      difficulty: MonsterDifficulty.values.byName(meta['difficulty'] as String),
+      monster: meta['monster'] as String,
+      isDeadly: meta['isDeadly'] as bool,
+      difficultyRoll: meta['difficultyRoll'] as int?,
+      wasDoubles: meta['wasDoubles'] as bool? ?? false,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildInterpretation(String monster, bool isDeadly, bool wasDoubles) {
     final deadlyMarker = isDeadly ? ' 💀' : '';
@@ -151,18 +207,34 @@ class MonsterTracksResult extends RollResult {
     required this.row,
     required this.tracks,
     required this.modifier,
+    DateTime? timestamp,
   }) : super(
           type: RollType.encounter,
           description: 'Monster Tracks',
           diceResults: diceResults,
           total: modifier,
           interpretation: '$tracks (modifier: $modifier)',
+          timestamp: timestamp,
           metadata: {
             'row': row,
             'tracks': tracks,
             'modifier': modifier,
           },
         );
+
+  @override
+  String get className => 'MonsterTracksResult';
+
+  factory MonsterTracksResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return MonsterTracksResult(
+      diceResults: (json['diceResults'] as List<dynamic>).cast<int>(),
+      row: meta['row'] as int,
+      tracks: meta['tracks'] as String,
+      modifier: meta['modifier'] as int,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => 'Tracks: $tracks (modifier: $modifier)';

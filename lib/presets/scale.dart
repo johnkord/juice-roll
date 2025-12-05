@@ -99,12 +99,14 @@ class ScaleResult extends RollResult {
     required this.total,
     required this.modifier,
     required this.multiplier,
+    DateTime? timestamp,
   }) : super(
           type: RollType.scale,
           description: 'Scale',
           diceResults: [...fateDice, intensity],
           total: total,
           interpretation: modifier,
+          timestamp: timestamp,
           metadata: {
             'fateDice': fateDice,
             'fateSum': fateSum,
@@ -113,6 +115,24 @@ class ScaleResult extends RollResult {
             'multiplier': multiplier,
           },
         );
+
+  @override
+  String get className => 'ScaleResult';
+
+  factory ScaleResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    final fateDice = (meta['fateDice'] as List?)?.cast<int>() ?? diceResults.take(2).toList();
+    return ScaleResult(
+      fateDice: fateDice,
+      fateSum: meta['fateSum'] as int? ?? fateDice.fold(0, (a, b) => a + b),
+      intensity: meta['intensity'] as int? ?? diceResults.last,
+      total: json['total'] as int,
+      modifier: meta['modifier'] as String,
+      multiplier: (meta['multiplier'] as num).toDouble(),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   /// Get symbolic representation of the Fate dice.
   String get fateSymbols => FateDiceFormatter.diceToSymbols(fateDice);

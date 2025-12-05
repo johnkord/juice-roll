@@ -511,12 +511,14 @@ class InformationResult extends RollResult {
     required this.topicRoll,
     required this.informationType,
     required this.topic,
+    DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: 'NPC Information (2d100)',
           diceResults: [typeRoll, topicRoll],
           total: typeRoll + topicRoll,
           interpretation: '$informationType $topic',
+          timestamp: timestamp,
           metadata: {
             'typeRoll': typeRoll,
             'topicRoll': topicRoll,
@@ -524,6 +526,21 @@ class InformationResult extends RollResult {
             'topic': topic,
           },
         );
+
+  @override
+  String get className => 'InformationResult';
+
+  factory InformationResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return InformationResult(
+      typeRoll: meta['typeRoll'] as int? ?? diceResults[0],
+      topicRoll: meta['topicRoll'] as int? ?? diceResults[1],
+      informationType: meta['informationType'] as String,
+      topic: meta['topic'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => '$informationType $topic';
@@ -541,12 +558,14 @@ class CompanionResponseResult extends RollResult {
     required this.response,
     required this.skew,
     required this.allRolls,
+    DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: _buildDescription(skew),
           diceResults: allRolls,
           total: roll,
           interpretation: response,
+          timestamp: timestamp,
           metadata: {
             'roll': roll,
             'response': response,
@@ -554,6 +573,24 @@ class CompanionResponseResult extends RollResult {
             'favor': _getFavorLevel(roll),
           },
         );
+
+  @override
+  String get className => 'CompanionResponseResult';
+
+  factory CompanionResponseResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return CompanionResponseResult(
+      roll: meta['roll'] as int? ?? diceResults[0],
+      response: meta['response'] as String,
+      skew: SkewType.values.firstWhere(
+        (s) => s.name == meta['skew'],
+        orElse: () => SkewType.none,
+      ),
+      allRolls: diceResults,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildDescription(SkewType skew) {
     switch (skew) {
@@ -589,17 +626,32 @@ class DialogTopicResult extends RollResult {
   DialogTopicResult({
     required this.roll,
     required this.topic,
+    DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: 'Dialog Topic (1d100)',
           diceResults: [roll],
           total: roll,
           interpretation: topic,
+          timestamp: timestamp,
           metadata: {
             'roll': roll,
             'topic': topic,
           },
         );
+
+  @override
+  String get className => 'DialogTopicResult';
+
+  factory DialogTopicResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DialogTopicResult(
+      roll: meta['roll'] as int? ?? diceResults[0],
+      topic: meta['topic'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => topic;

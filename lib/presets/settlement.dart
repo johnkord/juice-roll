@@ -373,17 +373,36 @@ class SettlementNameResult extends RollResult {
     required this.prefix,
     required this.suffixRoll,
     required this.suffix,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Settlement Name',
           diceResults: [prefixRoll, suffixRoll],
           total: prefixRoll + suffixRoll,
           interpretation: '$prefix$suffix',
+          timestamp: timestamp,
           metadata: {
             'prefix': prefix,
+            'prefixRoll': prefixRoll,
             'suffix': suffix,
+            'suffixRoll': suffixRoll,
           },
         );
+
+  @override
+  String get className => 'SettlementNameResult';
+
+  factory SettlementNameResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return SettlementNameResult(
+      prefixRoll: meta['prefixRoll'] as int? ?? diceResults[0],
+      prefix: meta['prefix'] as String,
+      suffixRoll: meta['suffixRoll'] as int? ?? diceResults[1],
+      suffix: meta['suffix'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   String get name => '$prefix$suffix';
 
@@ -409,12 +428,14 @@ class SettlementDetailResult extends RollResult {
     this.subResult,
     this.detailDescription,
     this.dieSize,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Settlement $detailType',
           diceResults: subRoll != null ? [roll, subRoll] : [roll],
           total: roll + (subRoll ?? 0),
           interpretation: result,
+          timestamp: timestamp,
           metadata: {
             'detailType': detailType,
             'result': result,
@@ -423,6 +444,24 @@ class SettlementDetailResult extends RollResult {
             if (dieSize != null) 'dieSize': dieSize,
           },
         );
+
+  @override
+  String get className => 'SettlementDetailResult';
+
+  factory SettlementDetailResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return SettlementDetailResult(
+      detailType: meta['detailType'] as String,
+      roll: diceResults[0],
+      result: meta['result'] as String,
+      subRoll: diceResults.length > 1 ? diceResults[1] : null,
+      subResult: meta['subResult'] as String?,
+      detailDescription: meta['detailDescription'] as String?,
+      dieSize: meta['dieSize'] as int?,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => '$detailType: $result';
@@ -440,18 +479,38 @@ class EstablishmentCountResult extends RollResult {
     required this.dice,
     required this.settlementType,
     required this.skewUsed,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Establishment Count',
           diceResults: dice,
           total: count,
           interpretation: '$count establishments',
+          timestamp: timestamp,
           metadata: {
             'count': count,
             'settlementType': settlementType.name,
             'skewUsed': skewUsed,
           },
         );
+
+  @override
+  String get className => 'EstablishmentCountResult';
+
+  factory EstablishmentCountResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return EstablishmentCountResult(
+      count: meta['count'] as int,
+      dice: diceResults,
+      settlementType: SettlementType.values.firstWhere(
+        (t) => t.name == meta['settlementType'],
+        orElse: () => SettlementType.village,
+      ),
+      skewUsed: meta['skewUsed'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => 'Establishments: $count ($skewUsed)';
@@ -465,6 +524,7 @@ class MultiEstablishmentResult extends RollResult {
   MultiEstablishmentResult({
     required this.countResult,
     required this.establishments,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Settlement Establishments',
@@ -474,11 +534,21 @@ class MultiEstablishmentResult extends RollResult {
           ],
           total: establishments.length,
           interpretation: establishments.map((e) => e.result).join(', '),
+          timestamp: timestamp,
           metadata: {
             'count': countResult.count,
             'establishments': establishments.map((e) => e.result).toList(),
           },
         );
+
+  @override
+  String get className => 'MultiEstablishmentResult';
+
+  factory MultiEstablishmentResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct nested objects
+    throw UnimplementedError('MultiEstablishmentResult.fromJson requires full nested data');
+  }
 
   @override
   String toString() => 'Establishments (${countResult.count}): ${establishments.map((e) => e.result).join(', ')}';
@@ -494,6 +564,7 @@ class FullSettlementResult extends RollResult {
     required this.name,
     required this.establishment,
     required this.news,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Settlement',
@@ -505,12 +576,22 @@ class FullSettlementResult extends RollResult {
           total: name.total + establishment.total + news.total,
           interpretation:
               '${name.name} - ${establishment.result} - ${news.result}',
+          timestamp: timestamp,
           metadata: {
             'name': name.name,
             'establishment': establishment.result,
             'news': news.result,
           },
         );
+
+  @override
+  String get className => 'FullSettlementResult';
+
+  factory FullSettlementResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct nested objects
+    throw UnimplementedError('FullSettlementResult.fromJson requires full nested data');
+  }
 
   @override
   String toString() =>
@@ -529,6 +610,7 @@ class CompleteSettlementResult extends RollResult {
     required this.name,
     required this.establishments,
     required this.news,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: settlementType == SettlementType.village ? 'Village' : 'City',
@@ -539,6 +621,7 @@ class CompleteSettlementResult extends RollResult {
           ],
           total: name.total + establishments.total + news.total,
           interpretation: _formatInterpretation(settlementType, name, establishments, news),
+          timestamp: timestamp,
           metadata: {
             'settlementType': settlementType.name,
             'name': name.name,
@@ -546,6 +629,15 @@ class CompleteSettlementResult extends RollResult {
             'news': news.result,
           },
         );
+
+  @override
+  String get className => 'CompleteSettlementResult';
+
+  factory CompleteSettlementResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct nested objects
+    throw UnimplementedError('CompleteSettlementResult.fromJson requires full nested data');
+  }
 
   static String _formatInterpretation(
     SettlementType type,
@@ -592,20 +684,42 @@ class EstablishmentNameResult extends RollResult {
     required this.objectRoll,
     required this.object,
     required this.name,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Establishment Name',
           diceResults: [colorRoll, objectRoll],
           total: colorRoll + objectRoll,
           interpretation: '$colorEmoji $name',
+          timestamp: timestamp,
           metadata: {
             'color': color,
+            'colorRoll': colorRoll,
             'shortColor': shortColor,
             'colorEmoji': colorEmoji,
             'object': object,
+            'objectRoll': objectRoll,
             'name': name,
           },
         );
+
+  @override
+  String get className => 'EstablishmentNameResult';
+
+  factory EstablishmentNameResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return EstablishmentNameResult(
+      colorRoll: meta['colorRoll'] as int? ?? diceResults[0],
+      color: meta['color'] as String,
+      shortColor: meta['shortColor'] as String,
+      colorEmoji: meta['colorEmoji'] as String,
+      objectRoll: meta['objectRoll'] as int? ?? diceResults[1],
+      object: meta['object'] as String,
+      name: meta['name'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => 'Establishment: $colorEmoji $name';
@@ -620,6 +734,7 @@ class SettlementPropertiesResult extends RollResult {
   SettlementPropertiesResult({
     required this.property1,
     required this.property2,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Settlement Properties',
@@ -631,13 +746,36 @@ class SettlementPropertiesResult extends RollResult {
           ],
           total: property1.propertyRoll + property2.propertyRoll,
           interpretation: '${property1.interpretation} + ${property2.interpretation}',
+          timestamp: timestamp,
           metadata: {
             'property1': property1.property,
+            'property1Roll': property1.propertyRoll,
             'intensity1': property1.intensityRoll,
             'property2': property2.property,
+            'property2Roll': property2.propertyRoll,
             'intensity2': property2.intensityRoll,
           },
         );
+
+  @override
+  String get className => 'SettlementPropertiesResult';
+
+  factory SettlementPropertiesResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return SettlementPropertiesResult(
+      property1: PropertyResult(
+        propertyRoll: meta['property1Roll'] as int? ?? 1,
+        property: meta['property1'] as String,
+        intensityRoll: meta['intensity1'] as int? ?? 1,
+      ),
+      property2: PropertyResult(
+        propertyRoll: meta['property2Roll'] as int? ?? 1,
+        property: meta['property2'] as String,
+        intensityRoll: meta['intensity2'] as int? ?? 1,
+      ),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() =>
@@ -653,6 +791,7 @@ class SimpleNpcResult extends RollResult {
   SimpleNpcResult({
     required this.name,
     required this.profile,
+    DateTime? timestamp,
   }) : super(
           type: RollType.settlement,
           description: 'Simple NPC',
@@ -662,6 +801,7 @@ class SimpleNpcResult extends RollResult {
           ],
           total: name.total + profile.total,
           interpretation: '${name.name}: ${profile.personality}, ${profile.need}, ${profile.motive}',
+          timestamp: timestamp,
           metadata: {
             'name': name.name,
             'personality': profile.personality,
@@ -669,6 +809,32 @@ class SimpleNpcResult extends RollResult {
             'motive': profile.motive,
           },
         );
+
+  @override
+  String get className => 'SimpleNpcResult';
+
+  factory SimpleNpcResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct, but provide basic info
+    return SimpleNpcResult(
+      name: NameResult(
+        rolls: [1],
+        syllables: [meta['name'] as String],
+        name: meta['name'] as String,
+        style: NameStyle.neutral,
+        method: NameMethod.simple,
+      ),
+      profile: NpcProfileResult(
+        personalityRoll: 1,
+        personality: meta['personality'] as String,
+        needRoll: 1,
+        need: meta['need'] as String,
+        motiveRoll: 1,
+        motive: meta['motive'] as String,
+      ),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() =>

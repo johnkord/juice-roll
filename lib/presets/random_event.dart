@@ -310,20 +310,42 @@ class RandomEventResult extends RollResult {
     required this.modifier,
     required this.ideaRoll,
     required this.idea,
-    required this.ideaCategory,
+    this.ideaCategory = 'Idea',
+    DateTime? timestamp,
   }) : super(
           type: RollType.randomEvent,
           description: 'Random Event',
           diceResults: [focusRoll, modifierRoll, ideaRoll],
           total: focusRoll + modifierRoll + ideaRoll,
           interpretation: '$focus: $modifier $idea',
+          timestamp: timestamp,
           metadata: {
             'focus': focus,
+            'focusRoll': focusRoll,
             'modifier': modifier,
+            'modifierRoll': modifierRoll,
             'idea': idea,
+            'ideaRoll': ideaRoll,
             'ideaCategory': ideaCategory,
           },
         );
+
+  @override
+  String get className => 'RandomEventResult';
+
+  factory RandomEventResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return RandomEventResult(
+      focusRoll: meta['focusRoll'] as int? ?? (json['diceResults'] as List).first as int,
+      focus: meta['focus'] as String,
+      modifierRoll: meta['modifierRoll'] as int? ?? 0,
+      modifier: meta['modifier'] as String,
+      ideaRoll: meta['ideaRoll'] as int? ?? 0,
+      idea: meta['idea'] as String,
+      ideaCategory: meta['ideaCategory'] as String? ?? 'Idea',
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   String get eventPhrase => '$modifier $idea';
 
@@ -345,18 +367,37 @@ class IdeaResult extends RollResult {
     required this.ideaRoll,
     required this.idea,
     required this.ideaCategory,
+    DateTime? timestamp,
   }) : super(
           type: RollType.randomEvent,
           description: ideaCategory,
           diceResults: [modifierRoll, ideaRoll],
           total: modifierRoll + ideaRoll,
           interpretation: '$modifier $idea',
+          timestamp: timestamp,
           metadata: {
             'modifier': modifier,
+            'modifierRoll': modifierRoll,
             'idea': idea,
+            'ideaRoll': ideaRoll,
             'ideaCategory': ideaCategory,
           },
         );
+
+  @override
+  String get className => 'IdeaResult';
+
+  factory IdeaResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return IdeaResult(
+      modifierRoll: meta['modifierRoll'] as int? ?? 0,
+      modifier: meta['modifier'] as String,
+      ideaRoll: meta['ideaRoll'] as int? ?? 0,
+      idea: meta['idea'] as String,
+      ideaCategory: meta['ideaCategory'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   String get phrase => '$modifier $idea';
 
@@ -372,16 +413,31 @@ class RandomEventFocusResult extends RollResult {
   RandomEventFocusResult({
     required this.focusRoll,
     required this.focus,
+    DateTime? timestamp,
   }) : super(
           type: RollType.randomEvent,
           description: 'Random Event Focus',
           diceResults: [focusRoll],
           total: focusRoll,
           interpretation: focus,
+          timestamp: timestamp,
           metadata: {
             'focus': focus,
+            'focusRoll': focusRoll,
           },
         );
+
+  @override
+  String get className => 'RandomEventFocusResult';
+
+  factory RandomEventFocusResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return RandomEventFocusResult(
+      focusRoll: meta['focusRoll'] as int? ?? (json['diceResults'] as List).first as int,
+      focus: meta['focus'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => 'Random Event: $focus';
@@ -397,17 +453,33 @@ class SingleTableResult extends RollResult {
     required this.roll,
     required this.result,
     required this.tableName,
+    DateTime? timestamp,
   }) : super(
           type: RollType.randomEvent,
           description: tableName,
           diceResults: [roll],
           total: roll,
           interpretation: result,
+          timestamp: timestamp,
           metadata: {
             'tableName': tableName,
             'result': result,
+            'roll': roll,
           },
         );
+
+  @override
+  String get className => 'SingleTableResult';
+
+  factory SingleTableResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return SingleTableResult(
+      roll: meta['roll'] as int? ?? (json['diceResults'] as List).first as int,
+      result: meta['result'] as String,
+      tableName: meta['tableName'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => '$tableName: $result';

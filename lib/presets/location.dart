@@ -34,6 +34,7 @@ class LocationResult extends RollResult {
     required this.roll,
     required this.row,
     required this.column,
+    DateTime? timestamp,
   }) : direction = _getDirection(row, column),
        distance = _getDistance(row, column),
        super(
@@ -42,6 +43,7 @@ class LocationResult extends RollResult {
           diceResults: diceResults,
           total: roll,
           interpretation: _buildInterpretation(row, column),
+          timestamp: timestamp,
           metadata: {
             'roll': roll,
             'row': row,
@@ -52,6 +54,21 @@ class LocationResult extends RollResult {
             'zoomMethod': 'Grid position [$row,$column]',
           },
         );
+
+  @override
+  String get className => 'LocationResult';
+
+  factory LocationResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return LocationResult(
+      diceResults: diceResults,
+      roll: meta['roll'] as int,
+      row: meta['row'] as int,
+      column: meta['column'] as int,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   /// Get compass direction based on position relative to center (row 3, col 3)
   static CompassDirection _getDirection(int row, int column) {

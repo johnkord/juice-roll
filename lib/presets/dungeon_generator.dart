@@ -630,6 +630,7 @@ class DungeonNameResult extends RollResult {
     required String description,
     required this.subjectRoll,
     required this.subject,
+    DateTime? timestamp,
   }) : descriptionWord = description,
        super(
           type: RollType.dungeon,
@@ -637,12 +638,30 @@ class DungeonNameResult extends RollResult {
           diceResults: [typeRoll, descriptionRoll, subjectRoll],
           total: typeRoll + descriptionRoll + subjectRoll,
           interpretation: '$dungeonType of the $description $subject',
+          timestamp: timestamp,
           metadata: {
             'dungeonType': dungeonType,
             'description': description,
             'subject': subject,
           },
         );
+
+  @override
+  String get className => 'DungeonNameResult';
+
+  factory DungeonNameResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DungeonNameResult(
+      typeRoll: diceResults[0],
+      dungeonType: meta['dungeonType'] as String,
+      descriptionRoll: diceResults[1],
+      description: meta['description'] as String,
+      subjectRoll: diceResults[2],
+      subject: meta['subject'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   String get name => '$dungeonType of the $descriptionWord $subject';
 
@@ -668,12 +687,14 @@ class DungeonAreaResult extends RollResult {
     required this.areaType,
     required this.isDoubles,
     required this.phaseChange,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Area (${phase.displayText})',
           diceResults: [roll1, roll2],
           total: chosenRoll,
           interpretation: _buildInterpretation(areaType, isDoubles, phase),
+          timestamp: timestamp,
           metadata: {
             'phase': phase.name,
             'areaType': areaType,
@@ -681,6 +702,27 @@ class DungeonAreaResult extends RollResult {
             'phaseChange': phaseChange,
           },
         );
+
+  @override
+  String get className => 'DungeonAreaResult';
+
+  factory DungeonAreaResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DungeonAreaResult(
+      phase: DungeonPhase.values.firstWhere(
+        (p) => p.name == meta['phase'],
+        orElse: () => DungeonPhase.entering,
+      ),
+      roll1: diceResults[0],
+      roll2: diceResults.length > 1 ? diceResults[1] : diceResults[0],
+      chosenRoll: json['total'] as int,
+      areaType: meta['areaType'] as String,
+      isDoubles: meta['isDoubles'] as bool,
+      phaseChange: meta['phaseChange'] as bool,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildInterpretation(String area, bool isDoubles, DungeonPhase phase) {
     if (isDoubles) {
@@ -716,17 +758,34 @@ class DungeonDetailResult extends RollResult {
     required this.result,
     String? description,
     List<int>? diceResultsList,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: description ?? 'Dungeon $detailType',
           diceResults: diceResultsList ?? [roll],
           total: roll,
           interpretation: result,
+          timestamp: timestamp,
           metadata: {
             'detailType': detailType,
             'result': result,
           },
         );
+
+  @override
+  String get className => 'DungeonDetailResult';
+
+  factory DungeonDetailResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DungeonDetailResult(
+      detailType: meta['detailType'] as String,
+      roll: diceResults[0],
+      result: meta['result'] as String,
+      diceResultsList: diceResults,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => '$detailType: $result';
@@ -740,17 +799,28 @@ class FullDungeonAreaResult extends RollResult {
   FullDungeonAreaResult({
     required this.area,
     required this.condition,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Area',
           diceResults: [...area.diceResults, ...condition.diceResults],
           total: area.total + condition.total,
           interpretation: '${area.areaType} (${condition.result})',
+          timestamp: timestamp,
           metadata: {
             'area': area.metadata,
             'condition': condition.metadata,
           },
         );
+
+  @override
+  String get className => 'FullDungeonAreaResult';
+
+  factory FullDungeonAreaResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct nested objects
+    throw UnimplementedError('FullDungeonAreaResult.fromJson requires full nested data');
+  }
 
   @override
   String toString() =>
@@ -769,17 +839,34 @@ class DungeonMonsterResult extends RollResult {
     required this.descriptor,
     required this.abilityRoll,
     required this.ability,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Monster',
           diceResults: [descriptorRoll, abilityRoll],
           total: descriptorRoll + abilityRoll,
           interpretation: '$descriptor creature with $ability',
+          timestamp: timestamp,
           metadata: {
             'descriptor': descriptor,
             'ability': ability,
           },
         );
+
+  @override
+  String get className => 'DungeonMonsterResult';
+
+  factory DungeonMonsterResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DungeonMonsterResult(
+      descriptorRoll: diceResults[0],
+      descriptor: meta['descriptor'] as String,
+      abilityRoll: diceResults[1],
+      ability: meta['ability'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   String get monsterDescription => '$descriptor creature with $ability';
 
@@ -799,17 +886,34 @@ class DungeonTrapResult extends RollResult {
     required this.action,
     required this.subjectRoll,
     required this.subject,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Trap',
           diceResults: [actionRoll, subjectRoll],
           total: actionRoll + subjectRoll,
           interpretation: '$action trap with $subject',
+          timestamp: timestamp,
           metadata: {
             'action': action,
             'subject': subject,
           },
         );
+
+  @override
+  String get className => 'DungeonTrapResult';
+
+  factory DungeonTrapResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DungeonTrapResult(
+      actionRoll: diceResults[0],
+      action: meta['action'] as String,
+      subjectRoll: diceResults[1],
+      subject: meta['subject'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   String get trapDescription => '$action trap with $subject';
 
@@ -831,6 +935,7 @@ class DungeonEncounterResult extends RollResult {
     this.trap,
     this.feature,
     this.naturalHazard,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: 'Dungeon Encounter',
@@ -843,6 +948,7 @@ class DungeonEncounterResult extends RollResult {
           ],
           total: encounterRoll.roll,
           interpretation: _buildInterpretation(encounterRoll, monster, trap, feature, naturalHazard),
+          timestamp: timestamp,
           metadata: {
             'encounterType': encounterRoll.result,
             if (monster != null) 'monster': monster.metadata,
@@ -851,6 +957,15 @@ class DungeonEncounterResult extends RollResult {
             if (naturalHazard != null) 'naturalHazard': naturalHazard.metadata,
           },
         );
+
+  @override
+  String get className => 'DungeonEncounterResult';
+
+  factory DungeonEncounterResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct nested objects
+    throw UnimplementedError('DungeonEncounterResult.fromJson requires full nested data');
+  }
 
   static String _buildInterpretation(
     DungeonDetailResult encounter,
@@ -911,6 +1026,7 @@ class TwoPassAreaResult extends RollResult {
     required this.stopMapGeneration,
     required this.condition,
     this.passage,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: _buildDescription(hadFirstDoubles, isSecondDoubles),
@@ -929,6 +1045,7 @@ class TwoPassAreaResult extends RollResult {
             hadFirstDoubles, 
             isSecondDoubles,
           ),
+          timestamp: timestamp,
           metadata: {
             'areaType': areaType,
             'isDoubles': isDoubles,
@@ -938,6 +1055,15 @@ class TwoPassAreaResult extends RollResult {
             if (passage != null) 'passage': passage.metadata,
           },
         );
+
+  @override
+  String get className => 'TwoPassAreaResult';
+
+  factory TwoPassAreaResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct nested objects
+    throw UnimplementedError('TwoPassAreaResult.fromJson requires full nested data');
+  }
 
   static String _buildDescription(bool hadFirstDoubles, bool isSecondDoubles) {
     if (isSecondDoubles) {
@@ -1013,6 +1139,7 @@ class TrapProcedureResult extends RollResult {
     required this.dcRolls,
     required this.dc,
     required this.dcSkew,
+    DateTime? timestamp,
   }) : super(
           type: RollType.dungeon,
           description: 'Trap Procedure',
@@ -1022,6 +1149,7 @@ class TrapProcedureResult extends RollResult {
           ],
           total: dc,
           interpretation: _buildInterpretation(trap, isSearching, dc, dcSkew),
+          timestamp: timestamp,
           metadata: {
             'trap': trap.metadata,
             'isSearching': isSearching,
@@ -1031,6 +1159,15 @@ class TrapProcedureResult extends RollResult {
             'failOutcome': isSearching ? 'LOCATE' : 'TRIGGER',
           },
         );
+
+  @override
+  String get className => 'TrapProcedureResult';
+
+  factory TrapProcedureResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    // Cannot fully reconstruct nested objects
+    throw UnimplementedError('TrapProcedureResult.fromJson requires full nested data');
+  }
 
   static String _buildInterpretation(
     DungeonTrapResult trap,

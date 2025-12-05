@@ -417,20 +417,40 @@ class ObjectTreasureResult extends RollResult {
     required this.itemType,
     required this.rolls,
     this.columnLabels = const ['Quality', 'Material', 'Type'],
+    DateTime? timestamp,
   }) : super(
           type: RollType.objectTreasure,
           description: category,
           diceResults: rolls,
           total: rolls.reduce((a, b) => a + b),
           interpretation: _buildInterpretation(category, quality, material, itemType, columnLabels),
+          timestamp: timestamp,
           metadata: {
             'category': category,
             'quality': quality,
             'material': material,
             'itemType': itemType,
             'columnLabels': columnLabels,
+            'rolls': rolls,
           },
         );
+
+  @override
+  String get className => 'ObjectTreasureResult';
+
+  factory ObjectTreasureResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return ObjectTreasureResult(
+      category: meta['category'] as String,
+      quality: meta['quality'] as String,
+      material: meta['material'] as String,
+      itemType: meta['itemType'] as String,
+      rolls: (meta['rolls'] as List?)?.cast<int>() ?? diceResults,
+      columnLabels: (meta['columnLabels'] as List?)?.cast<String>() ?? const ['Quality', 'Material', 'Type'],
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
   
   static String _buildInterpretation(String category, String quality, String material, String itemType, List<String> labels) {
     // Build descriptive output based on category

@@ -65,6 +65,41 @@ class RollResult {
     this.imagePath,
   }) : timestamp = timestamp ?? DateTime.now();
 
+  /// Get the class name for serialization.
+  /// Subclasses should override this to return their specific class name.
+  String get className => 'RollResult';
+
+  /// Serialize to JSON for persistence.
+  /// Includes className for proper reconstruction on import.
+  Map<String, dynamic> toJson() => {
+    'className': className,
+    'type': type.name,
+    'description': description,
+    'diceResults': diceResults,
+    'total': total,
+    'interpretation': interpretation,
+    'timestamp': timestamp.toIso8601String(),
+    'metadata': metadata,
+    'imagePath': imagePath,
+  };
+
+  /// Deserialize from JSON.
+  /// Returns a base RollResult that preserves all display information.
+  factory RollResult.fromJson(Map<String, dynamic> json) {
+    return RollResult(
+      type: RollType.values.byName(json['type'] as String),
+      description: json['description'] as String,
+      diceResults: (json['diceResults'] as List<dynamic>).cast<int>(),
+      total: json['total'] as int,
+      interpretation: json['interpretation'] as String?,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      metadata: json['metadata'] != null 
+          ? Map<String, dynamic>.from(json['metadata'] as Map) 
+          : null,
+      imagePath: json['imagePath'] as String?,
+    );
+  }
+
   @override
   String toString() {
     final buffer = StringBuffer();
@@ -88,6 +123,9 @@ class FateRollResult extends RollResult {
     super.metadata,
   }) : super(type: RollType.fate);
 
+  @override
+  String get className => 'FateRollResult';
+
   /// Get symbolic representation of Fate dice.
   /// Uses Unicode minus (−), circle (○), and plus (+) for consistency.
   String get symbols {
@@ -103,6 +141,19 @@ class FateRollResult extends RollResult {
           return '?';
       }
     }).join(' ');
+  }
+
+  factory FateRollResult.fromJson(Map<String, dynamic> json) {
+    return FateRollResult(
+      description: json['description'] as String,
+      diceResults: (json['diceResults'] as List<dynamic>).cast<int>(),
+      total: json['total'] as int,
+      interpretation: json['interpretation'] as String?,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      metadata: json['metadata'] != null 
+          ? Map<String, dynamic>.from(json['metadata'] as Map) 
+          : null,
+    );
   }
 
   @override

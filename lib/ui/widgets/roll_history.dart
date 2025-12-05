@@ -1949,14 +1949,134 @@ class _RollHistoryCard extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
             ],
-            if (result.requiresFollowUp) ...[
-              const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward, size: 14, color: Colors.grey),
-            ],
           ],
         ),
+        // Show follow-up result with arrow notation if present
+        if (result.followUpResult != null) ...[
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '→',
+                style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getFollowUpColor(result.encounter).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _getFollowUpColor(result.encounter).withValues(alpha: 0.4)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '${result.followUpRoll}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              result.followUpResult!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (result.followUpData != null && result.encounter == 'Monster' && result.followUpData!['hasBoss'] == true) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Boss: ${result.followUpData!['bossMonster']}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.red[700],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ] else if (result.requiresFollowUp) ...[
+          // Legacy display for old results without embedded follow-up
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text(
+                '→',
+                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _getFollowUpHint(result.encounter),
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
+  }
+
+  Color _getFollowUpColor(String encounter) {
+    switch (encounter) {
+      case 'Monster':
+        return Colors.red;
+      case 'Natural Hazard':
+        return Colors.orange;
+      case 'Weather':
+        return Colors.blue;
+      case 'Challenge':
+        return Colors.purple;
+      case 'Dungeon':
+        return Colors.brown;
+      case 'Feature':
+        return Colors.teal;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getFollowUpHint(String encounter) {
+    switch (encounter) {
+      case 'Monster':
+        return 'Roll Monster Encounter';
+      case 'Natural Hazard':
+        return 'Roll Natural Hazard';
+      case 'Weather':
+        return 'Roll Weather';
+      case 'Challenge':
+        return 'Roll Challenge';
+      case 'Dungeon':
+        return 'Roll Dungeon';
+      case 'Feature':
+        return 'Roll Feature';
+      default:
+        return 'Roll for details';
+    }
   }
 
   Widget _buildWildernessWeatherDisplay(WildernessWeatherResult result, ThemeData theme) {

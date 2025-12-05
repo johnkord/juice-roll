@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/roll_result.dart';
+import '../models/roll_result_factory.dart';
+import '../models/session.dart';
+import '../services/session_service.dart';
 import '../core/roll_engine.dart';
 import '../core/table_lookup.dart';
 import '../presets/fate_check.dart';
@@ -41,6 +45,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final List<RollResult> _history = [];
   final RollEngine _rollEngine = RollEngine();
+  final SessionService _sessionService = SessionService();
+  
+  // Session state
+  Session? _currentSession;
+  List<Session> _sessions = [];
+  bool _isLoading = true;
   
   // Core Oracle presets
   final FateCheck _fateCheck = FateCheck();
@@ -82,28 +92,328 @@ class _HomeScreenState extends State<HomeScreen> {
   // Two-Pass map generation state (persists across dialog opens)
   bool _twoPassHasFirstDoubles = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSession();
+  }
+
+  Future<void> _loadSession() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      await _sessionService.init();
+      final session = await _sessionService.loadActiveSession();
+      final sessions = await _sessionService.getSessions();
+      
+      setState(() {
+        _currentSession = session;
+        _sessions = sessions;
+        _isLoading = false;
+        
+        // Load history from session
+        _history.clear();
+        for (final json in session.history) {
+          _history.add(RollResultFactory.fromJson(json));
+        }
+        
+        // Restore stateful preset states
+        _isDungeonEntering = session.dungeonIsEntering;
+        _twoPassHasFirstDoubles = session.twoPassHasFirstDoubles;
+        
+        // Restore wilderness state if available
+        if (session.wildernessEnvironmentRow != null) {
+          _wilderness.initializeAt(
+            session.wildernessEnvironmentRow!,
+            typeRow: session.wildernessTypeRow,
+            isLost: session.wildernessIsLost,
+          );
+        }
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _switchSession(Session session) async {
+    final fullSession = await _sessionService.getSession(session.id);
+    if (fullSession == null) return;
+    
+    await _sessionService.setActiveSessionId(session.id);
+    
+    setState(() {
+      _currentSession = fullSession;
+      _history.clear();
+      for (final json in fullSession.history) {
+        _history.add(RollResultFactory.fromJson(json));
+      }
+      
+      // Restore stateful preset states
+      _isDungeonEntering = fullSession.dungeonIsEntering;
+      _twoPassHasFirstDoubles = fullSession.twoPassHasFirstDoubles;
+      
+      // Restore wilderness state
+      if (fullSession.wildernessEnvironmentRow != null) {
+        _wilderness.initializeAt(
+          fullSession.wildernessEnvironmentRow!,
+          typeRow: fullSession.wildernessTypeRow,
+          isLost: fullSession.wildernessIsLost,
+        );
+      }
+    });
+    
+    // Refresh session list
+    final sessions = await _sessionService.getSessions();
+    setState(() => _sessions = sessions);
+  }
+
   void _setDungeonPhase(bool isEntering) {
     setState(() => _isDungeonEntering = isEntering);
+    _saveSessionState();
   }
 
   void _setTwoPassFirstDoubles(bool hasFirstDoubles) {
     setState(() => _twoPassHasFirstDoubles = hasFirstDoubles);
+    _saveSessionState();
+  }
+
+  Future<void> _saveSessionState() async {
+    if (_currentSession == null) return;
+    
+    _currentSession!.dungeonIsEntering = _isDungeonEntering;
+    _currentSession!.twoPassHasFirstDoubles = _twoPassHasFirstDoubles;
+    
+    // Save wilderness state
+    final wildernessState = _wilderness.state;
+    if (wildernessState != null) {
+      _currentSession!.wildernessEnvironmentRow = wildernessState.environmentRow;
+      _currentSession!.wildernessTypeRow = wildernessState.typeRow;
+      _currentSession!.wildernessIsLost = wildernessState.isLost;
+    }
+    
+    await _sessionService.saveSession(_currentSession!);
   }
 
   void _addToHistory(RollResult result) {
     setState(() {
       _history.insert(0, result);
-      // Keep only last 100 results
+      // Keep only last 100 results in memory
       if (_history.length > 100) {
         _history.removeLast();
       }
     });
+    
+    // Save to session
+    if (_currentSession != null) {
+      _currentSession!.history.insert(0, result.toJson());
+      if (_currentSession!.history.length > 200) {
+        _currentSession!.history.removeLast();
+      }
+      _sessionService.saveSession(_currentSession!);
+    }
   }
 
   void _clearHistory() {
     setState(() {
       _history.clear();
     });
+    
+    if (_currentSession != null) {
+      _currentSession!.history.clear();
+      _sessionService.saveSession(_currentSession!);
+    }
+  }
+
+  void _showSessionSelector() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => _SessionSelectorSheet(
+        sessions: _sessions,
+        currentSession: _currentSession,
+        onSelectSession: (session) {
+          _switchSession(session);
+        },
+        onNewSession: () {
+          _showNewSessionDialog();
+        },
+        onShowDetails: (session) {
+          _showSessionDetailsDialog(session);
+        },
+        onDeleteSession: (session) async {
+          await _sessionService.deleteSession(session.id);
+          
+          // If we deleted the current session, load another
+          if (_currentSession?.id == session.id) {
+            await _loadSession();
+          } else {
+            final sessions = await _sessionService.getSessions();
+            setState(() => _sessions = sessions);
+          }
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Deleted session: ${session.name}')),
+            );
+          }
+        },
+        onImportSession: () async {
+          await _importSession();
+        },
+      ),
+    );
+  }
+
+  void _showNewSessionDialog() {
+    final nameController = TextEditingController();
+    final notesController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('New Session'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Session Name',
+                hintText: 'e.g., Dungeon Crawl',
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesController,
+              decoration: const InputDecoration(
+                labelText: 'Notes (optional)',
+                hintText: 'e.g., Level 3 fighter',
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty) return;
+              
+              Navigator.pop(context);
+              
+              final session = await _sessionService.createSession(
+                name,
+                notes: notesController.text.trim().isEmpty 
+                    ? null 
+                    : notesController.text.trim(),
+              );
+              
+              // Refresh session list immediately after creation
+              final sessions = await _sessionService.getSessions();
+              if (mounted) {
+                setState(() => _sessions = sessions);
+              }
+              
+              await _switchSession(session);
+              
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Created session: $name')),
+                );
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSessionDetailsDialog(Session session) async {
+    // Load full session data
+    final fullSession = await _sessionService.getSession(session.id);
+    if (fullSession == null || !mounted) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => _SessionDetailsDialog(
+        session: fullSession,
+        isCurrentSession: _currentSession?.id == session.id,
+        onDelete: () async {
+          await _sessionService.deleteSession(session.id);
+          
+          // If we deleted the current session, load another
+          if (_currentSession?.id == session.id) {
+            await _loadSession();
+          } else {
+            final sessions = await _sessionService.getSessions();
+            setState(() => _sessions = sessions);
+          }
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Deleted session: ${session.name}')),
+            );
+          }
+        },
+        onExport: () async {
+          await fullSession.copyToClipboard();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Session copied to clipboard! Paste it somewhere safe to back up.'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+        onUpdate: (updatedSession) async {
+          await _sessionService.updateSession(
+            session.id,
+            name: updatedSession.name,
+            notes: updatedSession.notes,
+          );
+          final sessions = await _sessionService.getSessions();
+          setState(() => _sessions = sessions);
+          if (_currentSession?.id == session.id) {
+            _currentSession!.name = updatedSession.name;
+            _currentSession!.notes = updatedSession.notes;
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _importSession() async {
+    final session = await _sessionService.importSession();
+    
+    if (!mounted) return;
+    
+    if (session != null) {
+      final sessions = await _sessionService.getSessions();
+      setState(() => _sessions = sessions);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Imported session: ${session.name}'),
+          action: SnackBarAction(
+            label: 'Switch',
+            onPressed: () => _switchSession(session),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No valid session data found in clipboard'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showDiceRollDialog() {
@@ -286,6 +596,8 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => _WildernessDialog(
         wilderness: _wilderness,
         onRoll: _addToHistory,
+        dungeonGenerator: _dungeonGenerator,
+        challenge: _challenge,
       ),
     );
   }
@@ -331,9 +643,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('JuiceRoll'),
+          centerTitle: true,
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading session...'),
+            ],
+          ),
+        ),
+      );
+    }
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('JuiceRoll'),
+        title: GestureDetector(
+          onTap: _showSessionSelector,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  _currentSession?.name ?? 'JuiceRoll',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_drop_down, size: 20),
+            ],
+          ),
+        ),
         centerTitle: true,
         actions: [
           if (_history.isNotEmpty)
@@ -348,7 +694,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Clear History?'),
-                      content: const Text('This will remove all roll history.'),
+                      content: const Text('This will remove all roll history for this session.'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -2793,8 +3139,15 @@ class _DialogOption extends StatelessWidget {
 class _WildernessDialog extends StatefulWidget {
   final Wilderness wilderness;
   final void Function(RollResult) onRoll;
+  final DungeonGenerator dungeonGenerator;
+  final Challenge challenge;
 
-  const _WildernessDialog({required this.wilderness, required this.onRoll});
+  const _WildernessDialog({
+    required this.wilderness,
+    required this.onRoll,
+    required this.dungeonGenerator,
+    required this.challenge,
+  });
 
   @override
   State<_WildernessDialog> createState() => _WildernessDialogState();
@@ -2994,10 +3347,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                   ? 'What happens? (d${state.isLost ? 6 : 10}${_getSkewLabel()})'
                   : 'What happens? (d10)',
               onTap: () {
-                widget.onRoll(widget.wilderness.rollEncounter(
-                  hasDangerousTerrain: _hasDangerousTerrain,
-                  hasMapOrGuide: _hasMapOrGuide,
-                ));
+                _rollEncounterWithFollowUp();
                 setState(() {});
               },
             ),
@@ -3061,6 +3411,82 @@ class _WildernessDialogState extends State<_WildernessDialog> {
         ),
       ],
     );
+  }
+
+  /// Roll an encounter and automatically roll any required follow-up
+  void _rollEncounterWithFollowUp() {
+    var encounterResult = widget.wilderness.rollEncounter(
+      hasDangerousTerrain: _hasDangerousTerrain,
+      hasMapOrGuide: _hasMapOrGuide,
+    );
+    
+    // If follow-up is required, roll it and embed the result
+    if (encounterResult.requiresFollowUp) {
+      final encounter = encounterResult.encounter;
+      final environmentRow = widget.wilderness.state?.environmentRow ?? 5;
+      
+      if (encounter == 'Natural Hazard') {
+        final hazard = widget.wilderness.rollNaturalHazard();
+        encounterResult = encounterResult.withFollowUp(
+          followUpRoll: hazard.roll,
+          followUpResult: hazard.result,
+        );
+      } else if (encounter == 'Monster') {
+        final monster = MonsterEncounter.generateFullEncounter(environmentRow);
+        encounterResult = encounterResult.withFollowUp(
+          followUpRoll: monster.row + 1,
+          followUpResult: monster.encounterSummary,
+          followUpData: {
+            'difficulty': monster.difficulty.name,
+            'hasBoss': monster.hasBoss,
+            'bossMonster': monster.bossMonster,
+            'environmentFormula': monster.environmentFormula,
+          },
+        );
+      } else if (encounter == 'Weather') {
+        final weather = widget.wilderness.rollWeather();
+        encounterResult = encounterResult.withFollowUp(
+          followUpRoll: weather.weatherRow,
+          followUpResult: weather.weather,
+          followUpData: {
+            'baseRoll': weather.baseRoll,
+            'formula': weather.formula,
+          },
+        );
+      } else if (encounter == 'Challenge') {
+        final challenge = widget.challenge.rollFullChallenge();
+        encounterResult = encounterResult.withFollowUp(
+          followUpRoll: challenge.physicalRoll,
+          followUpResult: '${challenge.physicalSkill} DC${challenge.physicalDc} / ${challenge.mentalSkill} DC${challenge.mentalDc}',
+          followUpData: {
+            'physicalSkill': challenge.physicalSkill,
+            'physicalDc': challenge.physicalDc,
+            'mentalSkill': challenge.mentalSkill,
+            'mentalDc': challenge.mentalDc,
+          },
+        );
+      } else if (encounter == 'Dungeon') {
+        final dungeon = widget.dungeonGenerator.generateName();
+        encounterResult = encounterResult.withFollowUp(
+          followUpRoll: dungeon.typeRoll,
+          followUpResult: dungeon.name,
+          followUpData: {
+            'type': dungeon.dungeonType,
+            'description': dungeon.descriptionWord,
+            'subject': dungeon.subject,
+          },
+        );
+      } else if (encounter == 'Feature') {
+        final feature = widget.wilderness.rollFeature();
+        encounterResult = encounterResult.withFollowUp(
+          followUpRoll: feature.roll,
+          followUpResult: feature.result,
+        );
+      }
+    }
+    
+    // Add the single encounter result (with embedded follow-up if any)
+    widget.onRoll(encounterResult);
   }
 
   String _getSkewLabel() {
@@ -4254,6 +4680,495 @@ class _AbstractIconsDialog extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
           child: const Text('Close'),
         ),
+      ],
+    );
+  }
+}
+
+/// A bottom sheet for selecting or managing sessions.
+class _SessionSelectorSheet extends StatelessWidget {
+  final List<Session> sessions;
+  final Session? currentSession;
+  final void Function(Session) onSelectSession;
+  final void Function(Session) onShowDetails;
+  final void Function(Session) onDeleteSession;
+  final VoidCallback onNewSession;
+  final VoidCallback onImportSession;
+
+  const _SessionSelectorSheet({
+    required this.sessions,
+    required this.currentSession,
+    required this.onSelectSession,
+    required this.onShowDetails,
+    required this.onDeleteSession,
+    required this.onNewSession,
+    required this.onImportSession,
+  });
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    
+    if (diff.inMinutes < 1) {
+      return 'Just now';
+    } else if (diff.inHours < 1) {
+      return '${diff.inMinutes}m ago';
+    } else if (diff.inDays < 1) {
+      return '${diff.inHours}h ago';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    } else {
+      return '${date.month}/${date.day}/${date.year}';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                const Text(
+                  'Sessions',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: onImportSession,
+                  icon: const Icon(Icons.download, size: 18),
+                  label: const Text('Import'),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // New Session button
+          ListTile(
+            leading: const CircleAvatar(
+              backgroundColor: Colors.green,
+              child: Icon(Icons.add, color: Colors.white),
+            ),
+            title: const Text('New Session'),
+            subtitle: const Text('Start a fresh adventure'),
+            onTap: () {
+              Navigator.pop(context);
+              onNewSession();
+            },
+          ),
+          const Divider(height: 1),
+          // Session list
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: sessions.length,
+              itemBuilder: (context, index) {
+                final session = sessions[index];
+                final isSelected = session.id == currentSession?.id;
+                
+                return Dismissible(
+                  key: Key(session.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  confirmDismiss: (direction) async {
+                    return await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Delete Session?'),
+                        content: Text(
+                          isSelected
+                              ? 'This is your current session. Deleting it will create a new empty session. '
+                                'Are you sure you want to delete "${session.name}" with ${session.history.length} rolls?'
+                              : 'Are you sure you want to delete "${session.name}"? '
+                                'This will permanently remove all ${session.history.length} rolls.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: TextButton.styleFrom(foregroundColor: Colors.red),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    ) ?? false;
+                  },
+                  onDismissed: (direction) {
+                    onDeleteSession(session);
+                  },
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: isSelected ? Colors.blue : Colors.grey[700],
+                      child: isSelected
+                          ? const Icon(Icons.check, color: Colors.white)
+                          : Text(
+                              session.name.isNotEmpty
+                                  ? session.name[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                    ),
+                    title: Text(
+                      session.name,
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${session.history.length} rolls • ${_formatDate(session.lastAccessedAt)}',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        onShowDetails(session);
+                      },
+                    ),
+                    selected: isSelected,
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (!isSelected) {
+                        onSelectSession(session);
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+          // Footer with session count
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              '${sessions.length} session${sessions.length == 1 ? '' : 's'}',
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dialog for viewing and managing session details.
+class _SessionDetailsDialog extends StatefulWidget {
+  final Session session;
+  final bool isCurrentSession;
+  final Future<void> Function(Session) onUpdate;
+  final Future<void> Function() onDelete;
+  final VoidCallback onExport;
+
+  const _SessionDetailsDialog({
+    required this.session,
+    required this.isCurrentSession,
+    required this.onUpdate,
+    required this.onDelete,
+    required this.onExport,
+  });
+
+  @override
+  State<_SessionDetailsDialog> createState() => _SessionDetailsDialogState();
+}
+
+class _SessionDetailsDialogState extends State<_SessionDetailsDialog> {
+  late TextEditingController _nameController;
+  late TextEditingController _notesController;
+  bool _isEditing = false;
+  bool _isDeleting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.session.name);
+    _notesController = TextEditingController(text: widget.session.notes ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  String _formatFullDate(DateTime date) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+    final amPm = date.hour >= 12 ? 'PM' : 'AM';
+    return '${months[date.month - 1]} ${date.day}, ${date.year} at $hour:${date.minute.toString().padLeft(2, '0')} $amPm';
+  }
+
+  Future<void> _saveChanges() async {
+    final updatedSession = widget.session.copyWith(
+      name: _nameController.text.trim().isEmpty 
+          ? widget.session.name 
+          : _nameController.text.trim(),
+      notes: _notesController.text.trim(),
+    );
+    await widget.onUpdate(updatedSession);
+    if (mounted) {
+      setState(() => _isEditing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Session updated')),
+      );
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Session?'),
+        content: Text(
+          widget.isCurrentSession
+              ? 'This is your current session. Deleting it will create a new empty session. '
+                'Are you sure you want to delete "${widget.session.name}" with ${widget.session.history.length} rolls?'
+              : 'Are you sure you want to delete "${widget.session.name}"? '
+                'This will permanently remove all ${widget.session.history.length} rolls.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isDeleting = true);
+      await widget.onDelete();
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Expanded(
+            child: _isEditing
+                ? TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Session Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    autofocus: true,
+                  )
+                : Text(widget.session.name),
+          ),
+          if (!_isEditing)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => setState(() => _isEditing = true),
+            ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Stats
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  _DetailRow(
+                    icon: Icons.casino,
+                    label: 'Rolls',
+                    value: '${widget.session.history.length}',
+                  ),
+                  const SizedBox(height: 8),
+                  _DetailRow(
+                    icon: Icons.calendar_today,
+                    label: 'Created',
+                    value: _formatFullDate(widget.session.createdAt),
+                  ),
+                  const SizedBox(height: 8),
+                  _DetailRow(
+                    icon: Icons.access_time,
+                    label: 'Last Played',
+                    value: _formatFullDate(widget.session.lastAccessedAt),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Notes
+            const Text(
+              'Notes',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            if (_isEditing)
+              TextField(
+                controller: _notesController,
+                decoration: const InputDecoration(
+                  hintText: 'Add notes about this session...',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[850],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[700]!),
+                ),
+                child: Text(
+                  (widget.session.notes ?? '').isEmpty
+                      ? 'No notes yet'
+                      : widget.session.notes!,
+                  style: TextStyle(
+                    color: (widget.session.notes ?? '').isEmpty
+                        ? Colors.grey[500]
+                        : Colors.white,
+                    fontStyle: (widget.session.notes ?? '').isEmpty
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            // Export button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: widget.onExport,
+                icon: const Icon(Icons.copy),
+                label: const Text('Copy to Clipboard'),
+              ),
+            ),
+            if (widget.isCurrentSession)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'This is your current session',
+                  style: TextStyle(
+                    color: Colors.blue[300],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        if (!_isDeleting)
+          TextButton.icon(
+            onPressed: _confirmDelete,
+            icon: const Icon(Icons.delete, size: 18),
+            label: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        if (_isDeleting)
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        const Spacer(),
+        if (_isEditing) ...[
+          TextButton(
+            onPressed: () {
+              _nameController.text = widget.session.name;
+              _notesController.text = widget.session.notes ?? '';
+              setState(() => _isEditing = false);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: _saveChanges,
+            child: const Text('Save'),
+          ),
+        ] else
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+      ],
+    );
+  }
+}
+
+/// A helper widget for displaying detail rows.
+class _DetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[400]),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey[400], fontSize: 12),
+        ),
+        const Spacer(),
+        Text(value, style: const TextStyle(fontSize: 12)),
       ],
     );
   }

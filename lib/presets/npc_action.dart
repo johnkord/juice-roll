@@ -501,14 +501,50 @@ class NpcActionResult extends RollResult {
     this.focus,
     this.objective,
     this.needSkew,
+    DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: _buildDescription(column, dieSize, disposition, context, focus, objective, needSkew),
           diceResults: allRolls ?? [roll],
           total: roll,
           interpretation: result,
-          metadata: _buildMetadata(column, result, dieSize, disposition, context, focus, objective, needSkew),
+          timestamp: timestamp,
+          metadata: _buildMetadata(column, result, roll, dieSize, disposition, context, focus, objective, needSkew, allRolls),
         );
+
+  @override
+  String get className => 'NpcActionResult';
+
+  factory NpcActionResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return NpcActionResult(
+      column: NpcColumn.values.firstWhere(
+        (e) => e.name == (meta['column'] as String),
+        orElse: () => NpcColumn.action,
+      ),
+      roll: meta['roll'] as int? ?? diceResults.first,
+      result: meta['result'] as String,
+      dieSize: meta['dieSize'] as int?,
+      allRolls: (meta['allRolls'] as List?)?.cast<int>() ?? diceResults,
+      disposition: meta['disposition'] != null 
+          ? NpcDisposition.values.firstWhere((e) => e.name == meta['disposition'])
+          : null,
+      context: meta['context'] != null
+          ? NpcContext.values.firstWhere((e) => e.name == meta['context'])
+          : null,
+      focus: meta['focus'] != null
+          ? NpcFocus.values.firstWhere((e) => e.name == meta['focus'])
+          : null,
+      objective: meta['objective'] != null
+          ? NpcObjective.values.firstWhere((e) => e.name == meta['objective'])
+          : null,
+      needSkew: meta['needSkew'] != null
+          ? NeedSkew.values.firstWhere((e) => e.name == meta['needSkew'])
+          : null,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildDescription(
     NpcColumn column,
@@ -548,22 +584,26 @@ class NpcActionResult extends RollResult {
   static Map<String, dynamic> _buildMetadata(
     NpcColumn column,
     String result,
+    int roll,
     int? dieSize,
     NpcDisposition? disposition,
     NpcContext? context,
     NpcFocus? focus,
     NpcObjective? objective,
     NeedSkew? needSkew,
+    List<int>? allRolls,
   ) {
     return {
       'column': column.name,
       'result': result,
+      'roll': roll,
       if (dieSize != null) 'dieSize': dieSize,
       if (disposition != null) 'disposition': disposition.name,
       if (context != null) 'context': context.name,
       if (focus != null) 'focus': focus.name,
       if (objective != null) 'objective': objective.name,
       if (needSkew != null) 'needSkew': needSkew.name,
+      if (allRolls != null) 'allRolls': allRolls,
     };
   }
 
@@ -585,14 +625,29 @@ class MotiveWithFollowUpResult extends RollResult {
     required this.motive,
     this.historyResult,
     this.focusResult,
+    DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: 'NPC Motive',
           diceResults: _buildDiceResults(roll, historyResult, focusResult),
           total: roll,
           interpretation: _buildInterpretation(motive, historyResult, focusResult),
-          metadata: _buildMetadata(motive, historyResult, focusResult),
+          timestamp: timestamp,
+          metadata: _buildMetadataMap(roll, motive, historyResult, focusResult),
         );
+
+  @override
+  String get className => 'MotiveWithFollowUpResult';
+
+  factory MotiveWithFollowUpResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return MotiveWithFollowUpResult(
+      roll: meta['roll'] as int? ?? (json['diceResults'] as List).first as int,
+      motive: meta['motive'] as String,
+      // Note: historyResult and focusResult cannot be fully reconstructed
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static List<int> _buildDiceResults(
     int roll,
@@ -623,13 +678,15 @@ class MotiveWithFollowUpResult extends RollResult {
     return motive;
   }
 
-  static Map<String, dynamic> _buildMetadata(
+  static Map<String, dynamic> _buildMetadataMap(
+    int roll,
     String motive,
     DetailResult? historyResult,
     FocusResult? focusResult,
   ) {
     return {
       'column': 'motive',
+      'roll': roll,
       'motive': motive,
       if (historyResult != null) 'history': historyResult.result,
       if (focusResult != null) 'focus': focusResult.focus,
@@ -678,6 +735,7 @@ class NpcProfileResult extends RollResult {
     required this.motive,
     this.needSkew,
     this.needAllRolls,
+    DateTime? timestamp,
   }) : super(
           type: RollType.npcAction,
           description: needSkew != null && needSkew != NeedSkew.none
@@ -686,13 +744,39 @@ class NpcProfileResult extends RollResult {
           diceResults: [personalityRoll, needRoll, motiveRoll],
           total: personalityRoll + needRoll + motiveRoll,
           interpretation: '$personality / $need / $motive',
+          timestamp: timestamp,
           metadata: {
             'personality': personality,
+            'personalityRoll': personalityRoll,
             'need': need,
+            'needRoll': needRoll,
             'motive': motive,
+            'motiveRoll': motiveRoll,
             if (needSkew != null) 'needSkew': needSkew.name,
+            if (needAllRolls != null) 'needAllRolls': needAllRolls,
           },
         );
+
+  @override
+  String get className => 'NpcProfileResult';
+
+  factory NpcProfileResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return NpcProfileResult(
+      personalityRoll: meta['personalityRoll'] as int? ?? diceResults[0],
+      personality: meta['personality'] as String,
+      needRoll: meta['needRoll'] as int? ?? diceResults[1],
+      need: meta['need'] as String,
+      motiveRoll: meta['motiveRoll'] as int? ?? diceResults[2],
+      motive: meta['motive'] as String,
+      needSkew: meta['needSkew'] != null
+          ? NeedSkew.values.firstWhere((e) => e.name == meta['needSkew'])
+          : null,
+      needAllRolls: (meta['needAllRolls'] as List?)?.cast<int>(),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() =>

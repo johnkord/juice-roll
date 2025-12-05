@@ -254,20 +254,47 @@ class DetailResult extends RollResult {
     this.emoji,
     this.skew = SkewType.none,
     this.requiresFollowUp = false,
+    DateTime? timestamp,
   }) : super(
           type: RollType.details,
           description: detailType.displayText,
           diceResults: secondRoll != null ? [roll, secondRoll] : [roll],
           total: roll,
           interpretation: emoji != null ? '$emoji $result' : result,
+          timestamp: timestamp,
           metadata: {
             'detailType': detailType.name,
             'result': result,
+            'roll': roll,
+            if (secondRoll != null) 'secondRoll': secondRoll,
             if (emoji != null) 'emoji': emoji,
             if (skew != SkewType.none) 'skew': skew.name,
             'requiresFollowUp': requiresFollowUp,
           },
         );
+
+  @override
+  String get className => 'DetailResult';
+
+  factory DetailResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DetailResult(
+      detailType: DetailType.values.firstWhere(
+        (e) => e.name == (meta['detailType'] as String),
+        orElse: () => DetailType.detail,
+      ),
+      roll: meta['roll'] as int? ?? diceResults.first,
+      secondRoll: meta['secondRoll'] as int?,
+      result: meta['result'] as String,
+      emoji: meta['emoji'] as String?,
+      skew: meta['skew'] != null 
+          ? SkewType.values.firstWhere((e) => e.name == meta['skew'])
+          : SkewType.none,
+      requiresFollowUp: meta['requiresFollowUp'] as bool? ?? false,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() =>
@@ -284,17 +311,34 @@ class PropertyResult extends RollResult {
     required this.propertyRoll,
     required this.property,
     required this.intensityRoll,
+    DateTime? timestamp,
   }) : super(
           type: RollType.details,
           description: 'Property',
           diceResults: [propertyRoll, intensityRoll],
           total: propertyRoll + intensityRoll,
           interpretation: '$property (${_intensityText(intensityRoll)})',
+          timestamp: timestamp,
           metadata: {
             'property': property,
+            'propertyRoll': propertyRoll,
             'intensity': intensityRoll,
           },
         );
+
+  @override
+  String get className => 'PropertyResult';
+
+  factory PropertyResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return PropertyResult(
+      propertyRoll: meta['propertyRoll'] as int? ?? diceResults[0],
+      property: meta['property'] as String,
+      intensityRoll: meta['intensity'] as int? ?? diceResults[1],
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _intensityText(int roll) {
     switch (roll) {
@@ -329,6 +373,7 @@ class DualPropertyResult extends RollResult {
   DualPropertyResult({
     required this.property1,
     required this.property2,
+    DateTime? timestamp,
   }) : super(
           type: RollType.details,
           description: 'Properties',
@@ -340,13 +385,36 @@ class DualPropertyResult extends RollResult {
           ],
           total: property1.propertyRoll + property2.propertyRoll,
           interpretation: '${property1.interpretation} + ${property2.interpretation}',
+          timestamp: timestamp,
           metadata: {
             'property1': property1.property,
+            'property1Roll': property1.propertyRoll,
             'intensity1': property1.intensityRoll,
             'property2': property2.property,
+            'property2Roll': property2.propertyRoll,
             'intensity2': property2.intensityRoll,
           },
         );
+
+  @override
+  String get className => 'DualPropertyResult';
+
+  factory DualPropertyResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    return DualPropertyResult(
+      property1: PropertyResult(
+        propertyRoll: meta['property1Roll'] as int? ?? 1,
+        property: meta['property1'] as String,
+        intensityRoll: meta['intensity1'] as int? ?? 1,
+      ),
+      property2: PropertyResult(
+        propertyRoll: meta['property2Roll'] as int? ?? 1,
+        property: meta['property2'] as String,
+        intensityRoll: meta['intensity2'] as int? ?? 1,
+      ),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   @override
   String toString() => 
@@ -368,6 +436,7 @@ class DetailWithFollowUpResult extends RollResult {
     required this.detailResult,
     this.historyResult,
     this.propertyResult,
+    DateTime? timestamp,
   }) : super(
           type: RollType.details,
           description: 'Detail',
@@ -380,14 +449,36 @@ class DetailWithFollowUpResult extends RollResult {
           ],
           total: detailResult.roll,
           interpretation: _buildInterpretation(detailResult, historyResult, propertyResult),
+          timestamp: timestamp,
           metadata: {
             'detail': detailResult.result,
+            'detailRoll': detailResult.roll,
             if (detailResult.skew != SkewType.none) 'skew': detailResult.skew.name,
             if (historyResult != null) 'history': historyResult.result,
             if (propertyResult != null) 'property': propertyResult.property,
             if (propertyResult != null) 'propertyIntensity': propertyResult.intensityRoll,
           },
         );
+
+  @override
+  String get className => 'DetailWithFollowUpResult';
+
+  factory DetailWithFollowUpResult.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map<String, dynamic>;
+    final diceResults = (json['diceResults'] as List).cast<int>();
+    return DetailWithFollowUpResult(
+      detailResult: DetailResult(
+        detailType: DetailType.detail,
+        roll: meta['detailRoll'] as int? ?? diceResults.first,
+        result: meta['detail'] as String,
+        skew: meta['skew'] != null
+            ? SkewType.values.firstWhere((e) => e.name == meta['skew'])
+            : SkewType.none,
+      ),
+      // Note: historyResult and propertyResult cannot be fully reconstructed
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   static String _buildInterpretation(
     DetailResult detail,
