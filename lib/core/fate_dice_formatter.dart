@@ -86,9 +86,9 @@ class FateDiceFormatter {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: backgroundColor ?? JuiceTheme.ink.withOpacity(0.3),
+        color: backgroundColor ?? JuiceTheme.ink.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.2)),
+        border: Border.all(color: JuiceTheme.parchmentDark.withValues(alpha: 0.2)),
       ),
       child: Text(
         '$label: ${diceToSymbols(dice)}',

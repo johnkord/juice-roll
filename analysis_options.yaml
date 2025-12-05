@@ -1,8 +1,18 @@
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  errors:
+    # Suppress deprecated member usage info messages (withOpacity, etc.)
+    # These will be addressed in a future Flutter upgrade
+    deprecated_member_use: ignore
+
 linter:
   rules:
-    prefer_const_constructors: true
-    prefer_const_declarations: true
+    prefer_const_constructors: false
+    prefer_const_declarations: false
+    prefer_const_literals_to_create_immutables: false
     prefer_final_fields: true
     avoid_print: false
+    use_super_parameters: false
+    unnecessary_brace_in_string_interps: false
+    overridden_fields: false

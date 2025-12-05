@@ -1495,7 +1495,6 @@ void main() {
 
     test('rollCompanionResponse favorLevel reflects roll', () {
       // Low rolls should be opposed
-      final npc1 = ExtendedNpcConversation(RollEngine(SeededRandom(1)));
       for (int seed = 0; seed < 100; seed++) {
         final npc = ExtendedNpcConversation(RollEngine(SeededRandom(seed)));
         final result = npc.rollCompanionResponse();

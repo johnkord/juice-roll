@@ -34,7 +34,6 @@ class _RollButtonState extends State<RollButton> with SingleTickerProviderStateM
     // More visible border - blend category color with gold for embossed effect
     final borderColor = Color.lerp(widget.color, JuiceTheme.gold, 0.3)!;
     // Brighter icon color for better visibility
-    final iconColor = JuiceTheme.parchment;
     final brightIconColor = Color.lerp(JuiceTheme.parchment, Colors.white, 0.15)!;
     
     return GestureDetector(

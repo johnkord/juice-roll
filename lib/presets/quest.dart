@@ -26,7 +26,9 @@ import 'wilderness.dart';
 /// - Location row 0/10: Wilderness Feature → Wilderness Feature table
 class Quest {
   final RollEngine _rollEngine;
+  // ignore: unused_field
   final RandomEvent _randomEvent;
+  // ignore: unused_field
   final Wilderness _wilderness;
   final DungeonGenerator _dungeon;
   final Settlement _settlement;
@@ -268,6 +270,7 @@ class QuestResult extends RollResult {
   final int objectiveRoll;
   final String objective;
   final int descriptionRoll;
+  @override
   final String description;
   final int? descriptionSubRoll;
   final String? descriptionExpanded;

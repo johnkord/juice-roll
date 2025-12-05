@@ -545,8 +545,7 @@ class MultiEstablishmentResult extends RollResult {
   String get className => 'MultiEstablishmentResult';
 
   factory MultiEstablishmentResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    // Cannot fully reconstruct nested objects
+    // Cannot fully reconstruct nested objects from JSON metadata
     throw UnimplementedError('MultiEstablishmentResult.fromJson requires full nested data');
   }
 
@@ -588,8 +587,7 @@ class FullSettlementResult extends RollResult {
   String get className => 'FullSettlementResult';
 
   factory FullSettlementResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    // Cannot fully reconstruct nested objects
+    // Cannot fully reconstruct nested objects from JSON metadata
     throw UnimplementedError('FullSettlementResult.fromJson requires full nested data');
   }
 
@@ -634,8 +632,7 @@ class CompleteSettlementResult extends RollResult {
   String get className => 'CompleteSettlementResult';
 
   factory CompleteSettlementResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    // Cannot fully reconstruct nested objects
+    // Cannot fully reconstruct nested objects from JSON metadata
     throw UnimplementedError('CompleteSettlementResult.fromJson requires full nested data');
   }
 

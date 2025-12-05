@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/roll_result.dart';
 import '../models/roll_result_factory.dart';
 import '../models/session.dart';
 import '../services/session_service.dart';
 import '../core/roll_engine.dart';
-import '../core/table_lookup.dart';
 import '../presets/fate_check.dart';
 import '../presets/expectation_check.dart';
 import '../presets/next_scene.dart';
@@ -263,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
           
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(content: Text('Deleted session: ${session.name}')),
             );
           }
@@ -333,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
               await _switchSession(session);
               
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(this.context).showSnackBar(
                   SnackBar(content: Text('Created session: $name')),
                 );
               }
@@ -367,7 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
           
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(content: Text('Deleted session: ${session.name}')),
             );
           }
@@ -375,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onExport: () async {
           await fullSession.copyToClipboard();
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(this.context).showSnackBar(
               const SnackBar(
                 content: Text('Session copied to clipboard! Paste it somewhere safe to back up.'),
                 duration: Duration(seconds: 3),
@@ -405,11 +403,13 @@ class _HomeScreenState extends State<HomeScreen> {
     
     if (!mounted) return;
     
+    final messenger = ScaffoldMessenger.of(context);
+    
     if (session != null) {
       final sessions = await _sessionService.getSessions();
       setState(() => _sessions = sessions);
       
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Imported session: ${session.name}'),
           action: SnackBarAction(
@@ -419,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('No valid session data found in clipboard'),
           backgroundColor: Colors.red,
@@ -678,8 +678,8 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8.0),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -688,7 +688,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: JuiceTheme.juiceOrange,
                 size: 24,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Text(
                 'Juice',
                 style: TextStyle(
@@ -938,7 +938,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Subtle divider matching theme
           Container(
             height: 1,
-            color: JuiceTheme.parchmentDark.withOpacity(0.2),
+            color: JuiceTheme.parchmentDark.withValues(alpha: 0.2),
           ),
 
           // History Section
@@ -952,22 +952,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icon(
                           Icons.auto_stories,
                           size: 64,
-                          color: JuiceTheme.parchmentDark.withOpacity(0.4),
+                          color: JuiceTheme.parchmentDark.withValues(alpha: 0.4),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'No rolls yet',
                           style: TextStyle(
                             fontFamily: JuiceTheme.fontFamilySerif,
-                            color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                            color: JuiceTheme.parchmentDark.withValues(alpha: 0.6),
                             fontSize: 18,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Tap a button above to roll',
                           style: TextStyle(
-                            color: JuiceTheme.parchmentDark.withOpacity(0.4),
+                            color: JuiceTheme.parchmentDark.withValues(alpha: 0.4),
                           ),
                         ),
                       ],
@@ -2534,38 +2534,6 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     }
   }
 
-  Widget _buildDoublesIndicator(String label, bool isActive, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: isActive ? color.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: isActive ? color : Colors.grey.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isActive ? Icons.check_circle : Icons.radio_button_unchecked,
-            size: 12,
-            color: isActive ? color : Colors.grey,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$label Doubles',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive ? color : Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -3251,14 +3219,10 @@ class _DungeonDialogState extends State<_DungeonDialog> {
 class _ScrollableDialogContent extends StatefulWidget {
   final Widget? child;
   final List<Widget>? children;
-  final Widget? stickyHeader;
-  final CrossAxisAlignment crossAxisAlignment;
 
   const _ScrollableDialogContent({
     this.child,
     this.children,
-    this.stickyHeader,
-    this.crossAxisAlignment = CrossAxisAlignment.start,
   }) : assert(child != null || children != null, 'Either child or children must be provided');
 
   @override
@@ -3297,11 +3261,6 @@ class _ScrollableDialogContentState extends State<_ScrollableDialogContent> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Sticky header if provided
-        if (widget.stickyHeader != null) ...[
-          widget.stickyHeader!,
-          const SizedBox(height: 8),
-        ],
         // Scroll up indicator
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
@@ -3334,7 +3293,7 @@ class _ScrollableDialogContentState extends State<_ScrollableDialogContent> {
             controller: _scrollController,
             child: widget.child ?? Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: widget.crossAxisAlignment,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: widget.children!,
             ),
           ),
@@ -3374,22 +3333,19 @@ class _ScrollableDialogContentState extends State<_ScrollableDialogContent> {
 class _SectionHeader extends StatelessWidget {
   final String title;
   final IconData icon;
-  final Color? color;
 
   const _SectionHeader({
     required this.title,
     required this.icon,
-    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = color ?? JuiceTheme.gold;
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: iconColor),
+          Icon(icon, size: 16, color: JuiceTheme.gold),
           const SizedBox(width: 6),
           Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
@@ -3423,11 +3379,11 @@ class _DialogOption extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             decoration: BoxDecoration(
               border: Border.all(
-                color: JuiceTheme.gold.withOpacity(0.3),
+                color: JuiceTheme.gold.withValues(alpha: 0.3),
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(8),
-              color: JuiceTheme.gold.withOpacity(0.08),
+              color: JuiceTheme.gold.withValues(alpha: 0.08),
             ),
             child: Row(
               children: [
@@ -3437,7 +3393,7 @@ class _DialogOption extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           color: JuiceTheme.gold,
                         ),
@@ -3445,7 +3401,7 @@ class _DialogOption extends StatelessWidget {
                       if (subtitle != null)
                         Text(
                           subtitle!,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                             color: JuiceTheme.parchmentDark,
                           ),
@@ -3456,7 +3412,7 @@ class _DialogOption extends StatelessWidget {
                 Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: JuiceTheme.gold.withOpacity(0.6),
+                  color: JuiceTheme.gold.withValues(alpha: 0.6),
                 ),
               ],
             ),
@@ -3586,7 +3542,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                   children: [
                     // Environment dropdown
                     DropdownButtonFormField<int>(
-                      value: _selectedEnvironment,
+                      initialValue: _selectedEnvironment,
                       decoration: const InputDecoration(
                         labelText: 'Environment',
                         isDense: true,
@@ -3604,7 +3560,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                     const SizedBox(height: 8),
                     // Type dropdown
                     DropdownButtonFormField<int>(
-                      value: _selectedType,
+                      initialValue: _selectedType,
                       decoration: const InputDecoration(
                         labelText: 'Type',
                         isDense: true,
@@ -3910,7 +3866,7 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
                     const SizedBox(height: 8),
                     // Environment selector
                     DropdownButtonFormField<int>(
-                      value: _selectedEnvironment,
+                      initialValue: _selectedEnvironment,
                       decoration: const InputDecoration(
                         labelText: 'Select Environment',
                         isDense: true,
@@ -3941,9 +3897,9 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
               const Divider(),
               const _SectionHeader(icon: Icons.flash_on, title: 'Quick Rolls'),
               const SizedBox(height: 4),
-              Text(
+              const Text(
                 MonsterEncounter.deadlyExplanation,
-                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
               ),
             const Divider(),
             _DialogOption(

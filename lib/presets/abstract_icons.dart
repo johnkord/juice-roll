@@ -1,4 +1,3 @@
-import 'dart:math';
 import '../models/roll_result.dart';
 import '../core/roll_engine.dart';
 
@@ -68,7 +67,7 @@ class AbstractIconResult extends RollResult {
     required this.rowLabel,
     required this.colLabel,
     required String imagePath,
-    DateTime? timestamp,
+    super.timestamp,
   }) : super(
           type: RollType.abstractIcons,
           description: 'Abstract Icons',
@@ -76,7 +75,6 @@ class AbstractIconResult extends RollResult {
           total: d10Roll + d6Roll,
           interpretation: '($rowLabel, $colLabel)',
           imagePath: imagePath,
-          timestamp: timestamp,
           metadata: {
             'rowLabel': rowLabel,
             'colLabel': colLabel,

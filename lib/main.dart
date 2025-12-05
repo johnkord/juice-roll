@@ -44,7 +44,7 @@ class PhoneFrame extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.3), width: 2),
+                border: Border.all(color: JuiceTheme.parchmentDark.withValues(alpha: 0.3), width: 2),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Navigator(

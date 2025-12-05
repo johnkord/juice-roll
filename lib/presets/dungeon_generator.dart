@@ -858,8 +858,7 @@ class FullDungeonAreaResult extends RollResult {
   String get className => 'FullDungeonAreaResult';
 
   factory FullDungeonAreaResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    // Cannot fully reconstruct nested objects
+    // Cannot fully reconstruct nested objects from JSON metadata
     throw UnimplementedError('FullDungeonAreaResult.fromJson requires full nested data');
   }
 
@@ -1003,8 +1002,7 @@ class DungeonEncounterResult extends RollResult {
   String get className => 'DungeonEncounterResult';
 
   factory DungeonEncounterResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    // Cannot fully reconstruct nested objects
+    // Cannot fully reconstruct nested objects from JSON metadata
     throw UnimplementedError('DungeonEncounterResult.fromJson requires full nested data');
   }
 
@@ -1101,8 +1099,7 @@ class TwoPassAreaResult extends RollResult {
   String get className => 'TwoPassAreaResult';
 
   factory TwoPassAreaResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    // Cannot fully reconstruct nested objects
+    // Cannot fully reconstruct nested objects from JSON metadata
     throw UnimplementedError('TwoPassAreaResult.fromJson requires full nested data');
   }
 
@@ -1205,8 +1202,7 @@ class TrapProcedureResult extends RollResult {
   String get className => 'TrapProcedureResult';
 
   factory TrapProcedureResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    // Cannot fully reconstruct nested objects
+    // Cannot fully reconstruct nested objects from JSON metadata
     throw UnimplementedError('TrapProcedureResult.fromJson requires full nested data');
   }
 
