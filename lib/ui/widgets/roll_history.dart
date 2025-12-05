@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/fate_dice_formatter.dart';
+import '../../core/dice_display_formatter.dart';
 import '../../models/roll_result.dart';
 import '../../presets/fate_check.dart';
 import '../../presets/next_scene.dart';
@@ -319,7 +320,7 @@ class _RollHistoryCard extends StatelessWidget {
               theme: theme,
             ),
             const SizedBox(width: 12),
-            // Intensity die
+            // Intensity die with label
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -327,19 +328,13 @@ class _RollHistoryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.purple.withOpacity(0.3)),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.flash_on, size: 14, color: Colors.purple),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${result.intensity}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.purple,
-                    ),
-                  ),
-                ],
+              child: Text(
+                '1d6: ${result.intensity}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple,
+                ),
               ),
             ),
             const Spacer(),
@@ -553,6 +548,21 @@ class _RollHistoryCard extends StatelessWidget {
             children: [
               const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
               const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'd10: ${result.focusResult!.roll}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               Text(
                 'Focus: ',
                 style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
@@ -573,11 +583,28 @@ class _RollHistoryCard extends StatelessWidget {
             children: [
               const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
               const SizedBox(width: 4),
-              Text(
-                '${result.ideaResult!.modifier} ${result.ideaResult!.idea}',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontStyle: FontStyle.italic,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '2d10: [${result.ideaResult!.modifierRoll}, ${result.ideaResult!.ideaRoll}]',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  '${result.ideaResult!.modifier} ${result.ideaResult!.idea}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ],
@@ -589,6 +616,21 @@ class _RollHistoryCard extends StatelessWidget {
             children: [
               const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
               const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '2d10: [${result.plotPointResult!.categoryRoll}, ${result.plotPointResult!.eventRoll}]',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               Chip(
                 label: Text(result.plotPointResult!.category),
                 backgroundColor: Colors.purple.withOpacity(0.2),
@@ -597,10 +639,12 @@ class _RollHistoryCard extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
               const SizedBox(width: 8),
-              Text(
-                result.plotPointResult!.event,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Flexible(
+                child: Text(
+                  result.plotPointResult!.event,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -614,6 +658,23 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice rolls display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '3d10: ${result.focusRoll}, ${result.modifierRoll}, ${result.ideaRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.amber.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         Chip(
           label: Text(result.focus),
           backgroundColor: Colors.amber.withOpacity(0.2),
@@ -634,33 +695,96 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData theme) {
-    return Chip(
-      label: Text(result.focus),
-      backgroundColor: Colors.amber.withOpacity(0.2),
-      side: const BorderSide(color: Colors.amber),
-      padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '1d10: ${result.focusRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.amber.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Chip(
+          label: Text(result.focus),
+          backgroundColor: Colors.amber.withOpacity(0.2),
+          side: const BorderSide(color: Colors.amber),
+          padding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
     );
   }
 
   Widget _buildIdeaDisplay(IdeaResult result, ThemeData theme) {
-    return Text(
-      '${result.modifier} ${result.idea}',
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        fontStyle: FontStyle.italic,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '2d10: ${result.modifierRoll}, ${result.ideaRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.orange.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${result.modifier} ${result.idea}',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildDiscoverMeaningDisplay(DiscoverMeaningResult result, ThemeData theme) {
-    return Text(
-      result.meaning,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        fontStyle: FontStyle.italic,
-        color: Colors.orange,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '2d20: ${result.adjectiveRoll}, ${result.nounRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.orange.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          result.meaning,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+            color: Colors.orange,
+          ),
+        ),
+      ],
     );
   }
 
@@ -668,6 +792,23 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice roll display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.teal.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '1d10: ${result.roll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.teal.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         // Main motive
         Row(
           children: [
@@ -702,6 +843,21 @@ class _RollHistoryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'd10: ${result.historyResult?.roll ?? result.focusResult?.roll ?? "?"}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
                     color: Colors.deepPurple.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -733,21 +889,49 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildNpcActionDisplay(NpcActionResult result, ThemeData theme) {
-    return Row(
+    // Build dice notation string
+    final dieSize = result.dieSize ?? 10;
+    final diceNotation = result.allRolls != null && result.allRolls!.length > 1
+        ? 'd$dieSize@: ${result.allRolls!.join(", ")} → ${result.roll}'
+        : '1d$dieSize: ${result.roll}';
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Chip(
-          label: Text(result.column.displayText),
-          backgroundColor: Colors.teal.withOpacity(0.2),
-          side: const BorderSide(color: Colors.teal),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          result.result,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+        // Dice roll display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.teal.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
+          child: Text(
+            diceNotation,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.teal.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Chip(
+              label: Text(result.column.displayText),
+              backgroundColor: Colors.teal.withOpacity(0.2),
+              side: const BorderSide(color: Colors.teal),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              result.result,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -757,6 +941,23 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice rolls display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.teal.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '3d10: ${result.personalityRoll}, ${result.needRoll}, ${result.motiveRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.teal.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         Text(
           result.personality,
           style: theme.textTheme.titleMedium?.copyWith(
@@ -779,6 +980,23 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice roll display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '1d10: ${result.roll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.red.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         if (result.isMajorTwist)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -910,11 +1128,32 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildSettlementNameDisplay(SettlementNameResult result, ThemeData theme) {
-    return Text(
-      result.name,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.blueGrey.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '2d10: ${result.prefixRoll}, ${result.suffixRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          result.name,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 
@@ -953,6 +1192,15 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Show dice rolls for both properties
+        DiceDisplayFormatter.buildMultipleDiceDisplay(
+          diceGroups: [
+            (label: 'd10+d6', values: [result.property1.propertyRoll, result.property1.intensityRoll]),
+            (label: 'd10+d6', values: [result.property2.propertyRoll, result.property2.intensityRoll]),
+          ],
+          theme: theme,
+        ),
+        const SizedBox(height: 6),
         Row(
           children: [
             Chip(
@@ -982,6 +1230,15 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice rolls for name and profile
+        DiceDisplayFormatter.buildMultipleDiceDisplay(
+          diceGroups: [
+            (label: '${result.name.rolls.length}d10', values: result.name.rolls),
+            (label: '3d10', values: [result.profile.personalityRoll, result.profile.needRoll, result.profile.motiveRoll]),
+          ],
+          theme: theme,
+        ),
+        const SizedBox(height: 6),
         Text(
           result.name.name,
           style: theme.textTheme.titleMedium?.copyWith(
@@ -1115,6 +1372,23 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice roll display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '4d6: ${result.rolls.join(", ")}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.amber.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         Chip(
           label: Text(result.category),
           backgroundColor: Colors.amber.withOpacity(0.2),
@@ -1134,53 +1408,117 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildChallengeSkillDisplay(ChallengeSkillResult result, ThemeData theme) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Chip(
-          label: Text(result.challengeType.displayText),
-          backgroundColor: Colors.indigo.withOpacity(0.2),
-          side: const BorderSide(color: Colors.indigo),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '${result.skill} (DC ${result.suggestedDc})',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+        // Dice roll display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.indigo.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
+          child: Text(
+            '1d10: ${result.roll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.indigo.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Chip(
+              label: Text(result.challengeType.displayText),
+              backgroundColor: Colors.indigo.withOpacity(0.2),
+              side: const BorderSide(color: Colors.indigo),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${result.skill} (DC ${result.suggestedDc})',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildQuickDcDisplay(QuickDcResult result, ThemeData theme) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'DC',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: Colors.grey,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.indigo.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '2d6: ${result.dice.join(", ")} + 6',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.indigo.shade700,
+            ),
           ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          '${result.dc}',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.indigo,
-          ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Text(
+              'DC',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${result.dc}',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.indigo,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildSensoryDetailDisplay(SensoryDetailResult result, ThemeData theme) {
-    return Text(
-      'You ${result.sense.toLowerCase()} something ${result.detail.toLowerCase()} ${result.where.toLowerCase()}',
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontStyle: FontStyle.italic,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.deepOrange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '3d10: ${result.senseRoll}, ${result.detailRoll}, ${result.whereRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'You ${result.sense.toLowerCase()} something ${result.detail.toLowerCase()} ${result.where.toLowerCase()}',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1188,6 +1526,22 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.deepOrange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '2d10: ${result.emotionRoll}, ${result.causeRoll} + 1dF: ${result.isPositive ? "+" : "−"}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         Row(
           children: [
             Chip(
@@ -1347,7 +1701,7 @@ class _RollHistoryCard extends StatelessWidget {
           theme: theme,
         ),
         const SizedBox(width: 12),
-        // Intensity die with lightning bolt
+        // Intensity die (1d6) with label
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -1355,19 +1709,13 @@ class _RollHistoryCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.purple.withOpacity(0.3)),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.flash_on, size: 14, color: Colors.purple),
-              const SizedBox(width: 4),
-              Text(
-                '${result.intensity}',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.purple,
-                ),
-              ),
-            ],
+          child: Text(
+            '1d6: ${result.intensity}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.purple,
+            ),
           ),
         ),
         const Spacer(),
@@ -1558,6 +1906,23 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Sensory dice display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.deepOrange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '3d10: ${result.sensory.senseRoll}, ${result.sensory.detailRoll}, ${result.sensory.whereRoll} + 2d10: ${result.emotional.emotionRoll}, ${result.emotional.causeRoll} + 1dF',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         Text(
           'You ${result.sensory.sense.toLowerCase()} something ${result.sensory.detail.toLowerCase()} ${result.sensory.where.toLowerCase()}',
           style: theme.textTheme.titleMedium?.copyWith(
@@ -1591,47 +1956,114 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Chip(
-          label: Text(result.property),
-          backgroundColor: Colors.pink.withOpacity(0.2),
-          side: const BorderSide(color: Colors.pink),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          result.intensityDescription,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.pink.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
+          child: Text(
+            '1d10: ${result.propertyRoll}, 1d6: ${result.intensityRoll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.pink.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Chip(
+              label: Text(result.property),
+              backgroundColor: Colors.pink.withOpacity(0.2),
+              side: const BorderSide(color: Colors.pink),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              result.intensityDescription,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildDetailResultDisplay(DetailResult result, ThemeData theme) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (result.emoji != null) ...[
-          Text(result.emoji!, style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 8),
-        ],
-        Text(
-          result.result,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.pink.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
+          child: Text(
+            result.secondRoll != null
+                ? '1d10@: ${result.roll}, ${result.secondRoll}'
+                : '1d10: ${result.roll}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.pink.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            if (result.emoji != null) ...[
+              Text(result.emoji!, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              result.result,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildDetailWithFollowUpDisplay(DetailWithFollowUpResult result, ThemeData theme) {
+    // Build dice display for main detail
+    final mainDiceLabel = result.detailResult.secondRoll != null ? '2d10' : 'd10';
+    final mainDiceValues = result.detailResult.secondRoll != null
+        ? '[${result.detailResult.roll}, ${result.detailResult.secondRoll}]'
+        : '${result.detailResult.roll}';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice roll for main detail
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.pink.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '$mainDiceLabel: $mainDiceValues',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+              color: Colors.pink.shade700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         // Main detail result
         Row(
           children: [
@@ -1670,6 +2102,21 @@ class _RollHistoryCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'd10: ${result.historyResult!.roll}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
                 Icon(Icons.history, size: 16, color: Colors.purple.shade600),
                 const SizedBox(width: 6),
                 Text(
@@ -1696,6 +2143,21 @@ class _RollHistoryCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'd10+d6: [${result.propertyResult!.propertyRoll}, ${result.propertyResult!.intensityRoll}]',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
                 Icon(Icons.tune, size: 16, color: Colors.teal.shade600),
                 const SizedBox(width: 6),
                 Text(
@@ -1982,7 +2444,7 @@ class _RollHistoryCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '${result.followUpRoll}',
+                              'd10: ${result.followUpRoll}',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'monospace',
@@ -2130,11 +2592,32 @@ class _RollHistoryCard extends StatelessWidget {
         weatherColor = Colors.grey;
     }
 
+    // Determine dice label based on whether there was a second roll (advantage/disadvantage)
+    final diceLabel = result.secondRoll != null ? '2d6' : '1d6';
+    final diceDisplay = result.secondRoll != null
+        ? '[${result.baseRoll}, ${result.secondRoll}]'
+        : '${result.baseRoll}';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.cyan.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$diceLabel: $diceDisplay',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -2195,13 +2678,31 @@ class _RollHistoryCard extends StatelessWidget {
       MonsterDifficulty.hard => Colors.red,
       MonsterDifficulty.boss => Colors.purple,
     };
+
+    // Determine dice display based on advantage type
+    final diceLabel = result.diceResults.length > 1 ? '2d6' : '1d6';
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Environment and formula info
+        // Dice roll with environment and formula info
         Row(
           children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$diceLabel: [${result.diceResults.join(", ")}]',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -2229,8 +2730,12 @@ class _RollHistoryCard extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
             if (result.isForest && result.row == 10) ...[
-              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -2242,13 +2747,8 @@ class _RollHistoryCard extends StatelessWidget {
                   style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold),
                 ),
               ),
+              const SizedBox(width: 8),
             ],
-          ],
-        ),
-        const SizedBox(height: 8),
-        // Difficulty indicator
-        Row(
-          children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
