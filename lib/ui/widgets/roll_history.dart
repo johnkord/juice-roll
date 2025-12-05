@@ -835,29 +835,73 @@ class _RollHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice roll display
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
+            color: JuiceTheme.juiceOrange.withOpacity(0.12),
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.3)),
           ),
           child: Text(
             '2d20: ${result.adjectiveRoll}, ${result.nounRoll}',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontFamily: 'monospace',
               fontWeight: FontWeight.bold,
-              color: Colors.orange.shade700,
+              color: JuiceTheme.juiceOrange,
             ),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          result.meaning,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontStyle: FontStyle.italic,
-            color: Colors.orange,
-          ),
+        const SizedBox(height: 8),
+        // Two-word meaning display with distinct styling
+        Row(
+          children: [
+            // Adjective/Verb (first word)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: JuiceTheme.mystic.withOpacity(0.12),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
+                ),
+                border: Border.all(color: JuiceTheme.mystic.withOpacity(0.4)),
+              ),
+              child: Text(
+                result.adjective,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  fontStyle: FontStyle.italic,
+                  color: JuiceTheme.mystic,
+                ),
+              ),
+            ),
+            // Noun (second word)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: JuiceTheme.gold.withOpacity(0.15),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+                border: Border(
+                  top: BorderSide(color: JuiceTheme.gold.withOpacity(0.5)),
+                  bottom: BorderSide(color: JuiceTheme.gold.withOpacity(0.5)),
+                  right: BorderSide(color: JuiceTheme.gold.withOpacity(0.5)),
+                ),
+              ),
+              child: Text(
+                result.noun,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: JuiceTheme.gold,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -1855,26 +1899,89 @@ class _RollHistoryCard extends StatelessWidget {
   // ============ END DUNGEON DISPLAY METHODS ============
 
   Widget _buildInterruptDisplay(InterruptPlotPointResult result, ThemeData theme) {
-    return Row(
+    // Get category color
+    final categoryColor = _getInterruptCategoryColor(result.category);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Chip(
-          label: Text(result.category),
-          backgroundColor: Colors.deepPurple.withOpacity(0.2),
-          side: const BorderSide(color: Colors.deepPurple),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            result.event,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+        // Category chip with icon
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: categoryColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: categoryColor.withOpacity(0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_getInterruptCategoryIcon(result.category), size: 14, color: categoryColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    result.category,
+                    style: TextStyle(
+                      color: categoryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(width: 10),
+            // Event name
+            Expanded(
+              child: Text(
+                result.event,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: JuiceTheme.parchment,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
+  }
+
+  /// Get color for interrupt category
+  Color _getInterruptCategoryColor(String category) {
+    switch (category) {
+      case 'Action':
+        return JuiceTheme.danger;
+      case 'Tension':
+        return JuiceTheme.juiceOrange;
+      case 'Mystery':
+        return JuiceTheme.mystic;
+      case 'Social':
+        return JuiceTheme.info;
+      case 'Personal':
+        return JuiceTheme.categoryCharacter;
+      default:
+        return JuiceTheme.parchmentDark;
+    }
+  }
+
+  /// Get icon for interrupt category
+  IconData _getInterruptCategoryIcon(String category) {
+    switch (category) {
+      case 'Action':
+        return Icons.flash_on;
+      case 'Tension':
+        return Icons.warning_amber;
+      case 'Mystery':
+        return Icons.help_outline;
+      case 'Social':
+        return Icons.groups;
+      case 'Personal':
+        return Icons.person;
+      default:
+        return Icons.bolt;
+    }
   }
 
   Widget _buildSettlementNameDisplay(SettlementNameResult result, ThemeData theme) {
@@ -2434,12 +2541,16 @@ class _RollHistoryCard extends StatelessWidget {
   Widget _buildScaleDisplay(ScaleResult result, ThemeData theme) {
     // Determine color based on scale direction
     Color scaleColor;
+    IconData scaleIcon;
     if (result.isIncrease) {
-      scaleColor = Colors.green;
+      scaleColor = JuiceTheme.success;
+      scaleIcon = Icons.trending_up;
     } else if (result.isDecrease) {
-      scaleColor = Colors.red;
+      scaleColor = JuiceTheme.danger;
+      scaleIcon = Icons.trending_down;
     } else {
-      scaleColor = Colors.grey;
+      scaleColor = JuiceTheme.parchmentDark;
+      scaleIcon = Icons.trending_flat;
     }
 
     return Row(
@@ -2450,40 +2561,47 @@ class _RollHistoryCard extends StatelessWidget {
           dice: result.fateDice,
           theme: theme,
         ),
-        const SizedBox(width: 12),
-        // Intensity die (1d6) with label
+        const SizedBox(width: 10),
+        // Intensity die (1d6) with label - using JuiceTheme
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.purple.withOpacity(0.1),
+            color: JuiceTheme.mystic.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.purple.withOpacity(0.3)),
+            border: Border.all(color: JuiceTheme.mystic.withOpacity(0.4)),
           ),
           child: Text(
             '1d6: ${result.intensity}',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontFamily: 'monospace',
               fontWeight: FontWeight.bold,
-              color: Colors.purple,
+              color: JuiceTheme.mystic,
             ),
           ),
         ),
         const Spacer(),
-        // Scale result chip
+        // Scale result chip with icon
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: scaleColor.withOpacity(0.2),
+            color: scaleColor.withOpacity(0.15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scaleColor),
+            border: Border.all(color: scaleColor.withOpacity(0.6), width: 1.5),
           ),
-          child: Text(
-            result.modifier,
-            style: TextStyle(
-              color: scaleColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(scaleIcon, size: 16, color: scaleColor),
+              const SizedBox(width: 4),
+              Text(
+                result.modifier,
+                style: TextStyle(
+                  color: scaleColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ],
           ),
         ),
       ],

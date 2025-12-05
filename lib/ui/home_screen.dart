@@ -2063,84 +2063,226 @@ class _DetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Details (Front Page)'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _DialogOption(
-            title: 'Color',
-            subtitle: 'd10 - eye/hair, armor, banners, etc.',
-            onTap: () {
-              onRoll(details.rollColor());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Property ×2',
-            subtitle: 'd10+d6 twice - describe items, NPCs, settlements',
-            onTap: () {
-              onRoll(details.rollTwoProperties());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Property ×1',
-            subtitle: 'd10+d6 once - single property with intensity',
-            onTap: () {
-              onRoll(details.rollProperty());
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(),
-          _DialogOption(
-            title: 'Detail',
-            subtitle: 'd10 - ground meaning to thread/character/emotion (auto-rolls History/Property)',
-            onTap: () {
-              onRoll(details.rollDetailWithFollowUp());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Detail (Positive)',
-            subtitle: 'd10 advantage - skew toward favorable',
-            onTap: () {
-              onRoll(details.rollDetailWithFollowUp(skew: SkewType.advantage));
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Detail (Negative)',
-            subtitle: 'd10 disadvantage - skew toward unfavorable',
-            onTap: () {
-              onRoll(details.rollDetailWithFollowUp(skew: SkewType.disadvantage));
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(),
-          _DialogOption(
-            title: 'History',
-            subtitle: 'd10 - tie elements to the past',
-            onTap: () {
-              onRoll(details.rollHistory());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'History (Recent)',
-            subtitle: 'd10 advantage - closer to present',
-            onTap: () {
-              onRoll(details.rollHistory(skew: SkewType.advantage));
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'History (Distant)',
-            subtitle: 'd10 disadvantage - further into past',
-            onTap: () {
-              onRoll(details.rollHistory(skew: SkewType.disadvantage));
-              Navigator.pop(context);
-            },
-          ),
-        ],
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Introduction from Juice instructions
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: JuiceTheme.parchmentDark.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'The Front Page adds flavor to anything. '
+                'Use it for NPCs, items, settlements, or to interpret oracle results.',
+                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Color Section
+            const _SectionHeader(title: 'Color', icon: Icons.palette),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Eye/hair color, armor accents, banners, dragon species...',
+                style: TextStyle(fontSize: 10, color: JuiceTheme.parchmentDark),
+              ),
+            ),
+            _DialogOption(
+              title: 'Color',
+              subtitle: 'd10 → Shade Black, Leather Brown, Forest Green, Crimson Red...',
+              onTap: () {
+                onRoll(details.rollColor());
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(height: 20),
+            
+            // Property Section - The most important!
+            Row(
+              children: [
+                Icon(Icons.tune, size: 16, color: JuiceTheme.gold),
+                const SizedBox(width: 6),
+                const Text('Property', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: JuiceTheme.gold.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    '★ ESSENTIAL',
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: JuiceTheme.gold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.gold.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.2)),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '"If you only take one table, take this one."',
+                    style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'd10 → Age, Durability, Familiarity, Power, Quality, Rarity, Size, Style, Value, Weight',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                  Text(
+                    'd6 → Minimal, Minor, Mundane, Moderate, Major, Maximum',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            _DialogOption(
+              title: 'Property ×2',
+              subtitle: 'd10+d6 twice → e.g., "Major Style" + "Minimal Power"',
+              onTap: () {
+                onRoll(details.rollTwoProperties());
+                Navigator.pop(context);
+              },
+            ),
+            _DialogOption(
+              title: 'Property ×1',
+              subtitle: 'd10+d6 once → single property with intensity',
+              onTap: () {
+                onRoll(details.rollProperty());
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(height: 20),
+            
+            // Detail Section
+            const _SectionHeader(title: 'Detail', icon: Icons.help_outline),
+            Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.mystic.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Oracle threw a curveball? Ground the meaning to a thread, '
+                'character, or emotion. Auto-rolls History/Property if needed.',
+                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+              ),
+            ),
+            _DialogOption(
+              title: 'Detail',
+              subtitle: 'd10 → Emotion / Favors / Disfavors (PC, Thread, NPC)',
+              onTap: () {
+                onRoll(details.rollDetailWithFollowUp());
+                Navigator.pop(context);
+              },
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Positive',
+                    subtitle: '@+ Favorable',
+                    icon: Icons.add_circle_outline,
+                    iconColor: JuiceTheme.success,
+                    onTap: () {
+                      onRoll(details.rollDetailWithFollowUp(skew: SkewType.advantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Negative',
+                    subtitle: '@- Unfavorable',
+                    icon: Icons.remove_circle_outline,
+                    iconColor: JuiceTheme.danger,
+                    onTap: () {
+                      onRoll(details.rollDetailWithFollowUp(skew: SkewType.disadvantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+            
+            // History Section
+            const _SectionHeader(title: 'History', icon: Icons.history),
+            Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.rust.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Tie elements to the past. Links current events to '
+                'backstory, past scenes, previous actions, or current threads.',
+                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+              ),
+            ),
+            _DialogOption(
+              title: 'History',
+              subtitle: 'd10 → Backstory, Past Thread, Previous Scene, Current Action...',
+              onTap: () {
+                onRoll(details.rollHistory());
+                Navigator.pop(context);
+              },
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Recent',
+                    subtitle: '@+ Present',
+                    icon: Icons.arrow_upward,
+                    iconColor: JuiceTheme.info,
+                    onTap: () {
+                      onRoll(details.rollHistory(skew: SkewType.advantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Distant',
+                    subtitle: '@- Past',
+                    icon: Icons.arrow_downward,
+                    iconColor: JuiceTheme.sepia,
+                    onTap: () {
+                      onRoll(details.rollHistory(skew: SkewType.disadvantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -2148,6 +2290,77 @@ class _DetailsDialog extends StatelessWidget {
           child: const Text('Cancel'),
         ),
       ],
+    );
+  }
+}
+
+/// Compact dialog option for side-by-side layouts (e.g., advantage/disadvantage).
+class _CompactDialogOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _CompactDialogOption({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: iconColor.withValues(alpha: 0.4),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              color: iconColor.withValues(alpha: 0.08),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 14, color: iconColor),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                          color: iconColor,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: iconColor.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -2163,91 +2376,245 @@ class _ImmersionDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Immersion'),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Introduction from Juice instructions
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: JuiceTheme.juiceOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Become your character. Be where they are, see what they see, '
+                'feel what they feel. Perfect when you\'re "stuck" — provides hints about the environment.',
+                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Full Immersion - highlighted as main option
+            Row(
+              children: [
+                Icon(Icons.auto_awesome, size: 16, color: JuiceTheme.gold),
+                const SizedBox(width: 6),
+                const Text('Full Immersion', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: JuiceTheme.gold.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    '★ COMPLETE',
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: JuiceTheme.gold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.gold.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.2)),
+              ),
+              child: const Text(
+                'Generates: "You [sense] something [detail] [where], and it causes [emotion] because [cause]"',
+                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+              ),
+            ),
             _DialogOption(
               title: 'Full Immersion',
-              subtitle: '5d10 + 1dF - Sense + Detail + Where + Emotion + Cause',
+              subtitle: '5d10 + 1dF → Sense + Detail + Where + Emotion + Cause',
               onTap: () {
                 onRoll(immersion.generateFullImmersion());
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
-              child: Text('Sensory Detail (3d10)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Divider(height: 20),
+            
+            // Sensory Detail Section
+            const _SectionHeader(title: 'Sensory Detail', icon: Icons.visibility),
+            Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'd10 Sense → See (1-3), Hear (4-6), Smell (7-8), Feel (9-0)',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                  Text(
+                    'd10 Detail → Based on sense (e.g., See: Broken, Colorful, Shiny...)',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                  Text(
+                    'd10 Where → Above, Behind, In The Distance, Next To You...',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
             ),
             _DialogOption(
               title: 'Sensory Detail',
-              subtitle: 'd10 - all senses',
+              subtitle: '3d10 → "You [sense] something [detail] [where]"',
               onTap: () {
                 onRoll(immersion.generateSensoryDetail());
                 Navigator.pop(context);
               },
             ),
-            _DialogOption(
-              title: 'Sensory (Closer)',
-              subtitle: 'd10 advantage - it is closer to you',
-              onTap: () {
-                onRoll(immersion.generateSensoryDetail(skew: SkewType.advantage));
-                Navigator.pop(context);
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Closer',
+                    subtitle: '@+ Near you',
+                    icon: Icons.near_me,
+                    iconColor: JuiceTheme.success,
+                    onTap: () {
+                      onRoll(immersion.generateSensoryDetail(skew: SkewType.advantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Further',
+                    subtitle: '@- Far away',
+                    icon: Icons.explore,
+                    iconColor: JuiceTheme.info,
+                    onTap: () {
+                      onRoll(immersion.generateSensoryDetail(skew: SkewType.disadvantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 4),
             _DialogOption(
-              title: 'Sensory (Further)',
-              subtitle: 'd10 disadvantage - it is further from you',
-              onTap: () {
-                onRoll(immersion.generateSensoryDetail(skew: SkewType.disadvantage));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Sensory (Distant Only)',
-              subtitle: 'd6 - only distant senses (See, Hear)',
+              title: 'Distant Senses Only',
+              subtitle: 'd6 → See or Hear only (for exploration/scouting)',
               onTap: () {
                 onRoll(immersion.generateSensoryDetail(senseDie: 6));
                 Navigator.pop(context);
               },
             ),
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
-              child: Text('Emotional Atmosphere (2d10 + 1dF)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Divider(height: 20),
+            
+            // Emotional Atmosphere Section
+            const _SectionHeader(title: 'Emotional Atmosphere', icon: Icons.mood),
+            Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.mystic.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '1dF polarity: (-/blank) negative, (+) positive',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                  Text(
+                    'Emotions paired as opposites: Despair↔Hope, Fear↔Courage, Anger↔Calm...',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Basic 6: Joy, Sadness, Fear, Anger, Disgust, Surprise',
+                    style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
             ),
             _DialogOption(
               title: 'Emotional Atmosphere',
-              subtitle: 'd10 - extended emotions',
+              subtitle: '2d10 + 1dF → "It causes [emotion] because [cause]"',
               onTap: () {
                 onRoll(immersion.generateEmotionalAtmosphere());
                 Navigator.pop(context);
               },
             ),
-            _DialogOption(
-              title: 'Emotion (Positive)',
-              subtitle: 'd10 advantage - roughly positive',
-              onTap: () {
-                onRoll(immersion.generateEmotionalAtmosphere(skew: SkewType.advantage));
-                Navigator.pop(context);
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Positive',
+                    subtitle: '@+ Hopeful',
+                    icon: Icons.sentiment_satisfied_alt,
+                    iconColor: JuiceTheme.success,
+                    onTap: () {
+                      onRoll(immersion.generateEmotionalAtmosphere(skew: SkewType.advantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _CompactDialogOption(
+                    title: 'Negative',
+                    subtitle: '@- Darker',
+                    icon: Icons.sentiment_dissatisfied,
+                    iconColor: JuiceTheme.danger,
+                    onTap: () {
+                      onRoll(immersion.generateEmotionalAtmosphere(skew: SkewType.disadvantage));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 4),
             _DialogOption(
-              title: 'Emotion (Negative)',
-              subtitle: 'd10 disadvantage - more negative',
-              onTap: () {
-                onRoll(immersion.generateEmotionalAtmosphere(skew: SkewType.disadvantage));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Emotion (Basic Only)',
-              subtitle: 'd6 - basic emotions (joy, sadness, fear, anger, disgust, surprise)',
+              title: 'Basic Emotions Only',
+              subtitle: 'd6 → Joy, Sadness, Fear, Anger, Disgust, Surprise',
               onTap: () {
                 onRoll(immersion.generateEmotionalAtmosphere(emotionDie: 6));
                 Navigator.pop(context);
               },
+            ),
+            const SizedBox(height: 8),
+            
+            // Example from the instructions
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: JuiceTheme.parchmentDark.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.parchmentDark.withValues(alpha: 0.2)),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Example:',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    '"You see something discarded behind you, and it causes joy because you were warned about it"',
+                    style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -2272,38 +2639,101 @@ class _ExpectationCheckDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Expectation Check'),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
-      contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      content: SizedBox(
-        width: 280,
+      title: Text(
+        'Expectation Check',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Instead of asking "Is X true?", you assume X is true and test '
-              'whether your expectation holds.\n\n'
-              'Also works for NPC behavior: assume what an NPC will likely do, then test it.',
-            ),
-            const SizedBox(height: 12),
+            // Introduction
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.withValues(alpha: 0.1),
+                color: JuiceTheme.info.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Column(
+              child: const Text(
+                'Instead of asking "Is X true?", you assume X is true and test '
+                'whether your expectation holds.',
+                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+              ),
+            ),
+            const SizedBox(height: 10),
+            
+            // Use cases row
+            Row(
+              children: [
+                Expanded(
+                  child: _ExpectUseCaseBox(
+                    icon: Icons.psychology,
+                    title: 'Story Events',
+                    example: '"The tavern is busy..."',
+                    color: JuiceTheme.mystic,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _ExpectUseCaseBox(
+                    icon: Icons.person,
+                    title: 'NPC Behavior',
+                    example: '"Guard will let me pass..."',
+                    color: JuiceTheme.categoryCharacter,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // Outcome reference grid
+            _buildOutcomeGrid(),
+            
+            const SizedBox(height: 12),
+            
+            // Roll button
+            _ExpectDialogOption(
+              title: 'Roll 2dF',
+              subtitle: 'Test your expectation',
+              icon: Icons.casino,
+              iconColor: JuiceTheme.gold,
+              highlighted: true,
+              onTap: () {
+                onRoll(expectationCheck.check());
+                Navigator.pop(context);
+              },
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Tip
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: JuiceTheme.parchmentDark.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('++ = Expected (Intensified)', style: TextStyle(fontSize: 11)),
-                  Text('+0 = Expected', style: TextStyle(fontSize: 11)),
-                  Text('+- or -+ = Next Most Expected', style: TextStyle(fontSize: 11)),
-                  Text('0+ = Favorable', style: TextStyle(fontSize: 11)),
-                  Text('00 = Modified Idea (roll Modifier+Idea)', style: TextStyle(fontSize: 11)),
-                  Text('0- = Unfavorable', style: TextStyle(fontSize: 11)),
-                  Text('-0 = Opposite', style: TextStyle(fontSize: 11)),
-                  Text('-- = Opposite (Intensified)', style: TextStyle(fontSize: 11)),
+                  Icon(Icons.tips_and_updates, size: 12, color: JuiceTheme.juiceOrange),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Tip: Think of your most-likely AND next-most-likely outcomes before rolling!',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -2313,16 +2743,287 @@ class _ExpectationCheckDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            onRoll(expectationCheck.check());
-            Navigator.pop(context);
-          },
-          child: const Text('Roll 2dF'),
+          child: Text('Cancel', style: TextStyle(color: JuiceTheme.parchmentDark)),
         ),
       ],
+    );
+  }
+
+  Widget _buildOutcomeGrid() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: JuiceTheme.gold.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.casino, size: 12, color: JuiceTheme.gold),
+              const SizedBox(width: 4),
+              Text(
+                '2dF Outcomes',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: JuiceTheme.gold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // Expected outcomes (positive zone)
+          Row(
+            children: [
+              _ExpectOutcomeChip(dice: '++', label: 'Expected!', color: JuiceTheme.success, isIntense: true),
+              const SizedBox(width: 4),
+              _ExpectOutcomeChip(dice: '+○', label: 'Expected', color: JuiceTheme.success),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Middle outcomes
+          Row(
+            children: [
+              _ExpectOutcomeChip(dice: '+−', label: 'Next Most', color: JuiceTheme.gold),
+              const SizedBox(width: 4),
+              _ExpectOutcomeChip(dice: '−+', label: 'Next Most', color: JuiceTheme.gold),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Modifier outcomes (neutral zone)
+          Row(
+            children: [
+              _ExpectOutcomeChip(dice: '○+', label: 'Favorable', color: JuiceTheme.info),
+              const SizedBox(width: 4),
+              _ExpectOutcomeChip(dice: '○−', label: 'Unfavorable', color: JuiceTheme.categoryWorld),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Special & Opposite
+          Row(
+            children: [
+              _ExpectOutcomeChip(dice: '○○', label: 'Mod+Idea', color: JuiceTheme.juiceOrange, isSpecial: true),
+              const SizedBox(width: 4),
+              _ExpectOutcomeChip(dice: '−○', label: 'Opposite', color: JuiceTheme.danger),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              _ExpectOutcomeChip(dice: '−−', label: 'Opposite!', color: JuiceTheme.danger, isIntense: true),
+              const Spacer(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Use case box for Expectation Check dialog.
+class _ExpectUseCaseBox extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String example;
+  final Color color;
+
+  const _ExpectUseCaseBox({
+    required this.icon,
+    required this.title,
+    required this.example,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 12, color: color),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            example,
+            style: TextStyle(
+              fontSize: 9,
+              fontStyle: FontStyle.italic,
+              color: color.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Outcome chip for Expectation Check grid.
+class _ExpectOutcomeChip extends StatelessWidget {
+  final String dice;
+  final String label;
+  final Color color;
+  final bool isIntense;
+  final bool isSpecial;
+
+  const _ExpectOutcomeChip({
+    required this.dice,
+    required this.label,
+    required this.color,
+    this.isIntense = false,
+    this.isSpecial = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isIntense || isSpecial ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(4),
+          border: isIntense || isSpecial
+              ? Border.all(color: color.withValues(alpha: 0.4), width: 1)
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: Text(
+                dice,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'monospace',
+                  color: color,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: isIntense ? FontWeight.bold : FontWeight.normal,
+                  color: color,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (isIntense)
+              Icon(Icons.whatshot, size: 10, color: color),
+            if (isSpecial)
+              Icon(Icons.auto_awesome, size: 10, color: color),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Dialog option for Expectation Check.
+class _ExpectDialogOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final bool highlighted;
+  final VoidCallback onTap;
+
+  const _ExpectDialogOption({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+    this.highlighted = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: highlighted
+                  ? iconColor.withValues(alpha: 0.5)
+                  : JuiceTheme.gold.withValues(alpha: 0.3),
+              width: highlighted ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            color: highlighted
+                ? iconColor.withValues(alpha: 0.1)
+                : JuiceTheme.gold.withValues(alpha: 0.08),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: iconColor),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: iconColor,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: JuiceTheme.parchmentDark,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: iconColor.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -2337,66 +3038,323 @@ class _NameGeneratorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Name Generator'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Simple Method section
-          const Text('Simple Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 4),
-          _DialogOption(
-            title: '3d20 (Columns 1,2,3)',
-            subtitle: 'Roll on all three columns',
-            onTap: () {
-              onRoll(nameGenerator.generate());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: '3d20 (Column 1 Only)',
-            subtitle: 'Roll on column 1 three times',
-            onTap: () {
-              onRoll(nameGenerator.generateColumn1Only());
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(),
-          // Pattern Method section
-          const Text('Pattern Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 4),
-          _DialogOption(
-            title: 'Neutral',
-            subtitle: 'Roll 1d20 for pattern',
-            onTap: () {
-              onRoll(nameGenerator.generatePatternNeutral());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Masculine (@-)',
-            subtitle: 'Roll 1d20 with disadvantage for pattern',
-            onTap: () {
-              onRoll(nameGenerator.generateMasculine());
-              Navigator.pop(context);
-            },
-          ),
-          _DialogOption(
-            title: 'Feminine (@+)',
-            subtitle: 'Roll 1d20 with advantage for pattern',
-            onTap: () {
-              onRoll(nameGenerator.generateFeminine());
-              Navigator.pop(context);
-            },
-          ),
-        ],
+      title: Text(
+        'Name Generator',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Simple Method section
+            _NameSectionHeader(
+              icon: Icons.casino,
+              title: 'Simple Method',
+              subtitle: 'Quick random names using 3d20',
+            ),
+            const SizedBox(height: 6),
+            _NameDialogOption(
+              title: '3d20 (Columns 1,2,3)',
+              subtitle: 'Roll on all three columns',
+              icon: Icons.grid_3x3,
+              iconColor: JuiceTheme.gold,
+              onTap: () {
+                onRoll(nameGenerator.generate());
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 4),
+            _NameDialogOption(
+              title: '3d20 (Column 1 Only)',
+              subtitle: 'Roll on column 1 three times',
+              icon: Icons.view_column,
+              iconColor: JuiceTheme.juiceOrange,
+              onTap: () {
+                onRoll(nameGenerator.generateColumn1Only());
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 12),
+            
+            // Pattern Method section
+            _NameSectionHeader(
+              icon: Icons.pattern,
+              title: 'Pattern Method',
+              subtitle: 'Use pattern column for structured names',
+            ),
+            const SizedBox(height: 6),
+            _NameDialogOption(
+              title: 'Neutral',
+              subtitle: 'Roll 1d20 for pattern',
+              icon: Icons.balance,
+              iconColor: JuiceTheme.parchmentDark,
+              onTap: () {
+                onRoll(nameGenerator.generatePatternNeutral());
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 4),
+            // Masculine/Feminine row
+            Row(
+              children: [
+                Expanded(
+                  child: _NameGenderOption(
+                    title: 'Masculine',
+                    subtitle: '@- (disadvantage)',
+                    icon: Icons.arrow_downward,
+                    color: JuiceTheme.info,
+                    onTap: () {
+                      onRoll(nameGenerator.generateMasculine());
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _NameGenderOption(
+                    title: 'Feminine',
+                    subtitle: '@+ (advantage)',
+                    icon: Icons.arrow_upward,
+                    color: JuiceTheme.categoryCharacter,
+                    onTap: () {
+                      onRoll(nameGenerator.generateFeminine());
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // Info box
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: JuiceTheme.parchmentDark.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.lightbulb_outline, size: 12, color: JuiceTheme.gold),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Examples',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: JuiceTheme.gold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '• Simple: Tolimaea, Mayosid, Nenetar\n'
+                    '• Masculine: Osuma, Likel, Risan\n'
+                    '• Feminine: Nedeli, Eyosi, Kisora',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontStyle: FontStyle.italic,
+                      color: JuiceTheme.parchmentDark,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text('Cancel', style: TextStyle(color: JuiceTheme.parchmentDark)),
         ),
       ],
+    );
+  }
+}
+
+/// Section header for Name Generator dialog.
+class _NameSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _NameSectionHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: JuiceTheme.gold),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: JuiceTheme.parchment,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 9,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Dialog option for Name Generator.
+class _NameDialogOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _NameDialogOption({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.3)),
+            borderRadius: BorderRadius.circular(8),
+            color: JuiceTheme.gold.withValues(alpha: 0.05),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: iconColor),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: JuiceTheme.parchment,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: JuiceTheme.gold.withValues(alpha: 0.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gender option for Name Generator (compact side-by-side).
+class _NameGenderOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _NameGenderOption({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+            borderRadius: BorderRadius.circular(8),
+            color: color.withValues(alpha: 0.1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 14, color: color),
+                  const SizedBox(width: 4),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: color.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -3998,186 +4956,283 @@ class _RandomTablesDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Random Tables'),
+      title: Text(
+        'Random Tables',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       content: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 350,
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
+          maxWidth: 360,
+          maxHeight: MediaQuery.of(context).size.height * 0.78,
         ),
         child: _ScrollableDialogContent(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Explanation from the instructions
+              // Intro explanation
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: JuiceTheme.sepia.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
-                  '"Discover Meaning" provides abstract concepts. These tables provide '
-                  'something more concrete for nouns.',
-                  style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 14, color: JuiceTheme.gold),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '"Discover Meaning" provides abstract concepts. These tables provide something more concrete for nouns.',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: JuiceTheme.parchment,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Divider(),
-              // Simple Mode section
-              const _SectionHeader(icon: Icons.tune, title: 'Simple Mode / Alter Scene'),
-              const SizedBox(height: 4),
-              const Text(
-                'Modifier + Idea replaces Random Event table in "Simple" mode. '
-                'Also used when Next Scene is "Altered".',
-                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+              const SizedBox(height: 14),
+
+              // Simple Mode / Alter Scene - primary action
+              _RandomSectionHeader(
+                icon: Icons.tune,
+                title: 'Simple Mode / Alter Scene',
               ),
               const SizedBox(height: 4),
-              _DialogOption(
+              _RandomPrimaryOption(
                 title: 'Modifier + Idea',
-                subtitle: '2d10 - Stop Food, Strange Resource, etc.',
+                subtitle: 'Replaces Random Event table • 2d10',
+                examples: 'Stop Food, Strange Resource, Increase Attention',
                 onTap: () {
                   onRoll(randomEvent.rollModifierPlusIdea());
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
+              const SizedBox(height: 14),
+
               // Individual Tables section
-              const _SectionHeader(icon: Icons.view_list, title: 'Individual Tables (d10)'),
-              const SizedBox(height: 4),
-              _DialogOption(
-                title: 'Modifier',
-                subtitle: 'Change, Continue, Decrease, Extra, Increase...',
+              _RandomSectionHeader(
+                icon: Icons.view_list,
+                title: 'Individual Tables (d10)',
+              ),
+              const SizedBox(height: 6),
+              _RandomIndividualTable(
+                label: 'Modifier',
+                examples: 'Change, Continue, Decrease, Extra, Increase, Stop, Strange...',
+                color: JuiceTheme.rust,
                 onTap: () {
                   onRoll(randomEvent.rollModifier());
                   Navigator.pop(context);
                 },
               ),
-              _DialogOption(
-                title: 'Idea',
-                subtitle: 'Attention, Communication, Danger, Element...',
+              const SizedBox(height: 4),
+              _RandomIndividualTable(
+                label: 'Idea',
+                examples: 'Attention, Communication, Danger, Element, Food, Home...',
+                color: JuiceTheme.mystic,
                 onTap: () {
                   onRoll(randomEvent.rollIdea());
                   Navigator.pop(context);
                 },
               ),
-              _DialogOption(
-                title: 'Event',
-                subtitle: 'Ambush, Anomaly, Blessing, Caravan... (when something happens)',
+              const SizedBox(height: 4),
+              _RandomIndividualTable(
+                label: 'Event',
+                examples: 'Ambush, Anomaly, Blessing, Caravan, Curse, Discovery...',
+                color: JuiceTheme.danger,
                 onTap: () {
                   onRoll(randomEvent.rollEvent());
                   Navigator.pop(context);
                 },
               ),
-              _DialogOption(
-                title: 'Person',
-                subtitle: 'Criminal, Entertainer, Expert, Mage... (NPC identity)',
+              const SizedBox(height: 4),
+              _RandomIndividualTable(
+                label: 'Person',
+                examples: 'Criminal, Entertainer, Expert, Mage, Mercenary, Noble...',
+                color: JuiceTheme.info,
                 onTap: () {
                   onRoll(randomEvent.rollPerson());
                   Navigator.pop(context);
                 },
               ),
-              _DialogOption(
-                title: 'Object',
-                subtitle: 'Arrow, Candle, Cauldron, Chain... (evocative items)',
+              const SizedBox(height: 4),
+              _RandomIndividualTable(
+                label: 'Object',
+                examples: 'Arrow, Candle, Cauldron, Chain, Claw, Hook, Quill, Skull...',
+                color: JuiceTheme.success,
                 onTap: () {
                   onRoll(randomEvent.rollObject());
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
-              // Combined with Modifier
-              const _SectionHeader(icon: Icons.merge_type, title: 'Modifier + Category'),
+              const SizedBox(height: 14),
+
+              // Modifier + Category section (combined options)
+              _RandomSectionHeader(
+                icon: Icons.merge_type,
+                title: 'Modifier + Category',
+              ),
+              const SizedBox(height: 6),
+              // 2x2 grid for modifier combinations
+              Row(
+                children: [
+                  Expanded(
+                    child: _RandomModifierCombo(
+                      label: 'Random',
+                      hint: '1-3: Idea, 4-6: Event\n7-8: Person, 9-0: Object',
+                      color: JuiceTheme.parchmentDark,
+                      onTap: () {
+                        onRoll(randomEvent.generateIdea());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _RandomModifierCombo(
+                      label: 'Event',
+                      hint: 'Scene triggers',
+                      color: JuiceTheme.danger,
+                      onTap: () {
+                        onRoll(randomEvent.generateIdea(category: IdeaCategory.event));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _RandomModifierCombo(
+                      label: 'Person',
+                      hint: 'NPC generation',
+                      color: JuiceTheme.info,
+                      onTap: () {
+                        onRoll(randomEvent.generateIdea(category: IdeaCategory.person));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _RandomModifierCombo(
+                      label: 'Object',
+                      hint: 'Items & things',
+                      color: JuiceTheme.success,
+                      onTap: () {
+                        onRoll(randomEvent.generateIdea(category: IdeaCategory.object));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Random Event Focus section
+              _RandomSectionHeader(
+                icon: Icons.shuffle,
+                title: 'Random Event Focus',
+              ),
               const SizedBox(height: 4),
-              _DialogOption(
-                title: 'Modifier + Random',
-                subtitle: '1-3: Idea, 4-6: Event, 7-8: Person, 9-0: Object',
-                onTap: () {
-                  onRoll(randomEvent.generateIdea());
-                  Navigator.pop(context);
-                },
+              Text(
+                'For double blanks on Fate Check (primary die left)',
+                style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic, color: JuiceTheme.parchmentDark),
               ),
-              _DialogOption(
-                title: 'Modifier + Event',
-                subtitle: 'Trigger for scene changes',
-                onTap: () {
-                  onRoll(randomEvent.generateIdea(category: IdeaCategory.event));
-                  Navigator.pop(context);
-                },
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _RandomFocusButton(
+                      title: 'Focus Only',
+                      subtitle: '1d10',
+                      onTap: () {
+                        onRoll(randomEvent.generateFocus());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _RandomFocusButton(
+                      title: 'Full Event',
+                      subtitle: '3d10',
+                      isPrimary: true,
+                      onTap: () {
+                        onRoll(randomEvent.generate());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
               ),
-              _DialogOption(
-                title: 'Modifier + Person',
-                subtitle: 'Generate NPC with modifier',
-                onTap: () {
-                  onRoll(randomEvent.generateIdea(category: IdeaCategory.person));
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: 'Modifier + Object',
-                subtitle: 'For objects in Simple mode',
-                onTap: () {
-                  onRoll(randomEvent.generateIdea(category: IdeaCategory.object));
-                  Navigator.pop(context);
-                },
-              ),
-              const Divider(),
-              // Random Event Focus section (for Fate Check triggers)
-              const _SectionHeader(icon: Icons.shuffle, title: 'Random Event Focus'),
-              const SizedBox(height: 4),
-              const Text(
-                'For double blanks on Fate Check (primary die left). Triggers things easy to forget.',
-                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-              ),
-              const SizedBox(height: 4),
-              _DialogOption(
-                title: 'Event Focus Only',
-                subtitle: 'Advance Time, Close Thread, NPC Action, etc.',
-                onTap: () {
-                  onRoll(randomEvent.generateFocus());
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: 'Full Random Event',
-                subtitle: 'Focus + Modifier + Idea (3d10)',
-                onTap: () {
-                  onRoll(randomEvent.generate());
-                  Navigator.pop(context);
-                },
-              ),
-              const Divider(),
-              // Reference section
+              const SizedBox(height: 8),
+
+              // Compact Focus Reference
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: JuiceTheme.parchmentDark.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Event Focus Reference:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                    SizedBox(height: 4),
-                    Text('1. Advance Time   6. Keyed Event', style: TextStyle(fontSize: 9, fontFamily: 'monospace')),
-                    Text('2. Close Thread   7. New Character', style: TextStyle(fontSize: 9, fontFamily: 'monospace')),
-                    Text('3. Converge       8. NPC Action', style: TextStyle(fontSize: 9, fontFamily: 'monospace')),
-                    Text('4. Diverge        9. Plot Armor', style: TextStyle(fontSize: 9, fontFamily: 'monospace')),
-                    Text('5. Immersion      0. Remote Event', style: TextStyle(fontSize: 9, fontFamily: 'monospace')),
+                    Text(
+                      'Event Focus Reference:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '1 Advance Time  2 Close Thread  3 Converge  4 Diverge  5 Immersion\n'
+                      '6 Keyed Event  7 New Character  8 NPC Action  9 Plot Armor  0 Remote',
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: JuiceTheme.parchment,
+                        height: 1.5,
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 8),
+
+              // Tip box
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: JuiceTheme.gold.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Text(
-                  'Tip: Use Color + Object for naming Establishments!',
-                  style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                child: Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline, size: 11, color: JuiceTheme.gold),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tip: Use Color + Object for naming Establishments!',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.gold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -4187,13 +5242,305 @@ class _RandomTablesDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text('Close', style: TextStyle(color: JuiceTheme.parchmentDark)),
         ),
       ],
     );
   }
 }
 
+/// Section header for Random Tables dialog.
+class _RandomSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _RandomSectionHeader({
+    required this.icon,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: JuiceTheme.gold),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            color: JuiceTheme.gold,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Primary featured option (Modifier + Idea).
+class _RandomPrimaryOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String examples;
+  final VoidCallback onTap;
+
+  const _RandomPrimaryOption({
+    required this.title,
+    required this.subtitle,
+    required this.examples,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                JuiceTheme.gold.withValues(alpha: 0.15),
+                JuiceTheme.juiceOrange.withValues(alpha: 0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.casino, size: 24, color: JuiceTheme.gold),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: JuiceTheme.parchment,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      examples,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.gold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 18, color: JuiceTheme.gold),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Individual table row option.
+class _RandomIndividualTable extends StatelessWidget {
+  final String label;
+  final String examples;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _RandomIndividualTable({
+    required this.label,
+    required this.examples,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                    color: color,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  examples,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: JuiceTheme.parchmentDark,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 14, color: color.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Modifier combination button (2x2 grid).
+class _RandomModifierCombo extends StatelessWidget {
+  final String label;
+  final String hint;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _RandomModifierCombo({
+    required this.label,
+    required this.hint,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Modifier + $label',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      '+ $label',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hint,
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: JuiceTheme.parchmentDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Focus button for Random Event Focus section.
+class _RandomFocusButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool isPrimary;
+  final VoidCallback onTap;
+
+  const _RandomFocusButton({
+    required this.title,
+    required this.subtitle,
+    this.isPrimary = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isPrimary ? JuiceTheme.categoryOracle : JuiceTheme.parchmentDark;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: isPrimary ? 0.15 : 0.08),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: isPrimary ? 0.5 : 0.2)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isPrimary ? color : JuiceTheme.parchment,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 /// Dialog for Location Grid options.
 class _LocationDialog extends StatelessWidget {
   final void Function(RollResult) onRoll;
