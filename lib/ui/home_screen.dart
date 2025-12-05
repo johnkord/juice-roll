@@ -664,6 +664,29 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.local_drink,
+                color: Colors.deepOrange.shade300,
+                size: 24,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Juice',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.deepOrange.shade300,
+                ),
+              ),
+            ],
+          ),
+        ),
+        leadingWidth: 80,
         title: GestureDetector(
           onTap: _showSessionSelector,
           child: Row(
