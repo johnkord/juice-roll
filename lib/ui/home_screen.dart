@@ -1821,159 +1821,570 @@ class _ChallengeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     return AlertDialog(
-      title: const Text('Challenge'),
+      title: Text(
+        'Challenge',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SizedBox(
-        width: 320,
-        height: screenHeight * 0.55,
-        child: _ScrollableDialogContent(
-          children: [
-            // Explanation from the instructions
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.lime.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Challenge Procedure explanation
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.categoryCombat.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.categoryCombat.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.fitness_center, size: 14, color: JuiceTheme.categoryCombat),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Challenge Procedure',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: JuiceTheme.parchment,
+                            fontFamily: JuiceTheme.fontFamilySerif,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '1. Roll Physical + Mental challenge with DCs\n'
+                      '2. Create a situation where both make sense\n'
+                      '3. Choose ONE path - only need to pass one!\n'
+                      '4. Fail = Pay The Price (may lock out other option)',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: JuiceTheme.parchment.withValues(alpha: 0.85),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 14),
+
+              // Full Challenge section - primary action
+              _ChallengeSectionHeader(
+                icon: Icons.fitness_center,
+                title: 'Full Challenge',
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Rolls 1 Physical + 1 Mental with separate DCs for each:',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                  color: JuiceTheme.parchmentDark,
+                ),
+              ),
+              const SizedBox(height: 6),
+              // 3 difficulty options as chips
+              Row(
                 children: [
-                  Text(
-                    'Challenge Procedure (Mythic Scene + Skill Check + Pay The Price):',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: _ChallengeDifficultyChip(
+                      label: 'Random DCs',
+                      hint: '1d10 each',
+                      color: JuiceTheme.parchmentDark,
+                      onTap: () {
+                        onRoll(challenge.rollFullChallenge());
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    '1. Roll Physical + Mental challenge with DCs\n'
-                    '2. Create a situation where both make sense\n'
-                    '3. Choose ONE path - only need to pass one!\n'
-                    '4. Fail = Pay The Price (may lock out other option)',
-                    style: TextStyle(fontSize: 10),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _ChallengeDifficultyChip(
+                      label: 'Easy DCs',
+                      hint: 'advantage',
+                      color: JuiceTheme.success,
+                      onTap: () {
+                        onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.advantage));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _ChallengeDifficultyChip(
+                      label: 'Hard DCs',
+                      hint: 'disadvantage',
+                      color: JuiceTheme.danger,
+                      onTap: () {
+                        onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.disadvantage));
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
                 ],
               ),
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'Full Challenge', icon: Icons.fitness_center),
-            const SizedBox(height: 4),
-            const Text(
-              'Rolls 1 Physical + 1 Mental with separate DCs for each:',
-              style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-            ),
-            _DialogOption(
-              title: 'Challenge (Random DCs)',
-              subtitle: 'Physical (DC) + Mental (DC) - each gets own DC',
-              onTap: () {
-                onRoll(challenge.rollFullChallenge());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Challenge (Easy DCs)',
-              subtitle: 'Both DCs rolled with advantage (lower)',
-              onTap: () {
-                onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.advantage));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Challenge (Hard DCs)',
-              subtitle: 'Both DCs rolled with disadvantage (higher)',
-              onTap: () {
-                onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.disadvantage));
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'DC Methods', icon: Icons.gavel),
-            const SizedBox(height: 4),
-            const Text(
-              '5 ways to generate a DC:',
-              style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-            ),
-            _DialogOption(
-              title: 'Quick DC',
-              subtitle: '2d6+6 (range 8-18)',
-              onTap: () {
-                onRoll(challenge.rollQuickDc());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Random DC',
-              subtitle: '1d10 → DC 8-17',
-              onTap: () {
-                onRoll(challenge.rollDc());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Balanced DC',
-              subtitle: '1d100 bell curve → middle DCs',
-              onTap: () {
-                onRoll(challenge.rollBalancedDc());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Easy DC',
-              subtitle: '1d10 with advantage → lower DC',
-              onTap: () {
-                onRoll(challenge.rollDc(skew: DcSkew.advantage));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Hard DC',
-              subtitle: '1d10 with disadvantage → higher DC',
-              onTap: () {
-                onRoll(challenge.rollDc(skew: DcSkew.disadvantage));
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'Individual Skills', icon: Icons.sports_martial_arts),
-            _DialogOption(
-              title: 'Physical Challenge',
-              subtitle: 'Skill only (no separate DC)',
-              onTap: () {
-                onRoll(challenge.rollPhysicalChallenge());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Mental Challenge',
-              subtitle: 'Skill only (no separate DC)',
-              onTap: () {
-                onRoll(challenge.rollMentalChallenge());
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'Examples', icon: Icons.lightbulb_outline),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 14),
+
+              // DC Methods section
+              _ChallengeSectionHeader(
+                icon: Icons.gavel,
+                title: 'DC Methods',
               ),
-              child: const Text(
-                '8,2: Stealth or Nature - Capture an elusive creature.\n'
-                '7,6: Sleight of Hand or Language - Communicate with natives.\n'
-                '9,7: Acrobatics or Religion - Display martial arts/tai chi.',
-                style: TextStyle(fontSize: 10, fontFamily: 'monospace'),
+              const SizedBox(height: 4),
+              Text(
+                '5 ways to generate a DC:',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                  color: JuiceTheme.parchmentDark,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              // 2x3 grid for DC methods
+              Row(
+                children: [
+                  Expanded(
+                    child: _ChallengeDcOption(
+                      title: 'Quick DC',
+                      subtitle: '2d6+6',
+                      range: '8-18',
+                      color: JuiceTheme.gold,
+                      onTap: () {
+                        onRoll(challenge.rollQuickDc());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _ChallengeDcOption(
+                      title: 'Random DC',
+                      subtitle: '1d10',
+                      range: '8-17',
+                      color: JuiceTheme.parchmentDark,
+                      onTap: () {
+                        onRoll(challenge.rollDc());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ChallengeDcOption(
+                      title: 'Balanced DC',
+                      subtitle: '1d100 bell',
+                      range: 'middle DCs',
+                      color: JuiceTheme.info,
+                      onTap: () {
+                        onRoll(challenge.rollBalancedDc());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _ChallengeDcOption(
+                      title: 'Easy DC',
+                      subtitle: '1d10@+',
+                      range: 'lower DC',
+                      color: JuiceTheme.success,
+                      onTap: () {
+                        onRoll(challenge.rollDc(skew: DcSkew.advantage));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _ChallengeDcOption(
+                      title: 'Hard DC',
+                      subtitle: '1d10@−',
+                      range: 'higher DC',
+                      color: JuiceTheme.danger,
+                      onTap: () {
+                        onRoll(challenge.rollDc(skew: DcSkew.disadvantage));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Individual Skills section
+              _ChallengeSectionHeader(
+                icon: Icons.sports_martial_arts,
+                title: 'Individual Skills',
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ChallengeSkillButton(
+                      title: 'Physical',
+                      color: JuiceTheme.rust,
+                      skills: 'Medicine, Survival, Athletics...',
+                      onTap: () {
+                        onRoll(challenge.rollPhysicalChallenge());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ChallengeSkillButton(
+                      title: 'Mental',
+                      color: JuiceTheme.mystic,
+                      skills: 'Nature, Arcana, Insight...',
+                      onTap: () {
+                        onRoll(challenge.rollMentalChallenge());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Examples section (compact)
+              _ChallengeSectionHeader(
+                icon: Icons.lightbulb_outline,
+                title: 'Examples',
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.sepia.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ChallengeExample(
+                      rolls: '8,2',
+                      physical: 'Stealth',
+                      mental: 'Nature',
+                      scenario: 'Capture an elusive creature',
+                    ),
+                    const SizedBox(height: 4),
+                    _ChallengeExample(
+                      rolls: '7,6',
+                      physical: 'Sleight of Hand',
+                      mental: 'Language',
+                      scenario: 'Communicate with natives',
+                    ),
+                    const SizedBox(height: 4),
+                    _ChallengeExample(
+                      rolls: '9,7',
+                      physical: 'Acrobatics',
+                      mental: 'Religion',
+                      scenario: 'Display martial arts/tai chi',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
+        ),
+      ],
+    );
+  }
+}
+
+// ========== Challenge Dialog Helper Widgets ==========
+
+class _ChallengeSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _ChallengeSectionHeader({
+    required this.icon,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: JuiceTheme.categoryCombat),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: JuiceTheme.parchment,
+            fontFamily: JuiceTheme.fontFamilySerif,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChallengeDifficultyChip extends StatelessWidget {
+  final String label;
+  final String hint;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ChallengeDifficultyChip({
+    required this.label,
+    required this.hint,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                hint,
+                style: TextStyle(
+                  fontSize: 8,
+                  color: JuiceTheme.parchmentDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChallengeDcOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String range;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ChallengeDcOption({
+    required this.title,
+    required this.subtitle,
+    required this.range,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 8,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.parchmentDark,
+                ),
+              ),
+              Text(
+                range,
+                style: TextStyle(
+                  fontSize: 7,
+                  color: JuiceTheme.parchmentDark.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChallengeSkillButton extends StatelessWidget {
+  final String title;
+  final Color color;
+  final String skills;
+  final VoidCallback onTap;
+
+  const _ChallengeSkillButton({
+    required this.title,
+    required this.color,
+    required this.skills,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    title == 'Physical' ? Icons.directions_run : Icons.psychology,
+                    size: 14,
+                    color: color,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                skills,
+                style: TextStyle(
+                  fontSize: 8,
+                  color: JuiceTheme.parchmentDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChallengeExample extends StatelessWidget {
+  final String rolls;
+  final String physical;
+  final String mental;
+  final String scenario;
+
+  const _ChallengeExample({
+    required this.rolls,
+    required this.physical,
+    required this.mental,
+    required this.scenario,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+          decoration: BoxDecoration(
+            color: JuiceTheme.categoryCombat.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Text(
+            rolls,
+            style: TextStyle(
+              fontSize: 8,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              fontWeight: FontWeight.bold,
+              color: JuiceTheme.categoryCombat,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(fontSize: 9, color: JuiceTheme.parchment),
+              children: [
+                TextSpan(
+                  text: physical,
+                  style: TextStyle(color: JuiceTheme.rust, fontWeight: FontWeight.w600),
+                ),
+                const TextSpan(text: ' or '),
+                TextSpan(
+                  text: mental,
+                  style: TextStyle(color: JuiceTheme.mystic, fontWeight: FontWeight.w600),
+                ),
+                TextSpan(
+                  text: ' - $scenario',
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -1990,57 +2401,186 @@ class _PayThePriceDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Pay the Price'),
+      title: Text(
+        'Pay the Price',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Explanation from the Juice instructions
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'So you failed a challenge. Time to Pay The Price! '
-              'Use this to determine the effect of your failure.',
-              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-            ),
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Intro explanation
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.danger.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.danger.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.warning_amber, size: 16, color: JuiceTheme.danger),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'So you failed a challenge. Time to Pay The Price! '
+                        'Use this to determine the effect of your failure.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: JuiceTheme.parchment,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Pay The Price button - primary action
+              _PayThePriceButton(
+                title: 'Pay The Price',
+                subtitle: 'Standard consequence (1d10)',
+                icon: Icons.casino,
+                color: JuiceTheme.rust,
+                onTap: () {
+                  onRoll(payThePrice.rollConsequence());
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 8),
+
+              // Standard consequences table
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.sepia.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Possible Outcomes:',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        _PriceOutcomeChip('Unintended Effect'),
+                        _PriceOutcomeChip('Situation Worsens'),
+                        _PriceOutcomeChip('Delayed'),
+                        _PriceOutcomeChip('Act Against Intentions'),
+                        _PriceOutcomeChip('New Danger'),
+                        _PriceOutcomeChip('Community in Danger'),
+                        _PriceOutcomeChip('Separated'),
+                        _PriceOutcomeChip('Value Lost'),
+                        _PriceOutcomeChip('Complication'),
+                        _PriceOutcomeChip('Betrayal'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Major Plot Twist section
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.danger.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.danger.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.bolt, size: 14, color: JuiceTheme.danger),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'For "Miss with a Match" or Critical Fail, use the Major Plot Twist:',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: JuiceTheme.parchment,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Major Plot Twist button
+              _PayThePriceButton(
+                title: 'Major Plot Twist',
+                subtitle: 'Critical failure consequence (1d10)',
+                icon: Icons.bolt,
+                color: JuiceTheme.danger,
+                onTap: () {
+                  onRoll(payThePrice.rollMajorTwist());
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 8),
+
+              // Major twists table
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.danger.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Possible Twists:',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.danger.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        _PriceTwistChip('Benefits Enemy'),
+                        _PriceTwistChip('Assumption False'),
+                        _PriceTwistChip('Dark Secret'),
+                        _PriceTwistChip('Enemy Allies'),
+                        _PriceTwistChip('Common Goal'),
+                        _PriceTwistChip('Diversion'),
+                        _PriceTwistChip('Secret Alliance'),
+                        _PriceTwistChip('Someone Returns'),
+                        _PriceTwistChip('Connected'),
+                        _PriceTwistChip('Too Late'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          const SizedBox(height: 12),
-          _DialogOption(
-            title: 'Pay The Price',
-            subtitle: 'Standard consequence for normal failure (1d10)',
-            onTap: () {
-              onRoll(payThePrice.rollConsequence());
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'If you "Miss with a Match" or "Critical Fail", use the Major Plot Twist table instead.',
-              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _DialogOption(
-            title: 'Major Plot Twist',
-            subtitle: 'For Miss with Match or Critical Fail (1d10)',
-            onTap: () {
-              onRoll(payThePrice.rollMajorTwist());
-              Navigator.pop(context);
-            },
-          ),
-        ],
+        ),
       ),
       actions: [
         TextButton(
@@ -2048,6 +2588,122 @@ class _PayThePriceDialog extends StatelessWidget {
           child: const Text('Cancel'),
         ),
       ],
+    );
+  }
+}
+
+// ========== Pay The Price Dialog Helper Widgets ==========
+
+class _PayThePriceButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _PayThePriceButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: color),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                        fontFamily: JuiceTheme.fontFamilySerif,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 18, color: color.withValues(alpha: 0.6)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PriceOutcomeChip extends StatelessWidget {
+  final String label;
+
+  const _PriceOutcomeChip(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: JuiceTheme.rust.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8,
+          color: JuiceTheme.parchment,
+        ),
+      ),
+    );
+  }
+}
+
+class _PriceTwistChip extends StatelessWidget {
+  final String label;
+
+  const _PriceTwistChip(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: JuiceTheme.danger.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8,
+          color: JuiceTheme.parchment,
+        ),
+      ),
     );
   }
 }
@@ -4412,250 +5068,244 @@ class _WildernessDialogState extends State<_WildernessDialog> {
     final isInitialized = state != null;
     
     return AlertDialog(
-      title: const Text('Wilderness'),
+      title: Text(
+        'Wilderness',
+        style: TextStyle(
+          fontFamily: JuiceTheme.fontFamilySerif,
+          color: JuiceTheme.parchment,
+        ),
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-          maxWidth: 350,
-        ),
-        child: _ScrollableDialogContent(
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Show current state if initialized
               if (isInitialized) ...[
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                _WildernessStateCard(state: state),
+                const SizedBox(height: 12),
+              ],
+
+              // ========== Environment Section ==========
+              _WildernessSectionHeader(
+                icon: Icons.terrain,
+                title: 'Environment',
+              ),
+              const SizedBox(height: 6),
+              
+              if (!isInitialized) ...[
+                _WildernessActionButton(
+                  title: 'Initialize Random Area',
+                  subtitle: 'Start in a random environment (1d10 + 1dF)',
+                  icon: Icons.shuffle,
+                  color: JuiceTheme.categoryExplore,
+                  onTap: () {
+                    widget.onRoll(widget.wilderness.initializeRandom());
+                    Navigator.pop(context);
+                  },
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Current: ${state.fullDescription}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'Weather modifier: +${state.typeModifier} @ ${state.environmentSkew}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    if (state.isLost)
-                      const Text(
-                        '⚠️ LOST (using d6 for encounters)',
-                        style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
-                      ),
-                  ],
+                const SizedBox(height: 6),
+                _WildernessActionButton(
+                  title: _showEnvironmentPicker ? 'Hide Picker' : 'Set Known Position...',
+                  subtitle: 'Start from an existing location',
+                  icon: _showEnvironmentPicker ? Icons.expand_less : Icons.expand_more,
+                  color: JuiceTheme.sepia,
+                  onTap: () => setState(() => _showEnvironmentPicker = !_showEnvironmentPicker),
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
-            const _SectionHeader(icon: Icons.terrain, title: 'Environment'),
-            if (!isInitialized) ...[
-              _DialogOption(
-                title: 'Initialize Random Area',
-                subtitle: 'Start in a random environment (1d10 + 1dF)',
-                onTap: () {
-                  widget.onRoll(widget.wilderness.initializeRandom());
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: _showEnvironmentPicker ? 'Hide Environment Picker' : 'Set Known Position...',
-                subtitle: 'Start from an existing location',
-                onTap: () => setState(() => _showEnvironmentPicker = !_showEnvironmentPicker),
-              ),
-            ] else ...[
-              _DialogOption(
-                title: 'Transition to Next Hex',
-                subtitle: 'Move to adjacent area (2dF env + 1dF type)',
-                onTap: () {
-                  widget.onRoll(widget.wilderness.transition());
-                  Navigator.pop(context);
-                },
-              ),
-              _DialogOption(
-                title: _showEnvironmentPicker ? 'Hide Environment Picker' : 'Change Position...',
-                subtitle: 'Set to a different location',
-                onTap: () => setState(() => _showEnvironmentPicker = !_showEnvironmentPicker),
-              ),
-            ],
-            // Environment picker
-            if (_showEnvironmentPicker) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+              ] else ...[
+                _WildernessActionButton(
+                  title: 'Transition to Next Hex',
+                  subtitle: 'Move to adjacent area (2dF env + 1dF type)',
+                  icon: Icons.arrow_forward,
+                  color: JuiceTheme.categoryExplore,
+                  onTap: () {
+                    widget.onRoll(widget.wilderness.transition());
+                    Navigator.pop(context);
+                  },
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Environment dropdown
-                    DropdownButtonFormField<int>(
-                      initialValue: _selectedEnvironment,
-                      decoration: const InputDecoration(
-                        labelText: 'Environment',
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      items: List.generate(10, (i) {
-                        final env = Wilderness.environments[i];
-                        return DropdownMenuItem(
-                          value: i + 1,
-                          child: Text('${i + 1}. $env'),
-                        );
-                      }),
-                      onChanged: (v) => setState(() => _selectedEnvironment = v ?? 6),
-                    ),
-                    const SizedBox(height: 8),
-                    // Type dropdown
-                    DropdownButtonFormField<int>(
-                      initialValue: _selectedType,
-                      decoration: const InputDecoration(
-                        labelText: 'Type',
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      items: List.generate(10, (i) {
-                        final type = Wilderness.types[i]['name'] as String;
-                        return DropdownMenuItem(
-                          value: i + 1,
-                          child: Text('${i + 1}. $type'),
-                        );
-                      }),
-                      onChanged: (v) => setState(() => _selectedType = v ?? 6),
-                    ),
-                    const SizedBox(height: 8),
-                    // Preview
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'Preview: ${Wilderness.types[_selectedType - 1]['name']} ${Wilderness.environments[_selectedEnvironment - 1]}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          final result = widget.wilderness.initializeAt(_selectedEnvironment, typeRow: _selectedType);
-                          widget.onRoll(result);
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.location_on),
-                        label: const Text('Set Position'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const Divider(),
-            const _SectionHeader(icon: Icons.explore, title: 'Encounters'),
-            // Skew toggles
-            Row(
-              children: [
-                Expanded(
-                  child: CheckboxListTile(
-                    title: const Text('Dangerous', style: TextStyle(fontSize: 12)),
-                    subtitle: const Text('Disadvantage', style: TextStyle(fontSize: 10)),
-                    value: _hasDangerousTerrain,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (v) => setState(() => _hasDangerousTerrain = v ?? false),
-                  ),
-                ),
-                Expanded(
-                  child: CheckboxListTile(
-                    title: const Text('Map/Guide', style: TextStyle(fontSize: 12)),
-                    subtitle: const Text('Advantage', style: TextStyle(fontSize: 10)),
-                    value: _hasMapOrGuide,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (v) => setState(() => _hasMapOrGuide = v ?? false),
-                  ),
+                const SizedBox(height: 6),
+                _WildernessActionButton(
+                  title: _showEnvironmentPicker ? 'Hide Picker' : 'Change Position...',
+                  subtitle: 'Set to a different location',
+                  icon: _showEnvironmentPicker ? Icons.expand_less : Icons.expand_more,
+                  color: JuiceTheme.sepia,
+                  onTap: () => setState(() => _showEnvironmentPicker = !_showEnvironmentPicker),
                 ),
               ],
-            ),
-            _DialogOption(
-              title: 'Roll Encounter',
-              subtitle: isInitialized 
-                  ? 'What happens? (d${state.isLost ? 6 : 10}${_getSkewLabel()})'
-                  : 'What happens? (d10)',
-              onTap: () {
-                _rollEncounterWithFollowUp();
-                Navigator.pop(context);
-              },
-            ),
-            if (isInitialized && state.isLost)
-              _DialogOption(
-                title: 'Mark as Found',
-                subtitle: 'Manually reset orientation (back to d10)',
+
+              // Environment picker
+              if (_showEnvironmentPicker) ...[
+                const SizedBox(height: 8),
+                _WildernessEnvironmentPicker(
+                  selectedEnvironment: _selectedEnvironment,
+                  selectedType: _selectedType,
+                  onEnvironmentChanged: (v) => setState(() => _selectedEnvironment = v),
+                  onTypeChanged: (v) => setState(() => _selectedType = v),
+                  onConfirm: () {
+                    final result = widget.wilderness.initializeAt(_selectedEnvironment, typeRow: _selectedType);
+                    widget.onRoll(result);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+              const SizedBox(height: 14),
+
+              // ========== Encounters Section ==========
+              _WildernessSectionHeader(
+                icon: Icons.explore,
+                title: 'Encounters',
+              ),
+              const SizedBox(height: 6),
+
+              // Skew toggles as compact chips
+              Row(
+                children: [
+                  _WildernessModifierChip(
+                    label: 'Dangerous',
+                    subtitle: 'Disadvantage',
+                    isSelected: _hasDangerousTerrain,
+                    color: JuiceTheme.danger,
+                    onTap: () => setState(() => _hasDangerousTerrain = !_hasDangerousTerrain),
+                  ),
+                  const SizedBox(width: 8),
+                  _WildernessModifierChip(
+                    label: 'Map/Guide',
+                    subtitle: 'Advantage',
+                    isSelected: _hasMapOrGuide,
+                    color: JuiceTheme.success,
+                    onTap: () => setState(() => _hasMapOrGuide = !_hasMapOrGuide),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              _WildernessActionButton(
+                title: 'Roll Encounter',
+                subtitle: isInitialized 
+                    ? 'What happens? (d${state.isLost ? 6 : 10}${_getSkewLabel()})'
+                    : 'What happens? (d10)',
+                icon: Icons.casino,
+                color: JuiceTheme.gold,
                 onTap: () {
-                  widget.wilderness.setLost(false);
+                  _rollEncounterWithFollowUp();
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No longer lost - using d10 for encounters')),
-                  );
                 },
               ),
-            _DialogOption(
-              title: 'Weather',
-              subtitle: isInitialized
-                  ? '1d6@${state.environmentSkew} + ${state.typeModifier}'
-                  : 'Current conditions (needs state)',
-              onTap: () {
-                widget.onRoll(widget.wilderness.rollWeather());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Natural Hazard',
-              subtitle: 'Environmental danger (1d10)',
-              onTap: () {
-                widget.onRoll(widget.wilderness.rollNaturalHazard());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Wilderness Feature',
-              subtitle: 'Notable landmark (1d10)',
-              onTap: () {
-                widget.onRoll(widget.wilderness.rollFeature());
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(icon: Icons.pets, title: 'Monster Level'),
-            _DialogOption(
-              title: 'Roll Monster Level',
-              subtitle: isInitialized
-                  ? 'Based on ${state.environment} environment'
-                  : '1d6+modifier with advantage/disadvantage',
-              onTap: () {
-                widget.onRoll(widget.wilderness.rollMonsterLevel());
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
+              const SizedBox(height: 6),
+
+              if (isInitialized && state.isLost) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: JuiceTheme.danger.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: JuiceTheme.danger.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber, size: 14, color: JuiceTheme.danger),
+                      const SizedBox(width: 6),
+                      Text(
+                        'LOST - using d6 for encounters',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: JuiceTheme.danger,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          widget.wilderness.setLost(false);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No longer lost - using d10')),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Mark Found',
+                          style: TextStyle(fontSize: 10, color: JuiceTheme.success),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+
+              // Secondary encounter options in a compact row
+              Row(
+                children: [
+                  Expanded(
+                    child: _WildernessCompactButton(
+                      title: 'Weather',
+                      icon: Icons.cloud,
+                      color: JuiceTheme.info,
+                      onTap: () {
+                        widget.onRoll(widget.wilderness.rollWeather());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _WildernessCompactButton(
+                      title: 'Hazard',
+                      icon: Icons.warning,
+                      color: JuiceTheme.rust,
+                      onTap: () {
+                        widget.onRoll(widget.wilderness.rollNaturalHazard());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _WildernessCompactButton(
+                      title: 'Feature',
+                      icon: Icons.place,
+                      color: JuiceTheme.mystic,
+                      onTap: () {
+                        widget.onRoll(widget.wilderness.rollFeature());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // ========== Monster Level Section ==========
+              _WildernessSectionHeader(
+                icon: Icons.pets,
+                title: 'Monster Level',
+              ),
+              const SizedBox(height: 6),
+
+              _WildernessActionButton(
+                title: 'Roll Monster Level',
+                subtitle: isInitialized
+                    ? 'Based on ${state.environment} (${_getMonsterFormula(state.environmentRow)})'
+                    : '1d6+modifier with advantage/disadvantage',
+                icon: Icons.catching_pokemon,
+                color: JuiceTheme.danger,
+                onTap: () {
+                  widget.onRoll(widget.wilderness.rollMonsterLevel());
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -4665,6 +5315,24 @@ class _WildernessDialogState extends State<_WildernessDialog> {
         ),
       ],
     );
+  }
+
+  String _getMonsterFormula(int environmentRow) {
+    // Monster formulas from the wilderness table
+    const formulas = [
+      '@-',      // 1 Arctic
+      '+1@-',    // 2 Mountains
+      '+1@-',    // 3 Cavern
+      '+2',      // 4 Hills
+      '+2@+',    // 5 Grassland
+      '+3',      // 6 Forest
+      '+3@+',    // 7 Swamp
+      '+4',      // 8 Water
+      '+4@+',    // 9 Coast
+      '+4@+',    // 10 Desert
+    ];
+    final index = (environmentRow - 1).clamp(0, 9);
+    return '1d6${formulas[index]}';
   }
 
   /// Roll an encounter and automatically roll any required follow-up
@@ -4748,6 +5416,459 @@ class _WildernessDialogState extends State<_WildernessDialog> {
     if (_hasDangerousTerrain) return '@-';
     if (_hasMapOrGuide) return '@+';
     return '';
+  }
+}
+
+// ========== Wilderness Dialog Helper Widgets ==========
+
+class _WildernessSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _WildernessSectionHeader({required this.icon, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: JuiceTheme.categoryExplore),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: JuiceTheme.parchment,
+            fontFamily: JuiceTheme.fontFamilySerif,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WildernessStateCard extends StatelessWidget {
+  final WildernessState state;
+
+  const _WildernessStateCard({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: JuiceTheme.categoryExplore.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: JuiceTheme.categoryExplore.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on, size: 16, color: JuiceTheme.categoryExplore),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  state.fullDescription,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                    color: JuiceTheme.parchment,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _StateInfoChip(
+                icon: Icons.cloud,
+                label: 'Weather',
+                value: '1d6@${state.environmentSkew}+${state.typeModifier}',
+              ),
+              const SizedBox(width: 8),
+              if (state.isLost)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: JuiceTheme.danger.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: JuiceTheme.danger.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.warning, size: 10, color: JuiceTheme.danger),
+                      const SizedBox(width: 3),
+                      Text(
+                        'LOST',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: JuiceTheme.danger,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StateInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _StateInfoChip({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: JuiceTheme.sepia.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: JuiceTheme.parchmentDark),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 9,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: JuiceTheme.parchmentDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WildernessActionButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _WildernessActionButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 16, color: color.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WildernessCompactButton extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _WildernessCompactButton({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WildernessModifierChip extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final bool isSelected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _WildernessModifierChip({
+    required this.label,
+    required this.subtitle,
+    required this.isSelected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: isSelected ? color.withValues(alpha: 0.2) : JuiceTheme.sepia.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: isSelected ? color.withValues(alpha: 0.5) : JuiceTheme.sepia.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                  size: 14,
+                  color: isSelected ? color : JuiceTheme.parchmentDark,
+                ),
+                const SizedBox(width: 6),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? color : JuiceTheme.parchment,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WildernessEnvironmentPicker extends StatelessWidget {
+  final int selectedEnvironment;
+  final int selectedType;
+  final ValueChanged<int> onEnvironmentChanged;
+  final ValueChanged<int> onTypeChanged;
+  final VoidCallback onConfirm;
+
+  const _WildernessEnvironmentPicker({
+    required this.selectedEnvironment,
+    required this.selectedType,
+    required this.onEnvironmentChanged,
+    required this.onTypeChanged,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: JuiceTheme.sepia.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: JuiceTheme.sepia.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Environment dropdown
+          DropdownButtonFormField<int>(
+            value: selectedEnvironment,
+            decoration: InputDecoration(
+              labelText: 'Environment',
+              labelStyle: TextStyle(color: JuiceTheme.parchmentDark),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: JuiceTheme.sepia.withValues(alpha: 0.3)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: JuiceTheme.sepia.withValues(alpha: 0.3)),
+              ),
+            ),
+            dropdownColor: JuiceTheme.surface,
+            items: List.generate(10, (i) {
+              final env = Wilderness.environments[i];
+              return DropdownMenuItem(
+                value: i + 1,
+                child: Text(
+                  '${i + 1}. $env',
+                  style: TextStyle(color: JuiceTheme.parchment, fontSize: 12),
+                ),
+              );
+            }),
+            onChanged: (v) => onEnvironmentChanged(v ?? 6),
+          ),
+          const SizedBox(height: 8),
+          // Type dropdown
+          DropdownButtonFormField<int>(
+            value: selectedType,
+            decoration: InputDecoration(
+              labelText: 'Type',
+              labelStyle: TextStyle(color: JuiceTheme.parchmentDark),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: JuiceTheme.sepia.withValues(alpha: 0.3)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: JuiceTheme.sepia.withValues(alpha: 0.3)),
+              ),
+            ),
+            dropdownColor: JuiceTheme.surface,
+            items: List.generate(10, (i) {
+              final type = Wilderness.types[i]['name'] as String;
+              return DropdownMenuItem(
+                value: i + 1,
+                child: Text(
+                  '${i + 1}. $type',
+                  style: TextStyle(color: JuiceTheme.parchment, fontSize: 12),
+                ),
+              );
+            }),
+            onChanged: (v) => onTypeChanged(v ?? 6),
+          ),
+          const SizedBox(height: 10),
+          // Preview
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: JuiceTheme.categoryExplore.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: JuiceTheme.categoryExplore.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.location_on, size: 14, color: JuiceTheme.categoryExplore),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${Wilderness.types[selectedType - 1]['name']} ${Wilderness.environments[selectedEnvironment - 1]}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: JuiceTheme.parchment,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onConfirm,
+              icon: const Icon(Icons.check, size: 16),
+              label: const Text('Set Position'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: JuiceTheme.categoryExplore,
+                foregroundColor: JuiceTheme.background,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -4965,12 +6086,9 @@ class _RandomTablesDialog extends StatelessWidget {
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 360,
-          maxHeight: MediaQuery.of(context).size.height * 0.78,
-        ),
-        child: _ScrollableDialogContent(
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
