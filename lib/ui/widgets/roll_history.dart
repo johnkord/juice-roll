@@ -310,6 +310,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildEmotionalAtmosphereDisplay(result as EmotionalAtmosphereResult, theme);
     } else if (result is FullImmersionResult) {
       return _buildFullImmersionDisplay(result as FullImmersionResult, theme);
+    } else if (result is DualPropertyResult) {
+      return _buildDualPropertyResultDisplay(result as DualPropertyResult, theme);
     } else if (result is PropertyResult) {
       return _buildPropertyResultDisplay(result as PropertyResult, theme);
     } else if (result is DetailWithFollowUpResult) {
@@ -4537,216 +4539,672 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
+    const propertyColor = JuiceTheme.gold;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.pink.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '1d10: ${result.propertyRoll}, 1d6: ${result.intensityRoll}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.pink.shade700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
+        // Dice display with property and intensity dice
         Row(
           children: [
-            Chip(
-              label: Text(result.property),
-              backgroundColor: Colors.pink.withOpacity(0.2),
-              side: const BorderSide(color: Colors.pink),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.rust.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'd10',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.rust,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.rust.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      '${result.propertyRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(width: 8),
-            Text(
-              result.intensityDescription,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'd6',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.info,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.info.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      '${result.intensityRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        // Property result display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                propertyColor.withValues(alpha: 0.15),
+                propertyColor.withValues(alpha: 0.08),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: propertyColor.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.tune, size: 16, color: propertyColor),
+              const SizedBox(width: 8),
+              Text(
+                result.property,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilySerif,
+                  color: propertyColor,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: propertyColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  result.intensityDescription,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: propertyColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildDualPropertyResultDisplay(DualPropertyResult result, ThemeData theme) {
+    const propertyColor = JuiceTheme.gold;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dice display row - both properties' dice
+        Row(
+          children: [
+            // First property dice
+            _buildPropertyDicePair(
+              result.property1.propertyRoll, 
+              result.property1.intensityRoll, 
+              theme,
+            ),
+            const SizedBox(width: 8),
+            Text('+', style: TextStyle(color: JuiceTheme.parchmentDark, fontSize: 12)),
+            const SizedBox(width: 8),
+            // Second property dice
+            _buildPropertyDicePair(
+              result.property2.propertyRoll, 
+              result.property2.intensityRoll, 
+              theme,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Property results
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            _buildPropertyChip(result.property1, propertyColor, theme),
+            Icon(Icons.add, size: 14, color: JuiceTheme.parchmentDark),
+            _buildPropertyChip(result.property2, propertyColor, theme),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPropertyDicePair(int d10Value, int d6Value, ThemeData theme) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: BoxDecoration(
+            color: JuiceTheme.rust.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'd10:',
+                style: TextStyle(
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  fontSize: 9,
+                  color: JuiceTheme.rust,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.rust.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Text(
+                  '$d10Value',
+                  style: TextStyle(
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.parchment,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 3),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: BoxDecoration(
+            color: JuiceTheme.info.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'd6:',
+                style: TextStyle(
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  fontSize: 9,
+                  color: JuiceTheme.info,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.info.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Text(
+                  '$d6Value',
+                  style: TextStyle(
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.parchment,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPropertyChip(PropertyResult prop, Color color, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            prop.property,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              prop.intensityDescription,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: color,
+                fontSize: 9,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildDetailResultDisplay(DetailResult result, ThemeData theme) {
+    // Different styling based on detail type
+    final isColor = result.detailType == DetailType.color;
+    final isHistory = result.detailType == DetailType.history;
+    
+    // Theme colors based on type
+    final Color accentColor;
+    final IconData icon;
+    if (isColor) {
+      accentColor = const Color(0xFF6B8EAE); // Blue-ish for color
+      icon = Icons.palette;
+    } else if (isHistory) {
+      accentColor = JuiceTheme.rust;
+      icon = Icons.history;
+    } else {
+      accentColor = JuiceTheme.mystic;
+      icon = Icons.help_outline;
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Dice roll display
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           decoration: BoxDecoration(
-            color: Colors.pink.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: accentColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(4),
           ),
-          child: Text(
-            result.secondRoll != null
-                ? '1d10@: ${result.roll}, ${result.secondRoll}'
-                : '1d10: ${result.roll}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.pink.shade700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            if (result.emoji != null) ...[
-              Text(result.emoji!, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              result.result,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailWithFollowUpDisplay(DetailWithFollowUpResult result, ThemeData theme) {
-    // Build dice display for main detail
-    final mainDiceLabel = result.detailResult.secondRoll != null ? '2d10' : 'd10';
-    final mainDiceValues = result.detailResult.secondRoll != null
-        ? '[${result.detailResult.roll}, ${result.detailResult.secondRoll}]'
-        : '${result.detailResult.roll}';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Dice roll for main detail
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.pink.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '$mainDiceLabel: $mainDiceValues',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.pink.shade700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        // Main detail result
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.pink.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.pink.withValues(alpha: 0.4)),
-              ),
-              child: Text(
-                result.detailResult.result,
-                style: TextStyle(
-                  color: Colors.pink.shade700,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                result.secondRoll != null ? 'd10 @' : 'd10',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: JuiceTheme.fontFamilyMono,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  color: accentColor,
+                  fontSize: 10,
                 ),
               ),
-            ),
-            if (result.hasFollowUp) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_forward, size: 16, color: Colors.grey.shade600),
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: Text(
+                  result.secondRoll != null 
+                      ? '${result.roll}, ${result.secondRoll}'
+                      : '${result.roll}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.parchment,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
             ],
-          ],
+          ),
         ),
-        // Follow-up result (History or Property)
-        if (result.historyResult != null) ...[
-          const SizedBox(height: 8),
+        const SizedBox(height: 8),
+        // Result display - special treatment for Color
+        if (isColor) ...[
+          _buildColorResultDisplay(result, theme),
+        ] else ...[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.purple.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                colors: [
+                  accentColor.withValues(alpha: 0.12),
+                  accentColor.withValues(alpha: 0.06),
+                ],
+              ),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+              border: Border.all(color: accentColor.withValues(alpha: 0.35)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'd10: ${result.historyResult!.roll}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Icon(Icons.history, size: 16, color: Colors.purple.shade600),
-                const SizedBox(width: 6),
+                Icon(icon, size: 16, color: accentColor),
+                const SizedBox(width: 8),
                 Text(
-                  result.historyResult!.result,
-                  style: TextStyle(
-                    color: Colors.purple.shade700,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                  result.result,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                    color: accentColor,
                   ),
                 ),
               ],
             ),
           ),
         ],
-        if (result.propertyResult != null) ...[
-          const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildColorResultDisplay(DetailResult result, ThemeData theme) {
+    // Map color names to actual colors for display
+    final colorMap = {
+      'Shade Black': Colors.black87,
+      'Leather Brown': const Color(0xFF8B4513),
+      'Highlight Yellow': Colors.yellow.shade600,
+      'Forest Green': const Color(0xFF228B22),
+      'Cobalt Blue': const Color(0xFF0047AB),
+      'Crimson Red': const Color(0xFFDC143C),
+      'Royal Violet': const Color(0xFF7851A9),
+      'Metallic Silver': Colors.grey.shade400,
+      'Midas Gold': const Color(0xFFFFD700),
+      'Holy White': Colors.white70,
+    };
+    
+    final displayColor = colorMap[result.result] ?? JuiceTheme.parchment;
+    final isDark = displayColor.computeLuminance() < 0.5;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: JuiceTheme.inkDark.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: displayColor.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Color swatch
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: Colors.teal.withValues(alpha: 0.1),
+              color: displayColor,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: isDark ? Colors.white24 : Colors.black26,
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: displayColor.withValues(alpha: 0.4),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Color name
+          Text(
+            result.result,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: JuiceTheme.parchment,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailWithFollowUpDisplay(DetailWithFollowUpResult result, ThemeData theme) {
+    const detailColor = JuiceTheme.mystic;
+    const historyColor = JuiceTheme.rust;
+    const propertyColor = JuiceTheme.gold;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dice roll for main detail
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          decoration: BoxDecoration(
+            color: detailColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                result.detailResult.secondRoll != null ? 'd10 @' : 'd10',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  fontWeight: FontWeight.bold,
+                  color: detailColor,
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: detailColor.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: Text(
+                  result.detailResult.secondRoll != null
+                      ? '${result.detailResult.roll}, ${result.detailResult.secondRoll}'
+                      : '${result.detailResult.roll}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.parchment,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Main detail result
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    detailColor.withValues(alpha: 0.15),
+                    detailColor.withValues(alpha: 0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: detailColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.help_outline, size: 14, color: detailColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    result.detailResult.result,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: detailColor,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (result.hasFollowUp) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.arrow_forward, size: 16, color: JuiceTheme.parchmentDark),
+            ],
+          ],
+        ),
+        // Follow-up result: History
+        if (result.historyResult != null) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  historyColor.withValues(alpha: 0.12),
+                  historyColor.withValues(alpha: 0.06),
+                ],
+              ),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.teal.withValues(alpha: 0.3)),
+              border: Border.all(color: historyColor.withValues(alpha: 0.35)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Dice indicator
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.15),
+                    color: historyColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'd10+d6: [${result.propertyResult!.propertyRoll}, ${result.propertyResult!.intensityRoll}]',
+                    'd10: ${result.historyResult!.roll}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
+                      fontFamily: JuiceTheme.fontFamilyMono,
                       fontWeight: FontWeight.bold,
+                      fontSize: 9,
+                      color: historyColor,
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
-                Icon(Icons.tune, size: 16, color: Colors.teal.shade600),
+                const SizedBox(width: 8),
+                Icon(Icons.history, size: 14, color: historyColor),
                 const SizedBox(width: 6),
                 Text(
-                  '${result.propertyResult!.property} (${result.propertyResult!.intensityDescription})',
-                  style: TextStyle(
-                    color: Colors.teal.shade700,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                  result.historyResult!.result,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: historyColor,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        // Follow-up result: Property
+        if (result.propertyResult != null) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  propertyColor.withValues(alpha: 0.12),
+                  propertyColor.withValues(alpha: 0.06),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: propertyColor.withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Dice indicator
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: propertyColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'd10+d6: ${result.propertyResult!.propertyRoll}, ${result.propertyResult!.intensityRoll}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 9,
+                      color: propertyColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.tune, size: 14, color: propertyColor),
+                const SizedBox(width: 6),
+                Text(
+                  result.propertyResult!.property,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: propertyColor,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: propertyColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Text(
+                    result.propertyResult!.intensityDescription,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: propertyColor,
+                      fontSize: 9,
+                    ),
                   ),
                 ),
               ],
