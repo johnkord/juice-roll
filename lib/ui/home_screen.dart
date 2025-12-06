@@ -9301,11 +9301,6 @@ class _LocationDialog extends StatelessWidget {
                 useFor: 'Remote Events, hidden treasure locations',
               ),
               
-              const SizedBox(height: 12),
-              
-              // Visual Grid
-              _buildGridVisual(),
-              
               const SizedBox(height: 16),
               
               // Roll button
@@ -9357,6 +9352,11 @@ class _LocationDialog extends StatelessWidget {
                   ),
                 ),
               ),
+              
+              const SizedBox(height: 12),
+              
+              // Visual Grid
+              _buildGridVisual(),
             ],
           ),
         ),
@@ -9712,6 +9712,35 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
               ),
               const SizedBox(height: 10),
               
+              // Action buttons - moved above the legend
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _rollDialog,
+                      icon: const Icon(Icons.casino, size: 18),
+                      label: Text(isActive ? 'Roll 2d10' : 'Roll (New)'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: dialogColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _startNewConversation,
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Reset to Fact (center)',
+                    style: IconButton.styleFrom(
+                      backgroundColor: JuiceTheme.success.withValues(alpha: 0.2),
+                      foregroundColor: JuiceTheme.success,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              
               // Direction/Tone legend - compact 2x2 grid
               Container(
                 padding: const EdgeInsets.all(8),
@@ -9761,35 +9790,6 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Action buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _rollDialog,
-                      icon: const Icon(Icons.casino, size: 18),
-                      label: Text(isActive ? 'Roll 2d10' : 'Roll (New)'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: dialogColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _startNewConversation,
-                    icon: const Icon(Icons.refresh),
-                    tooltip: 'Reset to Fact (center)',
-                    style: IconButton.styleFrom(
-                      backgroundColor: JuiceTheme.success.withValues(alpha: 0.2),
-                      foregroundColor: JuiceTheme.success,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
