@@ -24,6 +24,7 @@ import '../../presets/monster_encounter.dart';
 import '../../presets/abstract_icons.dart';
 import '../../presets/dungeon_generator.dart';
 import '../../presets/extended_npc_conversation.dart';
+import '../../presets/name_generator.dart';
 import '../theme/juice_theme.dart';
 
 /// Scrollable roll history widget.
@@ -362,6 +363,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildCompanionResponseDisplay(result as CompanionResponseResult, theme);
     } else if (result is DialogTopicResult) {
       return _buildDialogTopicDisplay(result as DialogTopicResult, theme);
+    } else if (result is NameResult) {
+      return _buildNameResultDisplay(result as NameResult, theme);
     }
 
     // Handle standard dice roll types with enhanced display
@@ -2682,6 +2685,248 @@ class _RollHistoryCard extends StatelessWidget {
       default:
         return Icons.bolt;
     }
+  }
+
+  // ============ NAME GENERATOR DISPLAY METHOD ============
+
+  /// Get icon for name style
+  IconData _getNameStyleIcon(NameStyle style) {
+    switch (style) {
+      case NameStyle.masculine:
+        return Icons.male;
+      case NameStyle.feminine:
+        return Icons.female;
+      case NameStyle.neutral:
+        return Icons.person;
+    }
+  }
+
+  /// Get color for name style
+  Color _getNameStyleColor(NameStyle style) {
+    switch (style) {
+      case NameStyle.masculine:
+        return JuiceTheme.info;
+      case NameStyle.feminine:
+        return JuiceTheme.mystic;
+      case NameStyle.neutral:
+        return JuiceTheme.gold;
+    }
+  }
+
+  Widget _buildNameResultDisplay(NameResult result, ThemeData theme) {
+    final styleColor = _getNameStyleColor(result.style);
+    final styleIcon = _getNameStyleIcon(result.style);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dice indicators row
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // Method badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.rust.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_fix_high, size: 12, color: JuiceTheme.rust),
+                    const SizedBox(width: 4),
+                    Text(
+                      result.method == NameMethod.pattern && result.pattern != null
+                          ? result.pattern!
+                          : result.method == NameMethod.simple
+                              ? '3d20'
+                              : 'Col1',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.rust,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              // Dice rolls
+              ...result.rolls.asMap().entries.map((entry) {
+                final index = entry.key;
+                final roll = entry.value;
+                final isPatternRoll = result.method == NameMethod.pattern && index == 0;
+                final rollColor = isPatternRoll ? JuiceTheme.mystic : JuiceTheme.info;
+                
+                return Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: rollColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isPatternRoll ? 'P' : 'd20',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: JuiceTheme.fontFamilyMono,
+                            fontWeight: FontWeight.bold,
+                            color: rollColor,
+                            fontSize: 9,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: rollColor.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            '$roll',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontFamily: JuiceTheme.fontFamilyMono,
+                              fontWeight: FontWeight.bold,
+                              color: JuiceTheme.parchment,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              // Style indicator
+              if (result.style != NameStyle.neutral) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: styleColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: styleColor.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(styleIcon, size: 12, color: styleColor),
+                      const SizedBox(width: 3),
+                      Text(
+                        result.style == NameStyle.masculine ? '@−' : '@+',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontFamily: JuiceTheme.fontFamilyMono,
+                          fontWeight: FontWeight.bold,
+                          color: styleColor,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Name result card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                styleColor.withValues(alpha: 0.15),
+                styleColor.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: styleColor.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Name display
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: styleColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(styleIcon, size: 18, color: styleColor),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      result.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.sepia,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Syllable breakdown
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: result.syllables.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final syllable = entry.value;
+                  final isFirst = index == 0;
+                  final isLast = index == result.syllables.length - 1;
+                  
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (isFirst
+                              ? JuiceTheme.success
+                              : isLast
+                                  ? JuiceTheme.mystic
+                                  : JuiceTheme.info)
+                          .withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: (isFirst
+                                ? JuiceTheme.success
+                                : isLast
+                                    ? JuiceTheme.mystic
+                                    : JuiceTheme.info)
+                            .withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      syllable,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.w600,
+                        color: isFirst
+                            ? JuiceTheme.success
+                            : isLast
+                                ? JuiceTheme.mystic
+                                : JuiceTheme.info,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildSettlementNameDisplay(SettlementNameResult result, ThemeData theme) {

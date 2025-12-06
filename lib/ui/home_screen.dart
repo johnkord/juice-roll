@@ -7487,13 +7487,58 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
               ),
             ),
             dropdownColor: JuiceTheme.surface,
+            iconEnabledColor: JuiceTheme.parchment,
+            style: TextStyle(color: JuiceTheme.parchment, fontSize: 12),
+            selectedItemBuilder: (context) {
+              return List.generate(10, (i) {
+                final env = Wilderness.environments[i];
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${i + 1}. $env',
+                    style: TextStyle(fontSize: 12, color: JuiceTheme.parchment),
+                  ),
+                );
+              });
+            },
             items: List.generate(10, (i) {
               final env = Wilderness.environments[i];
+              // Parse the environment string to separate name and formula
+              final match = RegExp(r'(.+?)\s*(\([^)]+\))').firstMatch(env);
+              final name = match?.group(1) ?? env;
+              final formula = match?.group(2) ?? '';
               return DropdownMenuItem(
                 value: i + 1,
-                child: Text(
-                  '${i + 1}. $env',
-                  style: TextStyle(color: JuiceTheme.parchment, fontSize: 12),
+                child: Row(
+                  children: [
+                    Text(
+                      '${i + 1}. ',
+                      style: TextStyle(fontSize: 13, color: JuiceTheme.sepia, fontFamily: JuiceTheme.fontFamilyMono),
+                    ),
+                    Expanded(
+                      child: Text(
+                        name.trim(),
+                        style: TextStyle(fontSize: 13, color: JuiceTheme.parchment, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    if (formula.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: JuiceTheme.gold.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          formula,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: JuiceTheme.gold,
+                            fontFamily: JuiceTheme.fontFamilyMono,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               );
             }),
@@ -7518,13 +7563,37 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
               ),
             ),
             dropdownColor: JuiceTheme.surface,
+            iconEnabledColor: JuiceTheme.parchment,
+            style: TextStyle(color: JuiceTheme.parchment, fontSize: 12),
+            selectedItemBuilder: (context) {
+              return List.generate(10, (i) {
+                final type = Wilderness.types[i]['name'] as String;
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${i + 1}. $type',
+                    style: TextStyle(fontSize: 12, color: JuiceTheme.parchment),
+                  ),
+                );
+              });
+            },
             items: List.generate(10, (i) {
               final type = Wilderness.types[i]['name'] as String;
               return DropdownMenuItem(
                 value: i + 1,
-                child: Text(
-                  '${i + 1}. $type',
-                  style: TextStyle(color: JuiceTheme.parchment, fontSize: 12),
+                child: Row(
+                  children: [
+                    Text(
+                      '${i + 1}. ',
+                      style: TextStyle(fontSize: 13, color: JuiceTheme.sepia, fontFamily: JuiceTheme.fontFamilyMono),
+                    ),
+                    Expanded(
+                      child: Text(
+                        type,
+                        style: TextStyle(fontSize: 13, color: JuiceTheme.parchment, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }),
@@ -7722,15 +7791,56 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
                           borderSide: BorderSide(color: JuiceTheme.categoryExplore.withValues(alpha: 0.3)),
                         ),
                       ),
-                      dropdownColor: JuiceTheme.parchmentDark,
+                      dropdownColor: JuiceTheme.surface,
+                      iconEnabledColor: JuiceTheme.parchment,
+                      style: TextStyle(color: JuiceTheme.parchment, fontSize: 12),
+                      selectedItemBuilder: (context) {
+                        return List.generate(10, (i) {
+                          final name = MonsterEncounter.environmentNames[i];
+                          final formula = MonsterEncounter.getEnvironmentFormula(i + 1);
+                          return Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${i + 1}. $name ($formula)',
+                              style: TextStyle(fontSize: 12, color: JuiceTheme.parchment),
+                            ),
+                          );
+                        });
+                      },
                       items: List.generate(10, (i) {
                         final name = MonsterEncounter.environmentNames[i];
                         final formula = MonsterEncounter.getEnvironmentFormula(i + 1);
                         return DropdownMenuItem(
                           value: i + 1,
-                          child: Text(
-                            '${i + 1}. $name ($formula)',
-                            style: TextStyle(fontSize: 12, color: JuiceTheme.parchment),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${i + 1}. ',
+                                style: TextStyle(fontSize: 13, color: JuiceTheme.sepia, fontFamily: JuiceTheme.fontFamilyMono),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  name,
+                                  style: TextStyle(fontSize: 13, color: JuiceTheme.parchment, fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: JuiceTheme.gold.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  formula,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: JuiceTheme.gold,
+                                    fontFamily: JuiceTheme.fontFamilyMono,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }),
