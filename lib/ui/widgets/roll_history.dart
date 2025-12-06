@@ -3784,30 +3784,258 @@ class _RollHistoryCard extends StatelessWidget {
 
   // ============ IMMERSION DISPLAY METHODS ============
 
+  /// Get icon for sense type
+  IconData _getSenseIcon(String sense) {
+    switch (sense.toLowerCase()) {
+      case 'see': return Icons.visibility;
+      case 'hear': return Icons.hearing;
+      case 'smell': return Icons.air;
+      case 'feel': return Icons.touch_app;
+      default: return Icons.sensors;
+    }
+  }
+
+  /// Get color for sense type
+  Color _getSenseColor(String sense) {
+    switch (sense.toLowerCase()) {
+      case 'see': return JuiceTheme.info;
+      case 'hear': return JuiceTheme.mystic;
+      case 'smell': return JuiceTheme.success;
+      case 'feel': return JuiceTheme.gold;
+      default: return JuiceTheme.rust;
+    }
+  }
+
   Widget _buildSensoryDetailDisplay(SensoryDetailResult result, ThemeData theme) {
+    final senseColor = _getSenseColor(result.sense);
+    final senseIcon = _getSenseIcon(result.sense);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.deepOrange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '3d10: ${result.senseRoll}, ${result.detailRoll}, ${result.whereRoll}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.deepOrange.shade700,
+        // Dice indicators row
+        Row(
+          children: [
+            // Sense die
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: senseColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(senseIcon, size: 12, color: senseColor),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: senseColor.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      '${result.senseRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(width: 4),
+            // Detail die
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.rust.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'd10',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.rust,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.rust.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      '${result.detailRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 4),
+            // Where die
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.place, size: 12, color: JuiceTheme.info),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.info.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      '${result.whereRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Skew indicator if present
+            if (result.skew != SkewType.none) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: (result.skew == SkewType.advantage
+                      ? JuiceTheme.success
+                      : JuiceTheme.danger).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: (result.skew == SkewType.advantage
+                        ? JuiceTheme.success
+                        : JuiceTheme.danger).withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      result.skew == SkewType.advantage
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      size: 12,
+                      color: result.skew == SkewType.advantage
+                          ? JuiceTheme.success
+                          : JuiceTheme.danger,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      result.skew == SkewType.advantage ? 'Closer' : 'Further',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: result.skew == SkewType.advantage
+                            ? JuiceTheme.success
+                            : JuiceTheme.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          'You ${result.sense.toLowerCase()} something ${result.detail.toLowerCase()} ${result.where.toLowerCase()}',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontStyle: FontStyle.italic,
+        const SizedBox(height: 8),
+        // Sensory result card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                senseColor.withValues(alpha: 0.15),
+                senseColor.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: senseColor.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(senseIcon, size: 16, color: senseColor),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: senseColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      result.sense.toUpperCase(),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: senseColor,
+                        fontSize: 10,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              RichText(
+                text: TextSpan(
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: JuiceTheme.sepia,
+                    height: 1.3,
+                  ),
+                  children: [
+                    const TextSpan(text: 'You '),
+                    TextSpan(
+                      text: result.sense.toLowerCase(),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: senseColor),
+                    ),
+                    const TextSpan(text: ' something '),
+                    TextSpan(
+                      text: result.detail.toLowerCase(),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.rust),
+                    ),
+                    const TextSpan(text: ' '),
+                    TextSpan(
+                      text: result.where.toLowerCase(),
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.info,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -3815,46 +4043,251 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildEmotionalAtmosphereDisplay(EmotionalAtmosphereResult result, ThemeData theme) {
+    final polarityColor = result.isPositive ? JuiceTheme.success : JuiceTheme.danger;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.deepOrange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '2d10: ${result.emotionRoll}, ${result.causeRoll} + 1dF: ${result.isPositive ? "+" : "−"}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.deepOrange.shade700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
+        // Dice indicators row
         Row(
           children: [
-            Chip(
-              avatar: Icon(
-                result.isPositive ? Icons.add : Icons.remove,
-                size: 16,
-                color: result.isPositive ? Colors.green : Colors.red,
+            // Emotion die
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.mystic.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
               ),
-              label: Text(result.selectedEmotion),
-              backgroundColor: (result.isPositive ? Colors.green : Colors.red).withOpacity(0.1),
-              side: BorderSide(color: result.isPositive ? Colors.green : Colors.red),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.mood, size: 12, color: JuiceTheme.mystic),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.mystic.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      '${result.emotionRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 4),
+            // Cause die
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.rust.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'd10',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.rust,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.rust.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      '${result.causeRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 4),
+            // Fate die indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: polarityColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: polarityColor.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '1dF',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: polarityColor,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: polarityColor.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Center(
+                      child: Text(
+                        result.isPositive ? '+' : '−',
+                        style: TextStyle(
+                          fontFamily: JuiceTheme.fontFamilyMono,
+                          fontWeight: FontWeight.bold,
+                          color: JuiceTheme.parchment,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Skew indicator if present
+            if (result.skew != SkewType.none) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: (result.skew == SkewType.advantage
+                      ? JuiceTheme.success
+                      : JuiceTheme.danger).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: (result.skew == SkewType.advantage
+                        ? JuiceTheme.success
+                        : JuiceTheme.danger).withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      result.skew == SkewType.advantage
+                          ? Icons.sentiment_very_satisfied
+                          : Icons.sentiment_very_dissatisfied,
+                      size: 12,
+                      color: result.skew == SkewType.advantage
+                          ? JuiceTheme.success
+                          : JuiceTheme.danger,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      result.skew == SkewType.advantage ? 'Positive' : 'Negative',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: result.skew == SkewType.advantage
+                            ? JuiceTheme.success
+                            : JuiceTheme.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
-        Text(
-          'because ${result.cause}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
-            fontStyle: FontStyle.italic,
+        const SizedBox(height: 8),
+        // Emotion result card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                polarityColor.withValues(alpha: 0.15),
+                polarityColor.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: polarityColor.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Emotion polarity and name
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: polarityColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(
+                      result.isPositive ? Icons.sentiment_satisfied : Icons.sentiment_dissatisfied,
+                      size: 16,
+                      color: polarityColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    result.selectedEmotion,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: polarityColor,
+                    ),
+                  ),
+                  const Spacer(),
+                  // Show the pair
+                  Text(
+                    result.isPositive
+                        ? '(vs ${result.negativeEmotion})'
+                        : '(vs ${result.positiveEmotion})',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: JuiceTheme.parchmentDark.withValues(alpha: 0.6),
+                      fontStyle: FontStyle.italic,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Cause
+              RichText(
+                text: TextSpan(
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: JuiceTheme.sepia,
+                  ),
+                  children: [
+                    const TextSpan(text: 'because '),
+                    TextSpan(
+                      text: result.cause,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: JuiceTheme.rust,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -4486,52 +4919,251 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
+    final senseColor = _getSenseColor(result.sensory.sense);
+    final senseIcon = _getSenseIcon(result.sensory.sense);
+    final polarityColor = result.emotional.isPositive ? JuiceTheme.success : JuiceTheme.danger;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Sensory dice display
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.deepOrange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+        // Compact dice summary
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // Sensory dice group
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: senseColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(senseIcon, size: 11, color: senseColor),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${result.sensory.senseRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: senseColor,
+                        fontSize: 10,
+                      ),
+                    ),
+                    Text(
+                      ' · ${result.sensory.detailRoll} · ${result.sensory.whereRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: JuiceTheme.parchmentDark,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              // Emotional dice group
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.mystic.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.mood, size: 11, color: JuiceTheme.mystic),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${result.emotional.emotionRoll} · ${result.emotional.causeRoll}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: JuiceTheme.parchmentDark,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              // Fate die
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: polarityColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: polarityColor.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '1dF',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: polarityColor,
+                        fontSize: 9,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      result.emotional.isPositive ? '+' : '−',
+                      style: TextStyle(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: polarityColor,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: Text(
-            '3d10: ${result.sensory.senseRoll}, ${result.sensory.detailRoll}, ${result.sensory.whereRoll} + 2d10: ${result.emotional.emotionRoll}, ${result.emotional.causeRoll} + 1dF',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.deepOrange.shade700,
+        ),
+        const SizedBox(height: 8),
+        // Sensory result card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                senseColor.withValues(alpha: 0.15),
+                senseColor.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: senseColor.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: senseColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(senseIcon, size: 18, color: senseColor),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: JuiceTheme.sepia,
+                      height: 1.3,
+                    ),
+                    children: [
+                      const TextSpan(text: 'You '),
+                      TextSpan(
+                        text: result.sensory.sense.toLowerCase(),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: senseColor),
+                      ),
+                      const TextSpan(text: ' something '),
+                      TextSpan(
+                        text: result.sensory.detail.toLowerCase(),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.rust),
+                      ),
+                      const TextSpan(text: ' '),
+                      TextSpan(
+                        text: result.sensory.where.toLowerCase(),
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: JuiceTheme.info,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          'You ${result.sensory.sense.toLowerCase()} something ${result.sensory.detail.toLowerCase()} ${result.sensory.where.toLowerCase()}',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontStyle: FontStyle.italic,
+        // Emotional result card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                polarityColor.withValues(alpha: 0.15),
+                polarityColor.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: polarityColor.withValues(alpha: 0.3)),
           ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Icon(
-              result.emotional.isPositive ? Icons.add : Icons.remove,
-              size: 16,
-              color: result.emotional.isPositive ? Colors.green : Colors.red,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'It causes ${result.emotional.selectedEmotion.toLowerCase()}',
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ),
-        Text(
-          'because ${result.emotional.cause}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
-            fontStyle: FontStyle.italic,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: polarityColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  result.emotional.isPositive
+                      ? Icons.sentiment_satisfied
+                      : Icons.sentiment_dissatisfied,
+                  size: 18,
+                  color: polarityColor,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: JuiceTheme.sepia,
+                        ),
+                        children: [
+                          const TextSpan(text: 'It causes '),
+                          TextSpan(
+                            text: result.emotional.selectedEmotion.toLowerCase(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: polarityColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    RichText(
+                      text: TextSpan(
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: JuiceTheme.parchmentDark.withValues(alpha: 0.8),
+                        ),
+                        children: [
+                          const TextSpan(text: 'because '),
+                          TextSpan(
+                            text: result.emotional.cause,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: JuiceTheme.rust,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
