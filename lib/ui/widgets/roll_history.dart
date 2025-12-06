@@ -23,6 +23,7 @@ import '../../presets/scale.dart';
 import '../../presets/monster_encounter.dart';
 import '../../presets/abstract_icons.dart';
 import '../../presets/dungeon_generator.dart';
+import '../../presets/extended_npc_conversation.dart';
 import '../theme/juice_theme.dart';
 
 /// Scrollable roll history widget.
@@ -291,6 +292,8 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildCompleteSettlementDisplay(result as CompleteSettlementResult, theme);
     } else if (result is FullSettlementResult) {
       return _buildFullSettlementDisplay(result as FullSettlementResult, theme);
+    } else if (result is ItemCreationResult) {
+      return _buildItemCreationDisplay(result as ItemCreationResult, theme);
     } else if (result is ObjectTreasureResult) {
       return _buildObjectTreasureDisplay(result as ObjectTreasureResult, theme);
     } else if (result is FullChallengeResult) {
@@ -325,6 +328,10 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildWildernessWeatherDisplay(result as WildernessWeatherResult, theme);
     } else if (result is FullMonsterEncounterResult) {
       return _buildFullMonsterEncounterDisplay(result as FullMonsterEncounterResult, theme);
+    } else if (result is MonsterEncounterResult) {
+      return _buildMonsterEncounterDisplay(result as MonsterEncounterResult, theme);
+    } else if (result is MonsterTracksResult) {
+      return _buildMonsterTracksDisplay(result as MonsterTracksResult, theme);
     } else if (result is LocationResult) {
       return _buildLocationDisplay(result as LocationResult, theme);
     } else if (result is AbstractIconResult) {
@@ -347,6 +354,20 @@ class _RollHistoryCard extends StatelessWidget {
       return _buildTrapProcedureDisplay(result as TrapProcedureResult, theme);
     } else if (result is DungeonDetailResult) {
       return _buildDungeonDetailDisplay(result as DungeonDetailResult, theme);
+    } else if (result is InformationResult) {
+      return _buildInformationDisplay(result as InformationResult, theme);
+    } else if (result is CompanionResponseResult) {
+      return _buildCompanionResponseDisplay(result as CompanionResponseResult, theme);
+    } else if (result is DialogTopicResult) {
+      return _buildDialogTopicDisplay(result as DialogTopicResult, theme);
+    }
+
+    // Handle standard dice roll types with enhanced display
+    if (result.type == RollType.standard || 
+        result.type == RollType.advantage || 
+        result.type == RollType.disadvantage || 
+        result.type == RollType.skewed) {
+      return _buildGenericDiceRollDisplay(result, theme);
     }
 
     // Default display
@@ -1061,45 +1082,95 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildNpcProfileDisplay(NpcProfileResult result, ThemeData theme) {
-    // Build dice roll string with all the rolls
-    final diceRollParts = <String>[
-      '${result.primaryPersonalityRoll}',
-      '${result.secondaryPersonalityRoll}',
-      '${result.needRoll}',
-      '${result.motiveRoll}',
-    ];
-    // Add follow-up rolls if present
-    if (result.historyResult != null) {
-      diceRollParts.add('${result.historyResult!.roll}');
+    final charColor = JuiceTheme.categoryCharacter;
+    
+    // Build need skew indicator
+    String needSkewLabel = '';
+    if (result.needSkew == NeedSkew.complex) {
+      needSkewLabel = ' @+';
+    } else if (result.needSkew == NeedSkew.primitive) {
+      needSkewLabel = ' @-';
     }
-    if (result.focusResult != null) {
-      diceRollParts.add('${result.focusResult!.roll}');
-      if (result.focusExpansionRoll != null) {
-        diceRollParts.add('${result.focusExpansionRoll}');
-      }
-    }
-    diceRollParts.add('${result.color.roll}');
-    diceRollParts.add('${result.property1.propertyRoll}+${result.property1.intensityRoll}');
-    diceRollParts.add('${result.property2.propertyRoll}+${result.property2.intensityRoll}');
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Dice rolls display
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.teal.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            diceRollParts.join(', '),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.teal.shade700,
+        // Type badge row
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: charColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: charColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.person, size: 12, color: charColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    'NPC PROFILE',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: charColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Dice display row - labeled dice badges
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            // Personality dice (2 d10s)
+            _buildNpcDiceBadge(
+              'Pers',
+              [result.primaryPersonalityRoll, result.secondaryPersonalityRoll],
+              charColor,
+              theme,
+            ),
+            // Need dice (1 or 2 d10s based on skew)
+            _buildNpcDiceBadge(
+              'Need$needSkewLabel',
+              result.needAllRolls ?? [result.needRoll],
+              JuiceTheme.mystic,
+              theme,
+            ),
+            // Motive dice + any follow-up rolls
+            _buildNpcDiceBadge(
+              'Mot',
+              [
+                result.motiveRoll,
+                if (result.historyResult != null) result.historyResult!.roll,
+                if (result.focusResult != null) result.focusResult!.roll,
+                if (result.focusExpansionRoll != null) result.focusExpansionRoll!,
+              ],
+              JuiceTheme.info,
+              theme,
+            ),
+            // Color dice
+            _buildNpcDiceBadge(
+              'Col',
+              [result.color.roll],
+              JuiceTheme.juiceOrange,
+              theme,
+            ),
+            // Property dice (d10+d6 × 2)
+            _buildNpcDiceBadge(
+              'Prop',
+              null, // Use propFormat instead
+              JuiceTheme.rust,
+              theme,
+              propFormat: '${result.property1.propertyRoll}+${result.property1.intensityRoll}, ${result.property2.propertyRoll}+${result.property2.intensityRoll}',
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         // Labeled fields for clarity
@@ -1172,57 +1243,113 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildComplexNpcDisplay(ComplexNpcResult result, ThemeData theme) {
-    // Build dice roll parts
-    final diceRollParts = <String>[];
-    if (result.name != null) {
-      diceRollParts.addAll(result.name!.diceResults.map((r) => r.toString()));
+    final charColor = JuiceTheme.categoryCharacter;
+    
+    // Build need skew indicator
+    String needSkewLabel = '';
+    if (result.needSkew == NeedSkew.complex) {
+      needSkewLabel = ' @+';
+    } else if (result.needSkew == NeedSkew.primitive) {
+      needSkewLabel = ' @-';
     }
-    diceRollParts.add('${result.primaryPersonalityRoll}');
-    if (result.secondaryPersonalityRoll != null) {
-      diceRollParts.add('${result.secondaryPersonalityRoll}');
-    }
-    diceRollParts.addAll(result.needAllRolls.map((r) => r.toString()));
-    diceRollParts.add('${result.motiveRoll}');
-    if (result.historyResult != null) {
-      diceRollParts.add('${result.historyResult!.roll}');
-    }
-    if (result.focusResult != null) {
-      diceRollParts.add('${result.focusResult!.roll}');
-      if (result.focusExpansionRoll != null) {
-        diceRollParts.add('${result.focusExpansionRoll}');
-      }
-    }
-    diceRollParts.add('${result.color.roll}');
-    diceRollParts.add('${result.property1.propertyRoll}+${result.property1.intensityRoll}');
-    diceRollParts.add('${result.property2.propertyRoll}+${result.property2.intensityRoll}');
-
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Dice rolls display
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.teal.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            diceRollParts.join(', '),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.teal.shade700,
+        // Type badge row
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: charColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: charColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.person, size: 12, color: charColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    'COMPLEX NPC',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: charColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Dice display row - labeled dice badges
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            // Personality dice (1 or 2 d10s)
+            _buildNpcDiceBadge(
+              'Pers',
+              result.secondaryPersonalityRoll != null
+                  ? [result.primaryPersonalityRoll, result.secondaryPersonalityRoll!]
+                  : [result.primaryPersonalityRoll],
+              charColor,
+              theme,
+            ),
+            // Need dice (1 or 2 d10s based on skew)
+            _buildNpcDiceBadge(
+              'Need$needSkewLabel',
+              result.needAllRolls,
+              JuiceTheme.mystic,
+              theme,
+            ),
+            // Motive dice + any follow-up rolls
+            _buildNpcDiceBadge(
+              'Mot',
+              [
+                result.motiveRoll,
+                if (result.historyResult != null) result.historyResult!.roll,
+                if (result.focusResult != null) result.focusResult!.roll,
+                if (result.focusExpansionRoll != null) result.focusExpansionRoll!,
+              ],
+              JuiceTheme.info,
+              theme,
+            ),
+            // Color dice
+            _buildNpcDiceBadge(
+              'Col',
+              [result.color.roll],
+              JuiceTheme.juiceOrange,
+              theme,
+            ),
+            // Property dice (d10+d6 × 2)
+            _buildNpcDiceBadge(
+              'Prop',
+              null, // Use propFormat instead
+              JuiceTheme.rust,
+              theme,
+              propFormat: '${result.property1.propertyRoll}+${result.property1.intensityRoll}, ${result.property2.propertyRoll}+${result.property2.intensityRoll}',
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         // Name (if present) as header
         if (result.name != null) ...[
-          Text(
-            result.name!.name,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Icon(Icons.badge, size: 14, color: charColor),
+              const SizedBox(width: 6),
+              Text(
+                result.name!.name,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilySerif,
+                ),
+              ),
+            ],
           ),
           const Divider(height: 12),
         ],
@@ -1267,6 +1394,45 @@ class _RollHistoryCard extends StatelessWidget {
           theme,
         ),
       ],
+    );
+  }
+  
+  /// Helper to build a labeled dice badge for NPC displays
+  Widget _buildNpcDiceBadge(
+    String label,
+    List<int>? dice,
+    Color color,
+    ThemeData theme, {
+    String? propFormat,
+  }) {
+    final displayText = propFormat ?? '[${dice!.join(", ")}]';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: color,
+              fontSize: 10,
+            ),
+          ),
+          Text(
+            displayText,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontFamily: JuiceTheme.fontFamilyMono,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2058,6 +2224,378 @@ class _RollHistoryCard extends StatelessWidget {
 
   // ============ END DUNGEON DISPLAY METHODS ============
 
+  // ============ EXTENDED NPC CONVERSATION DISPLAY METHODS ============
+
+  Widget _buildInformationDisplay(InformationResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Type badge with icon
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.info.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.library_books, size: 12, color: JuiceTheme.info),
+                  const SizedBox(width: 4),
+                  Text(
+                    'NPC KNOWLEDGE',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: JuiceTheme.info,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Dice rolls display
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '2d100: [${result.typeRoll}, ${result.topicRoll}]',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  fontWeight: FontWeight.bold,
+                  color: JuiceTheme.info,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Two-part result display
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: JuiceTheme.info.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.info.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Information Type (first d100)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.mystic.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${result.typeRoll}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.mystic,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      result.informationType,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.parchment,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Topic (second d100)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: JuiceTheme.gold.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${result.topicRoll}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.gold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      result.topic,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.gold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompanionResponseDisplay(CompanionResponseResult result, ThemeData theme) {
+    // Determine favor level color
+    Color favorColor;
+    IconData favorIcon;
+    final roll = result.roll;
+    
+    if (roll <= 20) {
+      favorColor = JuiceTheme.danger;  // Strongly Opposed
+      favorIcon = Icons.thumb_down;
+    } else if (roll <= 40) {
+      favorColor = JuiceTheme.juiceOrange;  // Hesitant
+      favorIcon = Icons.thumbs_up_down;
+    } else if (roll <= 60) {
+      favorColor = JuiceTheme.parchmentDark;  // Neutral
+      favorIcon = Icons.help_outline;
+    } else if (roll <= 80) {
+      favorColor = JuiceTheme.info;  // Cautious Support
+      favorIcon = Icons.thumb_up_outlined;
+    } else {
+      favorColor = JuiceTheme.success;  // Strongly In Favor
+      favorIcon = Icons.thumb_up;
+    }
+    
+    // Build skew indicator if present
+    String skewLabel = '';
+    if (result.skew == SkewType.advantage) {
+      skewLabel = '@+ In Favor';
+    } else if (result.skew == SkewType.disadvantage) {
+      skewLabel = '@- Opposed';
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row with type badge and dice
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.success.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.success.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.question_answer, size: 12, color: JuiceTheme.success),
+                  const SizedBox(width: 4),
+                  Text(
+                    'COMPANION',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: JuiceTheme.success,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Dice roll with skew
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                result.allRolls.length > 1
+                    ? 'd100$skewLabel: [${result.allRolls.join(", ")}] → ${result.roll}'
+                    : '1d100: ${result.roll}',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  fontWeight: FontWeight.bold,
+                  color: JuiceTheme.success,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Favor level indicator
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: favorColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: favorColor.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(favorIcon, size: 14, color: favorColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    result.favorLevel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: favorColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Response text with speech styling
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: JuiceTheme.inkDark.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: favorColor.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.format_quote, size: 16, color: favorColor.withValues(alpha: 0.6)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  result.response,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w500,
+                    color: JuiceTheme.parchment,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDialogTopicDisplay(DialogTopicResult result, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.juiceOrange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.juiceOrange.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.forum, size: 12, color: JuiceTheme.juiceOrange),
+                  const SizedBox(width: 4),
+                  Text(
+                    'DIALOG TOPIC',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: JuiceTheme.juiceOrange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Dice roll
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.juiceOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '1d100: ${result.roll}',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  fontWeight: FontWeight.bold,
+                  color: JuiceTheme.juiceOrange,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Topic result with styled container
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: JuiceTheme.juiceOrange.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.juiceOrange.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.chat_bubble_outline, size: 16, color: JuiceTheme.juiceOrange.withValues(alpha: 0.7)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  result.topic,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                    color: JuiceTheme.parchment,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============ END EXTENDED NPC CONVERSATION DISPLAY METHODS ============
+
   Widget _buildInterruptDisplay(InterruptPlotPointResult result, ThemeData theme) {
     // Get category color
     final categoryColor = _getInterruptCategoryColor(result.category);
@@ -2385,39 +2923,377 @@ class _RollHistoryCard extends StatelessWidget {
     );
   }
 
+  /// Build a styled property chip for treasure display
+  Widget _buildTreasurePropertyChip(String label, String value, int roll, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              '$roll',
+              style: TextStyle(
+                fontSize: 9,
+                fontFamily: JuiceTheme.fontFamilyMono,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get category color for treasure types
+  Color _getTreasureCategoryColor(String category) {
+    switch (category) {
+      case 'Trinket': return JuiceTheme.sepia;
+      case 'Treasure': return JuiceTheme.gold;
+      case 'Document': return JuiceTheme.parchmentDark;
+      case 'Accessory': return JuiceTheme.mystic;
+      case 'Weapon': return JuiceTheme.danger;
+      case 'Armor': return JuiceTheme.info;
+      default: return JuiceTheme.gold;
+    }
+  }
+
+  /// Get category icon for treasure types
+  IconData _getTreasureCategoryIcon(String category) {
+    switch (category) {
+      case 'Trinket': return Icons.auto_awesome;
+      case 'Treasure': return Icons.paid;
+      case 'Document': return Icons.description;
+      case 'Accessory': return Icons.watch;
+      case 'Weapon': return Icons.gpp_maybe;
+      case 'Armor': return Icons.shield;
+      default: return Icons.diamond;
+    }
+  }
+
   Widget _buildObjectTreasureDisplay(ObjectTreasureResult result, ThemeData theme) {
+    final categoryColor = _getTreasureCategoryColor(result.category);
+    final categoryIcon = _getTreasureCategoryIcon(result.category);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Dice roll display
+        // Category header with icon
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: categoryColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(categoryIcon, size: 16, color: categoryColor),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    result.category,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: categoryColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    result.fullDescription,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: JuiceTheme.parchment,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        
+        // Property breakdown
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            if (result.rolls.isNotEmpty)
+              _buildTreasurePropertyChip(
+                result.columnLabels.isNotEmpty ? result.columnLabels[0] : 'Quality',
+                result.quality,
+                result.rolls.length > 1 ? result.rolls[1] : result.rolls[0],
+                categoryColor,
+              ),
+            if (result.rolls.length > 2)
+              _buildTreasurePropertyChip(
+                result.columnLabels.length > 1 ? result.columnLabels[1] : 'Material',
+                result.material,
+                result.rolls[2],
+                categoryColor,
+              ),
+            if (result.rolls.length > 3)
+              _buildTreasurePropertyChip(
+                result.columnLabels.length > 2 ? result.columnLabels[2] : 'Type',
+                result.itemType,
+                result.rolls[3],
+                categoryColor,
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        
+        // Dice summary
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: JuiceTheme.inkDark,
+            borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
-            '4d6: ${result.rolls.join(", ")}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.amber.shade700,
+            '4d6: [${result.rolls.join(", ")}]',
+            style: TextStyle(
+              fontSize: 10,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: Colors.grey.shade500,
             ),
           ),
         ),
-        const SizedBox(height: 6),
-        Chip(
-          label: Text(result.category),
-          backgroundColor: Colors.amber.withOpacity(0.2),
-          side: const BorderSide(color: Colors.amber),
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
+      ],
+    );
+  }
+
+  /// Display for full Item Creation procedure results
+  Widget _buildItemCreationDisplay(ItemCreationResult result, ThemeData theme) {
+    final categoryColor = _getTreasureCategoryColor(result.baseItem.category);
+    final categoryIcon = _getTreasureCategoryIcon(result.baseItem.category);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Category header with icon
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: categoryColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(categoryIcon, size: 16, color: categoryColor),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    result.baseItem.category,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: categoryColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    result.baseItem.fullDescription,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: JuiceTheme.parchment,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 10),
+        
+        // Properties section - the magic happens here
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: JuiceTheme.mystic.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_fix_high, size: 12, color: JuiceTheme.mystic),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Properties',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.mystic,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Property 1
+              _buildItemPropertyRow(
+                result.property1.intensityDescription,
+                result.property1.property,
+                result.property1.propertyRoll,
+                result.property1.intensityRoll,
+              ),
+              const SizedBox(height: 4),
+              // Property 2
+              _buildItemPropertyRow(
+                result.property2.intensityDescription,
+                result.property2.property,
+                result.property2.propertyRoll,
+                result.property2.intensityRoll,
+              ),
+            ],
+          ),
+        ),
+        
+        // Color if present
+        if (result.color != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: JuiceTheme.juiceOrange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: JuiceTheme.juiceOrange.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.palette, size: 14, color: JuiceTheme.juiceOrange),
+                const SizedBox(width: 6),
+                Text(
+                  result.color!.result,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.juiceOrange,
+                  ),
+                ),
+                if (result.color!.emoji != null) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    result.color!.emoji!,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+        
+        const SizedBox(height: 8),
+        
+        // Dice summary
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: JuiceTheme.inkDark,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            '4d6: [${result.baseItem.rolls.join(", ")}]  Props: [${result.property1.propertyRoll},${result.property1.intensityRoll}] [${result.property2.propertyRoll},${result.property2.intensityRoll}]${result.color != null ? "  Color: [${result.color!.roll}]" : ""}',
+            style: TextStyle(
+              fontSize: 9,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build a property row for item creation display
+  Widget _buildItemPropertyRow(String intensity, String property, int propRoll, int intRoll) {
+    // Get color based on intensity
+    Color intensityColor;
+    if (intensity.contains('Major') || intensity.contains('Extreme')) {
+      intensityColor = JuiceTheme.success;
+    } else if (intensity.contains('Minimal') || intensity.contains('Trace')) {
+      intensityColor = JuiceTheme.rust;
+    } else {
+      intensityColor = JuiceTheme.info;
+    }
+    
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: intensityColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            intensity,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: intensityColor,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
         Text(
-          result.fullDescription,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+          property,
+          style: TextStyle(
+            fontSize: 12,
+            fontFamily: JuiceTheme.fontFamilySerif,
+            color: JuiceTheme.parchment,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          '[$propRoll,$intRoll]',
+          style: TextStyle(
+            fontSize: 9,
+            fontFamily: JuiceTheme.fontFamilyMono,
+            color: Colors.grey.shade600,
           ),
         ),
       ],
@@ -2984,37 +3860,310 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildFateRollDisplay(FateRollResult result, ThemeData theme) {
+    // Determine result color based on total
+    final resultColor = result.total > 0
+        ? JuiceTheme.success
+        : result.total < 0
+            ? JuiceTheme.danger
+            : JuiceTheme.parchmentDark;
+    
     return Row(
       children: [
-        // Fate dice symbols in styled container
+        // Fate dice symbols with individual styling
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.1),
+            color: JuiceTheme.mystic.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: result.diceResults.asMap().entries.map((entry) {
+              final value = entry.value;
+              final isLast = entry.key == result.diceResults.length - 1;
+              
+              // Determine symbol and color for this die
+              String symbol;
+              Color dieColor;
+              if (value > 0) {
+                symbol = '+';
+                dieColor = JuiceTheme.success;
+              } else if (value < 0) {
+                symbol = '−';
+                dieColor = JuiceTheme.danger;
+              } else {
+                symbol = '○';
+                dieColor = JuiceTheme.parchmentDark;
+              }
+              
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: dieColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: dieColor.withValues(alpha: 0.5)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        symbol,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: dieColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!isLast) const SizedBox(width: 4),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(width: 10),
+        // Equals sign
+        Text(
+          '=',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: JuiceTheme.parchmentDark,
+          ),
+        ),
+        const SizedBox(width: 6),
+        // Total with gradient background
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                resultColor.withValues(alpha: 0.25),
+                resultColor.withValues(alpha: 0.15),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: resultColor.withValues(alpha: 0.5)),
           ),
           child: Text(
-            result.symbols,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontFamily: 'monospace',
+            result.total >= 0 ? '+${result.total}' : '${result.total}',
+            style: TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              letterSpacing: 4,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: resultColor,
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        Text(
-          '= ${result.total >= 0 ? '+' : ''}${result.total}',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: result.total > 0
-                ? Colors.green
-                : result.total < 0
-                    ? Colors.red
-                    : Colors.grey,
-          ),
-        ),
       ],
+    );
+  }
+
+  /// Enhanced display for generic dice rolls (standard, advantage, disadvantage, skewed)
+  Widget _buildGenericDiceRollDisplay(RollResult result, ThemeData theme) {
+    // Determine theme colors based on roll type
+    Color themeColor;
+    IconData typeIcon;
+    String? typeLabel;
+    
+    switch (result.type) {
+      case RollType.advantage:
+        themeColor = JuiceTheme.success;
+        typeIcon = Icons.thumb_up;
+        typeLabel = 'ADV';
+        break;
+      case RollType.disadvantage:
+        themeColor = JuiceTheme.danger;
+        typeIcon = Icons.thumb_down;
+        typeLabel = 'DIS';
+        break;
+      case RollType.skewed:
+        final skew = result.metadata?['skew'] as int? ?? 0;
+        themeColor = skew > 0 ? JuiceTheme.success : JuiceTheme.danger;
+        typeIcon = skew > 0 ? Icons.arrow_upward : Icons.arrow_downward;
+        typeLabel = 'SKEW ${skew > 0 ? '+$skew' : '$skew'}';
+        break;
+      default:
+        themeColor = JuiceTheme.rust;
+        typeIcon = Icons.casino;
+        typeLabel = null;
+    }
+
+    // Extract discarded roll info for advantage/disadvantage
+    final discardedRoll = result.metadata?['discarded'] as List<dynamic>?;
+    final discardedSum = result.metadata?['discardedSum'] as int?;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Main dice display row
+        Row(
+          children: [
+            // Dice values container
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: themeColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: themeColor.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Individual dice values
+                  ...result.diceResults.asMap().entries.map((entry) {
+                    final isLast = entry.key == result.diceResults.length - 1;
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildDieValue(entry.value, themeColor, theme),
+                        if (!isLast) 
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              '+',
+                              style: TextStyle(
+                                color: themeColor.withValues(alpha: 0.6),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Equals and total
+            Text(
+              '=',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    themeColor.withValues(alpha: 0.25),
+                    themeColor.withValues(alpha: 0.15),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: themeColor.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                '${result.total}',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: themeColor,
+                ),
+              ),
+            ),
+            // Type badge (advantage/disadvantage/skew)
+            if (typeLabel != null) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: themeColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(typeIcon, size: 12, color: themeColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      typeLabel,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: themeColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        // Discarded roll info for advantage/disadvantage
+        if (discardedRoll != null && discardedSum != null) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.cancel_outlined,
+                size: 14,
+                color: JuiceTheme.parchmentDark.withValues(alpha: 0.5),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Discarded: ',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: JuiceTheme.parchmentDark.withValues(alpha: 0.7),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.ink.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '[${discardedRoll.join(', ')}] = $discardedSum',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    color: JuiceTheme.parchmentDark.withValues(alpha: 0.6),
+                    decoration: TextDecoration.lineThrough,
+                    decorationColor: JuiceTheme.parchmentDark.withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Build a single die value display
+  Widget _buildDieValue(int value, Color color, ThemeData theme) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        '$value',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          fontFamily: JuiceTheme.fontFamilyMono,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -3166,137 +4315,144 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildDialogDisplay(DialogResult result, ThemeData theme) {
+    final dialogColor = JuiceTheme.mystic;
     final toneColor = _getToneColor(result.tone);
+    
+    // Build a conversational prompt based on the result
+    String getFragmentPrompt(String fragment) {
+      switch (fragment) {
+        case 'Fact': return 'states a fact about';
+        case 'Query': return 'asks a question about';
+        case 'Need': return 'expresses a need regarding';
+        case 'Want': return 'expresses a desire about';
+        case 'Action': return 'describes an action involving';
+        case 'Denial': return 'denies or refuses regarding';
+        case 'Support': return 'offers support about';
+        default: return 'speaks about';
+      }
+    }
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Dice roll info
+        // Dice roll badge - compact
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.cyan.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: dialogColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                '2d10: ${result.directionRoll}, ${result.subjectRoll}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
+                '2d10: [${result.directionRoll}, ${result.subjectRoll}]',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: JuiceTheme.fontFamilyMono,
                   fontWeight: FontWeight.bold,
+                  fontSize: 11,
                 ),
               ),
             ),
             if (result.isDoubles) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.2),
+                  color: JuiceTheme.juiceOrange.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.orange),
+                  border: Border.all(color: JuiceTheme.juiceOrange),
                 ),
                 child: const Text(
-                  'DOUBLES',
-                  style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold),
+                  'DOUBLES!',
+                  style: TextStyle(fontSize: 9, color: JuiceTheme.juiceOrange, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ],
         ),
         const SizedBox(height: 8),
-        // Movement and fragment
-        Row(
-          children: [
-            if (!result.isDoubles) ...[
-              // Direction arrow
+        
+        // Main conversational prompt - the key output
+        if (!result.isDoubles) ...[
+          // "NPC [tone] [fragment prompt] [subject]"
+          RichText(
+            text: TextSpan(
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontFamily: JuiceTheme.fontFamilySerif,
+                height: 1.4,
+              ),
+              children: [
+                const TextSpan(text: 'NPC '),
+                TextSpan(
+                  text: '${result.tone.toLowerCase()} ',
+                  style: TextStyle(
+                    color: toneColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                TextSpan(text: getFragmentPrompt(result.newFragment)),
+                TextSpan(
+                  text: ' ${result.subject}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (result.isPast)
+                  TextSpan(
+                    text: ' (past)',
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: JuiceTheme.sepia,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Movement indicator - subtle
+          Row(
+            children: [
+              Text(
+                result.oldFragment,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontSize: 10,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  _getDirectionArrow(result.direction),
+                  style: TextStyle(fontSize: 12, color: toneColor),
+                ),
+              ),
               Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: toneColor.withOpacity(0.1),
+                  color: dialogColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  _getDirectionArrow(result.direction),
-                  style: TextStyle(fontSize: 16, color: toneColor),
+                  result.newFragment,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: result.isPast ? FontStyle.italic : FontStyle.normal,
+                    color: dialogColor,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
             ],
-            // Fragment chip
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: result.isDoubles 
-                    ? Colors.orange.withOpacity(0.2)
-                    : Colors.cyan.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: result.isDoubles ? Colors.orange : Colors.cyan,
-                ),
-              ),
-              child: Text(
-                result.newFragment,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontStyle: result.isPast ? FontStyle.italic : FontStyle.normal,
-                  color: result.isDoubles ? Colors.orange : Colors.cyan,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Past/Present indicator
-            Text(
-              result.isPast ? '(Past)' : '(Present)',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.grey,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        // Tone and Subject
-        Wrap(
-          spacing: 6,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: toneColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: toneColor.withOpacity(0.5)),
-              ),
-              child: Text(
-                result.tone,
-                style: TextStyle(fontSize: 11, color: toneColor, fontWeight: FontWeight.w500),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'about ${result.subject}',
-                style: const TextStyle(fontSize: 11),
-              ),
-            ),
-          ],
-        ),
-        // Conversation ended notice
-        if (result.isDoubles) ...[
-          const SizedBox(height: 6),
+          ),
+        ] else ...[
+          // Conversation ended
           Row(
             children: [
-              Icon(Icons.stop_circle_outlined, size: 14, color: Colors.orange.shade700),
-              const SizedBox(width: 4),
+              const Icon(Icons.stop_circle, size: 16, color: JuiceTheme.juiceOrange),
+              const SizedBox(width: 6),
               Text(
                 'Conversation has ended',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.orange.shade700,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: JuiceTheme.juiceOrange,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -3319,10 +4475,10 @@ class _RollHistoryCard extends StatelessWidget {
 
   Color _getToneColor(String tone) {
     switch (tone) {
-      case 'Neutral': return Colors.grey;
-      case 'Defensive': return Colors.blue;
-      case 'Aggressive': return Colors.red;
-      case 'Helpful': return Colors.green;
+      case 'Neutral': return JuiceTheme.info;
+      case 'Defensive': return JuiceTheme.rust;
+      case 'Aggressive': return JuiceTheme.danger;
+      case 'Helpful': return JuiceTheme.success;
       default: return Colors.grey;
     }
   }
@@ -4355,109 +5511,244 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, ThemeData theme) {
+    final combatColor = JuiceTheme.categoryCombat;
+    
     final difficultyColor = switch (result.difficulty) {
-      MonsterDifficulty.easy => Colors.green,
-      MonsterDifficulty.medium => Colors.orange,
-      MonsterDifficulty.hard => Colors.red,
-      MonsterDifficulty.boss => Colors.purple,
+      MonsterDifficulty.easy => JuiceTheme.success,
+      MonsterDifficulty.medium => JuiceTheme.juiceOrange,
+      MonsterDifficulty.hard => JuiceTheme.danger,
+      MonsterDifficulty.boss => JuiceTheme.mystic,
     };
 
-    // Determine dice display based on advantage type
-    final diceLabel = result.diceResults.length > 1 ? '2d6' : '1d6';
+    // Parse dice results: first 1-2 dice are row roll (d6), last 2 are difficulty (d10)
+    // Structure: [row dice...] + [diff d10, diff d10]
+    final totalDice = result.diceResults.length;
+    final rowDiceCount = totalDice - 2; // Last 2 are always the difficulty dice
+    final rowDice = rowDiceCount > 0 ? result.diceResults.sublist(0, rowDiceCount) : <int>[];
+    final diffDice = totalDice >= 2 ? result.diceResults.sublist(totalDice - 2) : <int>[];
+    
+    // Row dice label based on environment formula (advantage/disadvantage)
+    final rowDiceLabel = rowDice.length == 2 ? '2d6' : '1d6';
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Dice roll with environment and formula info
+        // Type badge row
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: combatColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: combatColor.withValues(alpha: 0.4)),
               ),
-              child: Text(
-                '$diceLabel: [${result.diceResults.join(", ")}]',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.groups, size: 12, color: combatColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    'FULL ENCOUNTER',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: combatColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                MonsterEncounter.environmentNames[(result.environmentRow - 1).clamp(0, 9)],
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Dice display row - show row dice and difficulty dice separately
+        Row(
+          children: [
+            // Row dice (1d6 or 2d6 for environment)
+            if (rowDice.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.categoryExplore.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Row $rowDiceLabel: ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: JuiceTheme.categoryExplore,
+                        fontSize: 10,
+                      ),
+                    ),
+                    Text(
+                      '[${rowDice.join(", ")}]',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
+            if (rowDice.isNotEmpty && diffDice.isNotEmpty)
+              const SizedBox(width: 6),
+            // Difficulty dice (2d10)
+            if (diffDice.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: difficultyColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Diff 2d10: ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: difficultyColor,
+                        fontSize: 10,
+                      ),
+                    ),
+                    Text(
+                      '[${diffDice.join(", ")}]',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Environment and formula info
+        Row(
+          children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: JuiceTheme.categoryExplore.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.landscape, size: 12, color: JuiceTheme.categoryExplore),
+                  const SizedBox(width: 4),
+                  Text(
+                    MonsterEncounter.environmentNames[(result.environmentRow - 1).clamp(0, 9)],
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.categoryExplore,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 result.environmentFormula,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.info,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
+        // Environment and difficulty row
         Row(
           children: [
             if (result.isForest && result.row == 10) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.2),
+                  color: JuiceTheme.categoryExplore.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: JuiceTheme.categoryExplore.withValues(alpha: 0.4)),
                 ),
-                child: const Text(
-                  'FOREST→BLIGHTS',
-                  style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.eco, size: 10, color: JuiceTheme.categoryExplore),
+                    const SizedBox(width: 3),
+                    Text(
+                      'FOREST→BLIGHTS',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: JuiceTheme.categoryExplore,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
             ],
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: difficultyColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: difficultyColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: difficultyColor.withValues(alpha: 0.5)),
               ),
-              child: Text(
-                MonsterEncounter.difficultyName(result.difficulty),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: difficultyColor,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (result.difficulty == MonsterDifficulty.boss)
+                    Icon(Icons.star, size: 12, color: difficultyColor),
+                  if (result.difficulty == MonsterDifficulty.boss)
+                    const SizedBox(width: 4),
+                  Text(
+                    MonsterEncounter.difficultyName(result.difficulty),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: difficultyColor,
+                    ),
+                  ),
+                ],
               ),
             ),
             if (result.wasDoubles) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.2),
+                  color: JuiceTheme.mystic.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
                 ),
-                child: const Text(
-                  'DOUBLES!',
-                  style: TextStyle(fontSize: 10, color: Colors.purple, fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 10, color: JuiceTheme.mystic),
+                    const SizedBox(width: 3),
+                    Text(
+                      'DOUBLES!',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: JuiceTheme.mystic,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -4466,47 +5757,354 @@ class _RollHistoryCard extends StatelessWidget {
         const SizedBox(height: 8),
         // Monster list
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.red.withValues(alpha: 0.05),
+            color: combatColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+            border: Border.all(color: combatColor.withValues(alpha: 0.2)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (result.hasBoss && result.bossMonster != null) ...[
-                Row(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: JuiceTheme.mystic.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star, size: 14, color: JuiceTheme.mystic),
+                      const SizedBox(width: 6),
+                      Text(
+                        '1× ${result.bossMonster} (Boss)',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: JuiceTheme.fontFamilySerif,
+                          color: JuiceTheme.mystic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (result.monsters.any((m) => m.count > 0))
+                  const SizedBox(height: 6),
+              ],
+              ...result.monsters.where((m) => m.count > 0).map((monster) => Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: Row(
                   children: [
-                    const Icon(Icons.star, size: 16, color: Colors.purple),
-                    const SizedBox(width: 4),
+                    Icon(Icons.pest_control, size: 12, color: combatColor.withValues(alpha: 0.6)),
+                    const SizedBox(width: 6),
                     Text(
-                      '1× ${result.bossMonster} (Boss)',
+                      '${monster.count}× ${monster.name}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple,
+                        fontFamily: JuiceTheme.fontFamilySerif,
                       ),
                     ),
                   ],
                 ),
-                if (result.monsters.any((m) => m.count > 0))
-                  const SizedBox(height: 4),
-              ],
-              ...result.monsters.where((m) => m.count > 0).map((monster) => Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
-                  '${monster.count}× ${monster.name}',
-                  style: theme.textTheme.bodyMedium,
-                ),
               )),
               if (result.monsters.every((m) => m.count == 0) && !result.hasBoss)
-                Text(
-                  'No monsters appeared (all rolled 0)',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey,
+                Row(
+                  children: [
+                    Icon(Icons.sentiment_neutral, size: 14, color: JuiceTheme.sepia),
+                    const SizedBox(width: 6),
+                    Text(
+                      'No monsters appeared (all rolled 0)',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.sepia,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMonsterEncounterDisplay(MonsterEncounterResult result, ThemeData theme) {
+    final combatColor = JuiceTheme.categoryCombat;
+    
+    final difficultyColor = switch (result.difficulty) {
+      MonsterDifficulty.easy => JuiceTheme.success,
+      MonsterDifficulty.medium => JuiceTheme.juiceOrange,
+      MonsterDifficulty.hard => JuiceTheme.danger,
+      MonsterDifficulty.boss => JuiceTheme.mystic,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Type badge and dice row
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: combatColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: combatColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.casino, size: 12, color: combatColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    'ENCOUNTER',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: combatColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (result.diceResults.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.parchment.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '2d10: [${result.diceResults.join(", ")}]',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
                 ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Difficulty and status flags
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: difficultyColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: difficultyColor.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (result.difficulty == MonsterDifficulty.boss)
+                    Icon(Icons.star, size: 12, color: difficultyColor),
+                  if (result.difficulty == MonsterDifficulty.boss)
+                    const SizedBox(width: 4),
+                  Text(
+                    MonsterEncounter.difficultyName(result.difficulty),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: difficultyColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Show DOUBLES! only if not Boss (Boss already implies doubles in its name)
+            if (result.wasDoubles && result.difficulty != MonsterDifficulty.boss) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.mystic.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 10, color: JuiceTheme.mystic),
+                    const SizedBox(width: 3),
+                    Text(
+                      'DOUBLES!',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: JuiceTheme.mystic,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (result.isDeadly) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.danger.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: JuiceTheme.danger.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '💀',
+                      style: TextStyle(fontSize: 10),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      'DEADLY',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: JuiceTheme.danger,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Monster result
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: combatColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: combatColor.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.pest_control, size: 16, color: combatColor),
+              const SizedBox(width: 8),
+              Text(
+                result.monster,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilySerif,
+                  color: combatColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMonsterTracksDisplay(MonsterTracksResult result, ThemeData theme) {
+    final combatColor = JuiceTheme.categoryCombat;
+    final trackColor = JuiceTheme.sepia;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Type badge and dice row
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: trackColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: trackColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.pets, size: 12, color: trackColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    'TRACKS',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: trackColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (result.diceResults.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.parchment.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '1d6-1@: [${result.diceResults.join(", ")}]',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Modifier display
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: JuiceTheme.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add_circle_outline, size: 12, color: JuiceTheme.info),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Modifier: ${result.modifier >= 0 ? '+' : ''}${result.modifier}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: JuiceTheme.info,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Tracks result
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: trackColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: trackColor.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.pets, size: 16, color: trackColor),
+              const SizedBox(width: 8),
+              Text(
+                result.tracks,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilySerif,
+                  color: trackColor,
+                ),
+              ),
             ],
           ),
         ),
@@ -4712,64 +6310,184 @@ class _RollHistoryCard extends StatelessWidget {
   }
 
   Widget _buildAbstractIconDisplay(AbstractIconResult result, ThemeData theme) {
+    // Themed colors matching the Abstract Icons dialog
+    const iconColor = JuiceTheme.success;
+    const gridColor = JuiceTheme.mystic;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        // Dice rolls and grid position
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
+            // Row die (1d10)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.lime.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '1d10: ${result.d10Roll}, 1d6: ${result.d6Roll}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
+                gradient: LinearGradient(
+                  colors: [
+                    JuiceTheme.rust.withValues(alpha: 0.2),
+                    JuiceTheme.rust.withValues(alpha: 0.1),
+                  ],
                 ),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: JuiceTheme.rust.withValues(alpha: 0.4),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_downward,
+                    size: 12,
+                    color: JuiceTheme.rust.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Row ',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: JuiceTheme.rust.withValues(alpha: 0.8),
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(
+                    '${result.d10Roll}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.rust,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
+            // Column die (1d6)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Cell [${result.rowLabel}, ${result.colLabel}]',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
+                gradient: LinearGradient(
+                  colors: [
+                    JuiceTheme.info.withValues(alpha: 0.2),
+                    JuiceTheme.info.withValues(alpha: 0.1),
+                  ],
                 ),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: JuiceTheme.info.withValues(alpha: 0.4),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_forward,
+                    size: 12,
+                    color: JuiceTheme.info.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Col ',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: JuiceTheme.info.withValues(alpha: 0.8),
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(
+                    '${result.d6Roll}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.info,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Grid cell indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: gridColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: gridColor.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.grid_on,
+                    size: 14,
+                    color: gridColor.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '[${result.rowLabel}, ${result.colLabel}]',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.w600,
+                      color: gridColor,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        // Display the icon image
+        const SizedBox(height: 12),
+        // Display the icon image with enhanced styling
         Center(
           child: Container(
-            width: 120,
-            height: 120,
+            width: 130,
+            height: 130,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.lime.withValues(alpha: 0.5), width: 2),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: iconColor.withValues(alpha: 0.6),
+                width: 2.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: iconColor.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: Image.asset(
-                result.imagePath!,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade200,
-                    child: const Center(
-                      child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
-                    ),
-                  );
-                },
+              borderRadius: BorderRadius.circular(7),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Image.asset(
+                  result.imagePath!,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: JuiceTheme.parchment,
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          size: 40,
+                          color: JuiceTheme.inkDark.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),

@@ -1392,169 +1392,468 @@ class _SettlementDialog extends StatelessWidget {
 
   const _SettlementDialog({required this.settlement, required this.onRoll});
 
-  @override
-  Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    return AlertDialog(
-      title: const Text('Settlement'),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SizedBox(
-        width: 320,
-        height: screenHeight * 0.6,
-        child: _ScrollableDialogContent(
-          children: [
-            // Header explanation from Juice instructions
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blueGrey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Settlements are places to rest, stock up on supplies, '
-                'collect quests, or chat with NPCs.',
-                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-              ),
+  // Establishment type chips with their d6/d10 ranges
+  Widget _buildEstablishmentChip(String name, String range, {bool cityOnly = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.only(right: 4, bottom: 4),
+      decoration: BoxDecoration(
+        color: cityOnly 
+            ? JuiceTheme.gold.withValues(alpha: 0.15)
+            : JuiceTheme.categoryWorld.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: cityOnly 
+              ? JuiceTheme.gold.withValues(alpha: 0.4)
+              : JuiceTheme.categoryWorld.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 9,
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: cityOnly ? JuiceTheme.gold : JuiceTheme.categoryWorld,
             ),
-            const Divider(),
-            const _SectionHeader(title: 'Generate Settlement', icon: Icons.location_city),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            range,
+            style: TextStyle(
+              fontSize: 8,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: (cityOnly ? JuiceTheme.gold : JuiceTheme.categoryWorld).withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // News type chip
+  Widget _buildNewsChip(String name) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      margin: const EdgeInsets.only(right: 3, bottom: 3),
+      decoration: BoxDecoration(
+        color: JuiceTheme.juiceOrange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Text(
+        name,
+        style: TextStyle(
+          fontSize: 8,
+          color: JuiceTheme.juiceOrange.withValues(alpha: 0.9),
+        ),
+      ),
+    );
+  }
+  
+  // Settlement type card (Village/City)
+  Widget _buildSettlementTypeCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String mechanics,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
+                  Icon(icon, size: 18, color: color),
+                  const SizedBox(width: 6),
                   Text(
-                    'Villages: 1d6@- count, d6 establishments (rural)',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                  Text(
-                    'Cities: 1d6@+ count, d10 establishments (urban)',
-                    style: TextStyle(fontSize: 10),
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: color,
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 4),
-            _DialogOption(
-              title: 'Village',
-              subtitle: 'Name + 1d6@- establishments (d6) + news',
-              onTap: () {
-                onRoll(settlement.generateVillage());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'City',
-              subtitle: 'Name + 1d6@+ establishments (d10) + news',
-              onTap: () {
-                onRoll(settlement.generateCity());
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'Individual Rolls', icon: Icons.casino),
-            _DialogOption(
-              title: 'Name (2d10)',
-              subtitle: 'Also usable for NPC last names',
-              onTap: () {
-                onRoll(settlement.generateName());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Establishment (d6)',
-              subtitle: 'Village: Stable, Tavern, Inn, Entertainment, General Store, Artisan',
-              onTap: () {
-                onRoll(settlement.rollEstablishment(isVillage: true));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Establishment (d10)',
-              subtitle: 'City: +Courier, Temple, Guild Hall, Magic Shop',
-              onTap: () {
-                onRoll(settlement.rollEstablishment(isVillage: false));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Artisan (d10)',
-              subtitle: 'Artist, Baker, Tailor, Tanner, Archer, Blacksmith, Carpenter, Apothecary, Jeweler, Scribe',
-              onTap: () {
-                onRoll(settlement.rollArtisan());
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'Naming & Description', icon: Icons.edit),
-            Container(
-              padding: const EdgeInsets.all(6),
-              margin: const EdgeInsets.only(bottom: 4),
-              decoration: BoxDecoration(
-                color: Colors.purple.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                  color: color.withValues(alpha: 0.8),
+                ),
               ),
-              child: const Text(
-                'Use Color + Object for establishment names (e.g., "The Crimson Hourglass"). '
-                'The color helps mark on maps, the object is their emblem.',
-                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+              const SizedBox(height: 6),
+              Text(
+                mechanics,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: Colors.grey.shade400,
+                ),
               ),
-            ),
-            _DialogOption(
-              title: 'Establishment Name',
-              subtitle: 'Color + Object → "The [Color] [Object]"',
-              onTap: () {
-                onRoll(settlement.generateEstablishmentName());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Settlement Properties',
-              subtitle: 'Two properties with intensity (e.g., "Major Style" + "Minimal Weight")',
-              onTap: () {
-                onRoll(settlement.generateProperties());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Simple NPC',
-              subtitle: 'Name + Personality + Need + Motive (for establishment owners)',
-              onTap: () {
-                onRoll(settlement.generateSimpleNpc());
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'News', icon: Icons.newspaper),
-            Container(
-              padding: const EdgeInsets.all(6),
-              margin: const EdgeInsets.only(bottom: 4),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.casino, size: 11, color: color),
+                        const SizedBox(width: 3),
+                        Text(
+                          'Roll',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              child: const Text(
-                'Roll when entering a settlement or on "Advance Time" random event. '
-                'With a Courier, ask for news from other settlements.',
-                style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settlementColor = JuiceTheme.categoryWorld;
+    
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.location_city, color: settlementColor, size: 24),
+          const SizedBox(width: 8),
+          const Text('Settlement'),
+        ],
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 340,
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header explanation
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: settlementColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: settlementColor.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.tips_and_updates, size: 14, color: settlementColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Settlements are places to rest, stock up on supplies,',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontStyle: FontStyle.italic,
+                            color: settlementColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'collect quests, or chat with NPCs.',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                        color: settlementColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            _DialogOption(
-              title: 'News (d10)',
-              subtitle: 'War, Sickness, Disaster, Crime, Succession, Remote Event, Arrival, Mail, Sale, Celebration',
-              onTap: () {
-                onRoll(settlement.rollNews());
-                Navigator.pop(context);
-              },
-            ),
-          ],
+              const SizedBox(height: 12),
+              
+              // Generate Settlement section - prominent
+              Row(
+                children: [
+                  Icon(Icons.add_location_alt, size: 16, color: settlementColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Generate Settlement',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: settlementColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              
+              // Village and City as prominent cards
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSettlementTypeCard(
+                      context,
+                      icon: Icons.house,
+                      title: 'Village',
+                      subtitle: 'Smaller, rural',
+                      mechanics: '1d6@- count\nd6 establishments',
+                      color: JuiceTheme.sepia,
+                      onTap: () {
+                        onRoll(settlement.generateVillage());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildSettlementTypeCard(
+                      context,
+                      icon: Icons.location_city,
+                      title: 'City',
+                      subtitle: 'Larger, urban',
+                      mechanics: '1d6@+ count\nd10 establishments',
+                      color: JuiceTheme.gold,
+                      onTap: () {
+                        onRoll(settlement.generateCity());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              Divider(color: settlementColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 8),
+              
+              // Individual Rolls section
+              Row(
+                children: [
+                  Icon(Icons.casino, size: 16, color: settlementColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Individual Rolls',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: settlementColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              
+              _DialogOption(
+                title: 'Name (2d10)',
+                subtitle: 'Also usable for NPC last names',
+                onTap: () {
+                  onRoll(settlement.generateName());
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Establishment (d6)',
+                subtitle: 'Village: Stable, Tavern, Inn, Entertainment, General Store, Artisan',
+                onTap: () {
+                  onRoll(settlement.rollEstablishment(isVillage: true));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Establishment (d10)',
+                subtitle: 'City: +Courier, Temple, Guild Hall, Magic Shop',
+                onTap: () {
+                  onRoll(settlement.rollEstablishment(isVillage: false));
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Artisan (d10)',
+                subtitle: 'Artist, Baker, Tailor, Tanner, Archer, Blacksmith, Carpenter, Apothecary, Jeweler, Scribe',
+                onTap: () {
+                  onRoll(settlement.rollArtisan());
+                  Navigator.pop(context);
+                },
+              ),
+              
+              const SizedBox(height: 12),
+              Divider(color: settlementColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 8),
+              
+              // Naming & Description section
+              Row(
+                children: [
+                  Icon(Icons.edit_note, size: 16, color: JuiceTheme.mystic),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Naming & Description',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: JuiceTheme.mystic,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              
+              // Tip box for naming
+              Container(
+                padding: const EdgeInsets.all(6),
+                margin: const EdgeInsets.only(bottom: 6),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.mystic.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.palette, size: 12, color: JuiceTheme.mystic.withValues(alpha: 0.7)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Use Color + Object for establishment names (e.g., "The Crimson Hourglass"). '
+                        'The color helps mark on maps, the object is their emblem.',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              _DialogOption(
+                title: 'Establishment Name',
+                subtitle: 'Color + Object → "The [Color] [Object]"',
+                onTap: () {
+                  onRoll(settlement.generateEstablishmentName());
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Settlement Properties',
+                subtitle: 'Two properties with intensity (e.g., "Major Style" + "Minimal Weight")',
+                onTap: () {
+                  onRoll(settlement.generateProperties());
+                  Navigator.pop(context);
+                },
+              ),
+              _DialogOption(
+                title: 'Simple NPC',
+                subtitle: 'Name + Personality + Need + Motive (for establishment owners)',
+                onTap: () {
+                  onRoll(settlement.generateSimpleNpc());
+                  Navigator.pop(context);
+                },
+              ),
+              
+              const SizedBox(height: 12),
+              Divider(color: settlementColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 8),
+              
+              // News section
+              Row(
+                children: [
+                  Icon(Icons.campaign, size: 16, color: JuiceTheme.juiceOrange),
+                  const SizedBox(width: 6),
+                  Text(
+                    'News',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: JuiceTheme.juiceOrange,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              
+              // News tip box
+              Container(
+                padding: const EdgeInsets.all(6),
+                margin: const EdgeInsets.only(bottom: 6),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.juiceOrange.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.juiceOrange.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 12, color: JuiceTheme.juiceOrange.withValues(alpha: 0.7)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Roll when entering a settlement or on "Advance Time" random event. '
+                        'With a Courier, ask for news from other settlements.',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              _DialogOption(
+                title: 'News (d10)',
+                subtitle: 'War, Sickness, Disaster, Crime, Succession, Remote Event, Arrival, Mail, Sale, Celebration',
+                onTap: () {
+                  onRoll(settlement.rollNews());
+                  Navigator.pop(context);
+                },
+              ),
+              
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -1582,224 +1881,545 @@ class _TreasureDialogState extends State<_TreasureDialog> {
   SkewType _skew = SkewType.none;
   bool _includeColor = false;
 
-  String _getSkewLabel() {
-    switch (_skew) {
-      case SkewType.advantage: return '@+ Better';
-      case SkewType.disadvantage: return '@- Worse';
-      case SkewType.none: return '';
-    }
+  // Skew chip builder
+  Widget _buildSkewChip(String label, SkewType type, Color color) {
+    final isSelected = _skew == type;
+    return GestureDetector(
+      onTap: () => setState(() => _skew = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.25) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.withValues(alpha: 0.4),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected)
+              Icon(Icons.check, size: 14, color: color),
+            if (isSelected)
+              const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? color : Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Category card for treasure types
+  Widget _buildCategoryCard({
+    required String number,
+    required String title,
+    required String properties,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Center(
+                  child: Text(
+                    number,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: JuiceTheme.fontFamilySerif,
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      properties,
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 18, color: color.withValues(alpha: 0.6)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final treasureColor = JuiceTheme.gold;
+    final skewLabel = _skew == SkewType.advantage ? ' @+' : _skew == SkewType.disadvantage ? ' @-' : '';
+    
     return AlertDialog(
-      title: const Text('Treasure'),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      title: Row(
+        children: [
+          Icon(Icons.diamond, color: treasureColor, size: 24),
+          const SizedBox(width: 8),
+          const Text('Treasure'),
+        ],
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: SizedBox(
-        width: 320,
-        height: screenHeight * 0.6,
-        child: _ScrollableDialogContent(
-          children: [
-            // Item Creation Section (from instructions)
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.deepOrange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.3)),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Item Creation Procedure:',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '1. Roll 4d6 on Object/Treasure table\n'
-                    '2. Roll two properties (1d10+1d6 each)\n'
-                    '3. Optionally roll color for appearance/elemental',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Color toggle for Item Creation
-            Row(
-              children: [
-                Checkbox(
-                  value: _includeColor,
-                  onChanged: (v) => setState(() => _includeColor = v ?? false),
-                  visualDensity: VisualDensity.compact,
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 340,
+          maxHeight: MediaQuery.of(context).size.height * 0.78,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Item Creation Procedure - prominent header
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: treasureColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: treasureColor.withValues(alpha: 0.3)),
                 ),
-                const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.auto_awesome, size: 14, color: treasureColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Item Creation Procedure:',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: JuiceTheme.fontFamilySerif,
+                            color: treasureColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '1. Roll 4d6 on Object/Treasure table\n'
+                      '2. Roll two properties (1d10+1d6 each)\n'
+                      '3. Optionally roll color for appearance/elemental',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              
+              // Color toggle - styled
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.mystic.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Checkbox(
+                        value: _includeColor,
+                        onChanged: (v) => setState(() => _includeColor = v ?? false),
+                        visualDensity: VisualDensity.compact,
+                        side: BorderSide(color: JuiceTheme.mystic.withValues(alpha: 0.6)),
+                        activeColor: JuiceTheme.mystic,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.palette, size: 14, color: JuiceTheme.mystic.withValues(alpha: 0.7)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Include Color (appearance/elemental)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: _includeColor ? JuiceTheme.mystic : Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              
+              // Create Full Item - prominent button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    widget.onRoll(widget.treasure.generateFullItem(
+                      skew: _skew,
+                      includeColor: _includeColor,
+                    ));
+                    Navigator.pop(context);
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          treasureColor.withValues(alpha: 0.2),
+                          treasureColor.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: treasureColor.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.star, size: 18, color: treasureColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Create Full Item',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: JuiceTheme.fontFamilySerif,
+                            color: treasureColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Center(
                   child: Text(
-                    'Include Color (for appearance or elemental powers)',
-                    style: TextStyle(fontSize: 11),
+                    '4d6 + 2 Properties${_includeColor ? ' + Color' : ''}$skewLabel',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: Colors.grey.shade500,
+                    ),
                   ),
                 ),
-              ],
-            ),
-            _DialogOption(
-              title: '⭐ Create Full Item',
-              subtitle: '4d6 + 2 Properties${_includeColor ? ' + Color' : ''}${_skew != SkewType.none ? ' ${_getSkewLabel()}' : ''}',
-              onTap: () {
-                widget.onRoll(widget.treasure.generateFullItem(
-                  skew: _skew,
-                  includeColor: _includeColor,
-                ));
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            // Header explanation from Juice instructions
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'Roll 4d6 to get a descriptive item. First die determines '
-                'the category (1-6), next 3 dice determine the properties.',
-                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Skew settings
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              
+              const SizedBox(height: 14),
+              Divider(color: treasureColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 10),
+              
+              // Skew selection
+              Row(
                 children: [
-                  const Text(
-                    'Skew: @+ = Better Item, @- = Worse Item',
-                    style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                  Icon(Icons.tune, size: 14, color: JuiceTheme.info),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Skew:',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.info,
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    children: [
-                      ChoiceChip(
-                        label: const Text('None'),
-                        selected: _skew == SkewType.none,
-                        onSelected: (s) => setState(() => _skew = SkewType.none),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      ChoiceChip(
-                        label: const Text('@- Worse'),
-                        selected: _skew == SkewType.disadvantage,
-                        onSelected: (s) => setState(() => _skew = SkewType.disadvantage),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      ChoiceChip(
-                        label: const Text('@+ Better'),
-                        selected: _skew == SkewType.advantage,
-                        onSelected: (s) => setState(() => _skew = SkewType.advantage),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
+                  const SizedBox(width: 4),
+                  Text(
+                    '@+ = Better, @- = Worse',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey.shade500,
+                    ),
                   ),
                 ],
               ),
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'Roll 4d6', icon: Icons.casino),
-            _DialogOption(
-              title: 'Random Treasure (4d6)',
-              subtitle: 'Category + Properties${_skew != SkewType.none ? ' ${_getSkewLabel()}' : ''}',
-              onTap: () {
-                widget.onRoll(widget.treasure.generate(skew: _skew));
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(title: 'By Category (3d6)', icon: Icons.category),
-            const SizedBox(height: 4),
-            const Text(
-              'Pick a specific category and roll 3d6 for properties:',
-              style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-            ),
-            _DialogOption(
-              title: '1: Trinket',
-              subtitle: 'Quality + Material + Type',
-              onTap: () {
-                widget.onRoll(widget.treasure.generateTrinket(skew: _skew));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: '2: Treasure',
-              subtitle: 'Quality + Container + Contents',
-              onTap: () {
-                widget.onRoll(widget.treasure.generateTreasure(skew: _skew));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: '3: Document',
-              subtitle: 'Type + Content + Subject',
-              onTap: () {
-                widget.onRoll(widget.treasure.generateDocument(skew: _skew));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: '4: Accessory',
-              subtitle: 'Quality + Material + Type',
-              onTap: () {
-                widget.onRoll(widget.treasure.generateAccessory(skew: _skew));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: '5: Weapon',
-              subtitle: 'Quality + Material + Type',
-              onTap: () {
-                widget.onRoll(widget.treasure.generateWeapon(skew: _skew));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: '6: Armor',
-              subtitle: 'Quality + Material + Type',
-              onTap: () {
-                widget.onRoll(widget.treasure.generateArmor(skew: _skew));
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            // Examples from Juice instructions
-            const _SectionHeader(title: 'Examples', icon: Icons.lightbulb_outline),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildSkewChip('None', SkewType.none, JuiceTheme.info),
+                  const SizedBox(width: 8),
+                  _buildSkewChip('@- Worse', SkewType.disadvantage, JuiceTheme.rust),
+                  const SizedBox(width: 8),
+                  _buildSkewChip('@+ Better', SkewType.advantage, JuiceTheme.success),
+                ],
               ),
-              child: const Text(
-                'Basic 4d6:\n'
-                '2,5,4,2: New satchel full of art.\n'
-                '6,1,5,3: Broken Mithral gloves.\n'
-                '4,4,1,1: Fine wooden headpiece (crown).\n\n'
-                'Full Item Creation:\n'
-                '4,3,4,5 → "Accessory: Simple Silver Necklace"\n'
-                '  Property: 9,5 → Major Value\n'
-                '  Property: 5,4 → Moderate Power\n'
-                '(A normal-looking necklace that grants power!)',
-                style: TextStyle(fontSize: 10, fontFamily: 'monospace'),
+              
+              const SizedBox(height: 14),
+              Divider(color: treasureColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 10),
+              
+              // Roll 4d6 section
+              Row(
+                children: [
+                  Icon(Icons.casino, size: 16, color: treasureColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Roll 4d6',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: treasureColor,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              _DialogOption(
+                title: 'Random Treasure (4d6)',
+                subtitle: 'Category + Properties$skewLabel',
+                onTap: () {
+                  widget.onRoll(widget.treasure.generate(skew: _skew));
+                  Navigator.pop(context);
+                },
+              ),
+              
+              const SizedBox(height: 14),
+              Divider(color: treasureColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 10),
+              
+              // By Category section
+              Row(
+                children: [
+                  Icon(Icons.category, size: 16, color: JuiceTheme.categoryWorld),
+                  const SizedBox(width: 6),
+                  Text(
+                    'By Category (3d6)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: JuiceTheme.categoryWorld,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Pick a specific category and roll 3d6 for properties:',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // Category grid - 2 columns
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildCategoryCard(
+                      number: '1',
+                      title: 'Trinket',
+                      properties: 'Quality + Material + Type',
+                      color: JuiceTheme.sepia,
+                      onTap: () {
+                        widget.onRoll(widget.treasure.generateTrinket(skew: _skew));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _buildCategoryCard(
+                      number: '2',
+                      title: 'Treasure',
+                      properties: 'Quality + Container + Contents',
+                      color: JuiceTheme.gold,
+                      onTap: () {
+                        widget.onRoll(widget.treasure.generateTreasure(skew: _skew));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildCategoryCard(
+                      number: '3',
+                      title: 'Document',
+                      properties: 'Type + Content + Subject',
+                      color: JuiceTheme.parchmentDark,
+                      onTap: () {
+                        widget.onRoll(widget.treasure.generateDocument(skew: _skew));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _buildCategoryCard(
+                      number: '4',
+                      title: 'Accessory',
+                      properties: 'Quality + Material + Type',
+                      color: JuiceTheme.mystic,
+                      onTap: () {
+                        widget.onRoll(widget.treasure.generateAccessory(skew: _skew));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildCategoryCard(
+                      number: '5',
+                      title: 'Weapon',
+                      properties: 'Quality + Material + Type',
+                      color: JuiceTheme.danger,
+                      onTap: () {
+                        widget.onRoll(widget.treasure.generateWeapon(skew: _skew));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _buildCategoryCard(
+                      number: '6',
+                      title: 'Armor',
+                      properties: 'Quality + Material + Type',
+                      color: JuiceTheme.info,
+                      onTap: () {
+                        widget.onRoll(widget.treasure.generateArmor(skew: _skew));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 14),
+              Divider(color: treasureColor.withValues(alpha: 0.3)),
+              const SizedBox(height: 10),
+              
+              // Examples section
+              Row(
+                children: [
+                  Icon(Icons.lightbulb_outline, size: 16, color: JuiceTheme.juiceOrange),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Examples',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      color: JuiceTheme.juiceOrange,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.inkDark,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Basic 4d6:',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '2,5,4,2: New satchel full of art.\n'
+                      '6,1,5,3: Broken Mithral gloves.\n'
+                      '4,4,1,1: Fine wooden headpiece (crown).',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Full Item Creation:',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '4,3,4,5 → "Accessory: Simple Silver Necklace"\n'
+                      '  Property: 9,5 → Major Value\n'
+                      '  Property: 5,4 → Moderate Power\n'
+                      '(A normal-looking necklace that grants power!)',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -4043,6 +4663,13 @@ class _DungeonDialog extends StatefulWidget {
 }
 
 class _DungeonDialogState extends State<_DungeonDialog> {
+  // Theme colors for dungeon - forest brown-green for exploration
+  static const Color _dungeonColor = JuiceTheme.categoryExplore;
+  static const Color _phaseEnteringColor = JuiceTheme.rust;  // @- worse/smaller
+  static const Color _phaseExploringColor = JuiceTheme.success;  // @+ better/larger
+  static const Color _encounterColor = JuiceTheme.danger;  // Red for danger
+  static const Color _trapColor = JuiceTheme.juiceOrange;  // Orange for traps
+
   late bool _isEntering;
   // Local state for Two-Pass mode (synced with parent on change)
   late bool _isTwoPassMode;
@@ -4119,6 +4746,150 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     widget.onTwoPassFirstDoublesChange(hasFirstDoubles);
   }
 
+  // Build a themed mode chip (One-Pass / Two-Pass)
+  Widget _buildModeChip(String label, bool isSelected, Color color) {
+    return GestureDetector(
+      onTap: () => _setTwoPassMode(label == 'Two-Pass'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.withValues(alpha: 0.4),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              label == 'One-Pass' ? Icons.route : Icons.layers,
+              size: 14,
+              color: isSelected ? color : Colors.grey.shade500,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? color : Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build a themed die size chip (d6/d10)
+  Widget _buildDieChip(String label, bool isSelected, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontFamily: JuiceTheme.fontFamilyMono,
+            color: isSelected ? color : Colors.grey.shade500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Build a themed skew chip (@-/@+)
+  Widget _buildSkewChip(String label, AdvantageType type, AdvantageType current, Color color, Function(AdvantageType) onTap) {
+    final isSelected = current == type;
+    return GestureDetector(
+      onTap: () => onTap(isSelected ? AdvantageType.none : type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected)
+              Icon(Icons.check, size: 12, color: color),
+            if (isSelected)
+              const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontFamily: JuiceTheme.fontFamilyMono,
+                color: isSelected ? color : Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build a section header with icon
+  Widget _buildDungeonSectionHeader(String title, IconData icon, {Color? color}) {
+    final c = color ?? _dungeonColor;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, top: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: c),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: c,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build an info/tip box
+  Widget _buildInfoBox(String content, {Color? color, bool isCompact = false}) {
+    final c = color ?? _dungeonColor;
+    return Container(
+      padding: EdgeInsets.all(isCompact ? 6 : 8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        content,
+        style: TextStyle(
+          fontSize: isCompact ? 9 : 10,
+          fontStyle: FontStyle.italic,
+          color: JuiceTheme.parchment.withValues(alpha: 0.85),
+        ),
+      ),
+    );
+  }
+
   // Get the current advantage state based on mode
   bool get _useAdvantage {
     if (_isTwoPassMode) {
@@ -4158,40 +4929,48 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     if (_isTwoPassMode) {
       if (_twoPassHasFirstDoubles) {
         statusText = '1d10@- (after 1st doubles)';
-        statusColor = Colors.orange;
+        statusColor = _phaseEnteringColor;
       } else {
         statusText = '1d10@+ (until 1st doubles)';
-        statusColor = Colors.green;
+        statusColor = _phaseExploringColor;
       }
     } else {
       if (_isEntering) {
         statusText = '1d10@- Entering (until doubles)';
-        statusColor = Colors.orange;
+        statusColor = _phaseEnteringColor;
       } else {
         statusText = '1d10@+ Exploring (after doubles)';
-        statusColor = Colors.green;
+        statusColor = _phaseExploringColor;
       }
     }
 
     // Build the sticky phase indicator
     Widget buildStickyPhaseIndicator() {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: statusColor.withValues(alpha: 0.15),
+          color: statusColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+          border: Border.all(color: statusColor.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
-            Icon(Icons.explore, size: 16, color: statusColor),
-            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(Icons.explore, size: 14, color: statusColor),
+            ),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 statusText,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilyMono,
                   color: statusColor,
                 ),
               ),
@@ -4202,18 +4981,18 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildCompactPhaseChip('(@-)', _isEntering, Colors.orange, () => _setPhase(true)),
+                    _buildCompactPhaseChip('(@-)', _isEntering, _phaseEnteringColor, () => _setPhase(true)),
                     const SizedBox(width: 4),
-                    _buildCompactPhaseChip('(@+)', !_isEntering, Colors.green, () => _setPhase(false)),
+                    _buildCompactPhaseChip('(@+)', !_isEntering, _phaseExploringColor, () => _setPhase(false)),
                   ],
                 ),
               ),
             ],
             // Two-Pass doubles indicators
             if (_isTwoPassMode) ...[
-              _buildCompactDoublesIndicator('1st', _twoPassHasFirstDoubles, Colors.orange),
+              _buildCompactDoublesIndicator('1st', _twoPassHasFirstDoubles, _phaseEnteringColor),
               const SizedBox(width: 4),
-              _buildCompactDoublesIndicator('2nd', false, Colors.red),
+              _buildCompactDoublesIndicator('2nd', false, _encounterColor),
             ],
             const SizedBox(width: 4),
             InkWell(
@@ -4230,7 +5009,19 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     }
 
     return AlertDialog(
-      title: const Text('Dungeon Generator'),
+      title: Row(
+        children: [
+          Icon(Icons.door_front_door, size: 22, color: _dungeonColor),
+          const SizedBox(width: 10),
+          Text(
+            'Dungeon Generator',
+            style: TextStyle(
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: _dungeonColor,
+            ),
+          ),
+        ],
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       content: SizedBox(
@@ -4270,7 +5061,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Dungeon Name Section
-                        _buildSectionHeader('Dungeon Name', Icons.castle),
+                        _buildDungeonSectionHeader('Dungeon Name', Icons.castle),
                         _DialogOption(
                           title: 'Generate Name (3d10)',
                           subtitle: '[Dungeon] of the [Description] [Subject]',
@@ -4282,67 +5073,31 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                         const Divider(),
                         
                         // ============ UNIFIED MAP GENERATION SECTION ============
-                        _buildSectionHeader('Map Generation', Icons.map),
+                        _buildDungeonSectionHeader('Map Generation', Icons.map),
                         const SizedBox(height: 8),
                         
                         // Mode Toggle: One-Pass vs Two-Pass
                         Row(
                           children: [
-                            ChoiceChip(
-                              label: Text('One-Pass', style: TextStyle(
-                                color: !_isTwoPassMode ? Colors.white : null,
-                                fontSize: 12,
-                              )),
-                              selected: !_isTwoPassMode,
-                              selectedColor: Colors.blue,
-                              onSelected: (s) => _setTwoPassMode(false),
-                              visualDensity: VisualDensity.compact,
-                            ),
+                            Expanded(child: _buildModeChip('One-Pass', !_isTwoPassMode, _dungeonColor)),
                             const SizedBox(width: 8),
-                            ChoiceChip(
-                              label: Text('Two-Pass', style: TextStyle(
-                                color: _isTwoPassMode ? Colors.white : null,
-                                fontSize: 12,
-                              )),
-                              selected: _isTwoPassMode,
-                              selectedColor: Colors.indigo,
-                              onSelected: (s) => _setTwoPassMode(true),
-                              visualDensity: VisualDensity.compact,
-                            ),
+                            Expanded(child: _buildModeChip('Two-Pass', _isTwoPassMode, JuiceTheme.mystic)),
                           ],
                         ),
                         const SizedBox(height: 8),
                         
                         // Mode-specific explanation
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: (_isTwoPassMode ? Colors.indigo : Colors.blue).withValues(alpha: 0.2)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _isTwoPassMode 
-                                  ? 'Two-Pass: Pre-generate map, then explore'
-                                  : 'One-Pass: Explore as you generate',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _isTwoPassMode
-                                  ? '• Start 1d10@+ → 1st doubles → 1d10@-\n'
-                                    '• 2nd doubles → STOP (remaining = dead ends)\n'
-                                    '• Roll encounters during exploration phase'
-                                  : '• Start 1d10@- → doubles → switch to 1d10@+\n'
-                                    '• Roll encounters as you enter each room\n'
-                                    '• Mimics "Skyrim" style: long way in, shortcut out',
-                                style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                              ),
-                            ],
-                          ),
+                        _buildInfoBox(
+                          _isTwoPassMode
+                            ? 'Two-Pass: Pre-generate map, then explore\n'
+                              '• Start 1d10@+ → 1st doubles → 1d10@-\n'
+                              '• 2nd doubles → STOP (remaining = dead ends)\n'
+                              '• Roll encounters during exploration phase'
+                            : 'One-Pass: Explore as you generate\n'
+                              '• Start 1d10@- → doubles → switch to 1d10@+\n'
+                              '• Roll encounters as you enter each room\n'
+                              '• Mimics "Skyrim" style: long way in, shortcut out',
+                          color: _isTwoPassMode ? JuiceTheme.mystic : _dungeonColor,
                         ),
                         const SizedBox(height: 8),
               
@@ -4367,7 +5122,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
-                          backgroundColor: Colors.red.shade700,
+                          backgroundColor: Color(0xFF8B3A3A),  // Dark danger
                           duration: const Duration(seconds: 4),
                         ),
                       );
@@ -4376,7 +5131,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
-                          backgroundColor: Colors.orange.shade700,
+                          backgroundColor: Color(0xFF8B5513),  // Dark rust
                         ),
                       );
                     }
@@ -4396,7 +5151,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
-                          backgroundColor: Colors.green.shade700,
+                          backgroundColor: Color(0xFF4A6B4A),  // Dark success
                         ),
                       );
                     }
@@ -4424,7 +5179,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
-                          backgroundColor: Colors.red.shade700,
+                          backgroundColor: Color(0xFF8B3A3A),  // Dark danger
                           duration: const Duration(seconds: 4),
                         ),
                       );
@@ -4433,7 +5188,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
-                          backgroundColor: Colors.orange.shade700,
+                          backgroundColor: Color(0xFF8B5513),  // Dark rust
                         ),
                       );
                     }
@@ -4455,7 +5210,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
-                          backgroundColor: Colors.green.shade700,
+                          backgroundColor: Color(0xFF4A6B4A),  // Dark success
                         ),
                       );
                     }
@@ -4489,55 +5244,51 @@ class _DungeonDialogState extends State<_DungeonDialog> {
               
               // Passage & Condition Settings (collapsed)
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.08),
+                  color: JuiceTheme.mystic.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                  border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.25)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Passage/Condition Settings',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'd6=Linear/Unoccupied, d10=Branching/Occupied\n'
-                      '@-=Smaller/Worse, @+=Larger/Better',
-                      style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic),
+                    Row(
+                      children: [
+                        Icon(Icons.tune, size: 14, color: JuiceTheme.mystic),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Passage/Condition Settings',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: JuiceTheme.mystic,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
+                    Text(
+                      'd6 = Linear/Unoccupied  •  d10 = Branching/Occupied\n'
+                      '@- = Smaller/Worse  •  @+ = Larger/Better',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.parchment.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
-                        ChoiceChip(
-                          label: const Text('d6', style: TextStyle(fontSize: 11)),
-                          selected: _useD6ForPassage,
-                          onSelected: (s) => setState(() => _useD6ForPassage = true),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('d10', style: TextStyle(fontSize: 11)),
-                          selected: !_useD6ForPassage,
-                          onSelected: (s) => setState(() => _useD6ForPassage = false),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        const SizedBox(width: 4),
-                        ChoiceChip(
-                          label: const Text('@-', style: TextStyle(fontSize: 11)),
-                          selected: _passageConditionSkew == AdvantageType.disadvantage,
-                          onSelected: (s) => setState(() => _passageConditionSkew = s ? AdvantageType.disadvantage : AdvantageType.none),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('@+', style: TextStyle(fontSize: 11)),
-                          selected: _passageConditionSkew == AdvantageType.advantage,
-                          onSelected: (s) => setState(() => _passageConditionSkew = s ? AdvantageType.advantage : AdvantageType.none),
-                          visualDensity: VisualDensity.compact,
-                        ),
+                        _buildDieChip('d6', _useD6ForPassage, JuiceTheme.info, () => setState(() => _useD6ForPassage = true)),
+                        _buildDieChip('d10', !_useD6ForPassage, JuiceTheme.info, () => setState(() => _useD6ForPassage = false)),
+                        const SizedBox(width: 8),
+                        _buildSkewChip('@-', AdvantageType.disadvantage, _passageConditionSkew, _phaseEnteringColor, 
+                          (v) => setState(() => _passageConditionSkew = v)),
+                        _buildSkewChip('@+', AdvantageType.advantage, _passageConditionSkew, _phaseExploringColor,
+                          (v) => setState(() => _passageConditionSkew = v)),
                       ],
                     ),
                   ],
@@ -4546,64 +5297,51 @@ class _DungeonDialogState extends State<_DungeonDialog> {
               
                         const Divider(),
                         // Encounter Settings
-                        _buildSectionHeader('Dungeon Encounter', Icons.warning_amber_rounded),
+                        _buildDungeonSectionHeader('Dungeon Encounter', Icons.warning_amber_rounded, color: _encounterColor),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.08),
+                  color: _encounterColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                  border: Border.all(color: _encounterColor.withValues(alpha: 0.25)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '10m 1d6 (NH: d6); Trap: 10m AP@+ A/L, PP L/T',
-                      style: TextStyle(fontSize: 10, fontFamily: 'monospace', fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 10, fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: _encounterColor),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'd6 = Lingering 10+ min in unsafe area\n'
                       'd10 = Entering area first time\n'
                       '@+ = Better Encounters, @- = Worse',
-                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.parchment.withValues(alpha: 0.7),
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
-                        ChoiceChip(
-                          label: const Text('d6 (Linger)'),
-                          selected: _isLingering,
-                          onSelected: (s) => setState(() => _isLingering = true),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('d10 (Entry)'),
-                          selected: !_isLingering,
-                          onSelected: (s) => setState(() => _isLingering = false),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        const SizedBox(width: 4),
-                        ChoiceChip(
-                          label: const Text('@-'),
-                          selected: _encounterSkew == AdvantageType.disadvantage,
-                          onSelected: (s) => setState(() => _encounterSkew = s ? AdvantageType.disadvantage : AdvantageType.none),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        ChoiceChip(
-                          label: const Text('@+'),
-                          selected: _encounterSkew == AdvantageType.advantage,
-                          onSelected: (s) => setState(() => _encounterSkew = s ? AdvantageType.advantage : AdvantageType.none),
-                          visualDensity: VisualDensity.compact,
-                        ),
+                        _buildDieChip('d6 Linger', _isLingering, _encounterColor, () => setState(() => _isLingering = true)),
+                        _buildDieChip('d10 Entry', !_isLingering, _encounterColor, () => setState(() => _isLingering = false)),
+                        const SizedBox(width: 8),
+                        _buildSkewChip('@-', AdvantageType.disadvantage, _encounterSkew, _phaseEnteringColor,
+                          (v) => setState(() => _encounterSkew = v)),
+                        _buildSkewChip('@+', AdvantageType.advantage, _encounterSkew, _phaseExploringColor,
+                          (v) => setState(() => _encounterSkew = v)),
                       ],
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: 8),
               _DialogOption(
                 title: 'Encounter Type',
                 subtitle: 'What do you find? (${_getEncounterDieLabel()}${_getEncounterSkewLabel()})',
@@ -4627,7 +5365,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                 },
               ),
                         const Divider(),
-                        _buildSectionHeader('Encounter Details', Icons.pest_control),
+                        _buildDungeonSectionHeader('Encounter Details', Icons.pest_control, color: _trapColor),
               _DialogOption(
                 title: 'Monster (2d10)',
                 subtitle: 'Descriptor + Ability',
@@ -4671,16 +5409,26 @@ class _DungeonDialogState extends State<_DungeonDialog> {
               // Show trap procedure info
               const Divider(),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: _trapColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _trapColor.withValues(alpha: 0.2)),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Trap Procedure:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                    SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.motion_photos_paused, size: 14, color: _trapColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Trap Procedure',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: _trapColor),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       '1. BEFORE encounter: decide to search (10 min) or not\n'
                       '2. If searching: Active Perception @+ vs DC\n'
@@ -4691,7 +5439,10 @@ class _DungeonDialogState extends State<_DungeonDialog> {
                       '   • Fail = TRIGGER (suffer consequences)\n\n'
                       'Note: Lingering >10 min in non-Safety room = roll\n'
                       'another encounter (d6). Only 1 action per room is "free".',
-                      style: TextStyle(fontSize: 10),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: JuiceTheme.parchment.withValues(alpha: 0.85),
+                      ),
                     ),
                   ],
                 ),
@@ -4699,23 +5450,37 @@ class _DungeonDialogState extends State<_DungeonDialog> {
               const SizedBox(height: 8),
               // Reference for encounter types
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
+                  color: JuiceTheme.sepia.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: JuiceTheme.sepia.withValues(alpha: 0.2)),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Encounter Reference:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                    SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.menu_book, size: 14, color: JuiceTheme.sepia),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Encounter Reference',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: JuiceTheme.sepia),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       '1: Monster    6: Known\n'
                       '2: Nat Hazard 7: Trap\n'
                       '3: Challenge  8: Feature\n'
                       '4: Immersion  9: Key\n'
                       '5: Safety     0: Treasure',
-                      style: TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: JuiceTheme.parchment.withValues(alpha: 0.85),
+                      ),
                     ),
                   ],
                 ),
@@ -4751,23 +5516,9 @@ class _DungeonDialogState extends State<_DungeonDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text('Close', style: TextStyle(color: _dungeonColor)),
         ),
       ],
-    );
-  }
-
-  // Helper to build section headers with icons
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: JuiceTheme.gold),
-          const SizedBox(width: 6),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
-      ),
     );
   }
 
@@ -4776,18 +5527,19 @@ class _DungeonDialogState extends State<_DungeonDialog> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.25) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: isSelected ? color : color.withValues(alpha: 0.5)),
+          border: Border.all(color: isSelected ? color : color.withValues(alpha: 0.4)),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : color.withValues(alpha: 0.8),
+            fontFamily: JuiceTheme.fontFamilyMono,
+            color: isSelected ? color : color.withValues(alpha: 0.6),
           ),
         ),
       ),
@@ -4797,7 +5549,7 @@ class _DungeonDialogState extends State<_DungeonDialog> {
   // Compact doubles indicator for sticky header
   Widget _buildCompactDoublesIndicator(String label, bool isActive, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       decoration: BoxDecoration(
         color: isActive ? color.withValues(alpha: 0.2) : Colors.transparent,
         borderRadius: BorderRadius.circular(4),
@@ -4811,15 +5563,15 @@ class _DungeonDialogState extends State<_DungeonDialog> {
           Icon(
             isActive ? Icons.check_circle : Icons.radio_button_unchecked,
             size: 10,
-            color: isActive ? color : Colors.grey,
+            color: isActive ? color : Colors.grey.withValues(alpha: 0.5),
           ),
-          const SizedBox(width: 2),
+          const SizedBox(width: 3),
           Text(
             label,
             style: TextStyle(
               fontSize: 9,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive ? color : Colors.grey,
+              color: isActive ? color : Colors.grey.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -5900,63 +6652,132 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
     final hasWildernessState = widget.wildernessState != null;
     final envName = MonsterEncounter.environmentNames[(_selectedEnvironment - 1).clamp(0, 9)];
     final envFormula = MonsterEncounter.getEnvironmentFormula(_selectedEnvironment);
+    final combatColor = JuiceTheme.categoryCombat;
     
     return AlertDialog(
-      title: const Text('Monster Encounter'),
+      title: Row(
+        children: [
+          Icon(Icons.pest_control, size: 22, color: combatColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Monster Encounter',
+                  style: TextStyle(
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                    color: JuiceTheme.parchment,
+                    fontSize: 18,
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  height: 2,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        combatColor,
+                        combatColor.withValues(alpha: 0.3),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-          maxWidth: 350,
-        ),
-        child: _ScrollableDialogContent(
+      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Environment-based encounter section
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: JuiceTheme.categoryExplore.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                  border: Border.all(color: JuiceTheme.categoryExplore.withValues(alpha: 0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.forest, size: 16, color: Colors.green),
+                        Icon(Icons.landscape, size: 16, color: JuiceTheme.categoryExplore),
                         const SizedBox(width: 8),
-                        Text(
-                          'Environment: $envName ($envFormula)',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        Expanded(
+                          child: Text(
+                            'Environment: $envName ($envFormula)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: JuiceTheme.categoryExplore,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     if (hasWildernessState) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        'From wilderness: ${widget.wildernessState!.fullDescription}',
-                        style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: JuiceTheme.categoryExplore.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.location_on, size: 10, color: JuiceTheme.categoryExplore),
+                            const SizedBox(width: 4),
+                            Text(
+                              'From wilderness: ${widget.wildernessState!.fullDescription}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontStyle: FontStyle.italic,
+                                color: JuiceTheme.categoryExplore,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                     const SizedBox(height: 8),
                     // Environment selector
                     DropdownButtonFormField<int>(
-                      initialValue: _selectedEnvironment,
-                      decoration: const InputDecoration(
+                      value: _selectedEnvironment,
+                      decoration: InputDecoration(
                         labelText: 'Select Environment',
+                        labelStyle: TextStyle(color: JuiceTheme.parchmentDark, fontSize: 12),
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: BorderSide(color: JuiceTheme.categoryExplore.withValues(alpha: 0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: BorderSide(color: JuiceTheme.categoryExplore.withValues(alpha: 0.3)),
+                        ),
                       ),
+                      dropdownColor: JuiceTheme.parchmentDark,
                       items: List.generate(10, (i) {
                         final name = MonsterEncounter.environmentNames[i];
                         final formula = MonsterEncounter.getEnvironmentFormula(i + 1);
                         return DropdownMenuItem(
                           value: i + 1,
-                          child: Text('${i + 1}. $name ($formula)'),
+                          child: Text(
+                            '${i + 1}. $name ($formula)',
+                            style: TextStyle(fontSize: 12, color: JuiceTheme.parchment),
+                          ),
                         );
                       }),
                       onChanged: (v) => setState(() => _selectedEnvironment = v ?? 6),
@@ -5964,101 +6785,491 @@ class _MonsterEncounterDialogState extends State<_MonsterEncounterDialog> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              _DialogOption(
+              const SizedBox(height: 10),
+              
+              // Full Encounter button - primary action
+              _MonsterPrimaryButton(
                 title: 'Full Encounter (By Environment)',
                 subtitle: 'Row ($envFormula) + Difficulty (2d10) + Counts (1d6-1@)',
+                icon: Icons.groups,
                 onTap: () {
                   widget.onRoll(MonsterEncounter.generateFullEncounter(_selectedEnvironment));
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
-              const _SectionHeader(icon: Icons.flash_on, title: 'Quick Rolls'),
+              
+              const SizedBox(height: 12),
+              
+              // Quick Rolls section
+              _MonsterSectionHeader(icon: Icons.flash_on, title: 'Quick Rolls'),
               const SizedBox(height: 4),
-              const Text(
-                MonsterEncounter.deadlyExplanation,
-                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.sepia.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 11, color: JuiceTheme.sepia),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        MonsterEncounter.deadlyExplanation,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontStyle: FontStyle.italic,
+                          color: JuiceTheme.sepia,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            const Divider(),
-            _DialogOption(
-              title: 'Roll Encounter',
-              subtitle: '2d10 for row + difficulty, doubles = boss',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollEncounter());
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Roll Tracks',
-              subtitle: '1d6-1@ with disadvantage',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollTracks());
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(icon: Icons.trending_up, title: 'By Difficulty'),
-            _DialogOption(
-              title: 'Easy (1-4)',
-              subtitle: 'Lower CR monsters',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.easy));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Medium (5-8)',
-              subtitle: 'Standard CR monsters',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.medium));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Hard (9-0)',
-              subtitle: 'Higher CR monsters',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.hard));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: 'Boss',
-              subtitle: 'Legendary or unique monster',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.boss));
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            const _SectionHeader(icon: Icons.star, title: 'Special Rows'),
-            _DialogOption(
-              title: '* (Nature/Plants)',
-              subtitle: 'Blights, hags, plant creatures',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollSpecialRow(humanoid: false));
-                Navigator.pop(context);
-              },
-            ),
-            _DialogOption(
-              title: '** (Humanoids)',
-              subtitle: 'Bandits, scouts, veterans',
-              onTap: () {
-                widget.onRoll(MonsterEncounter.rollSpecialRow(humanoid: true));
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MonsterQuickButton(
+                      title: 'Roll Encounter',
+                      subtitle: '2d10 for row + difficulty\ndoubles = boss',
+                      icon: Icons.casino,
+                      color: combatColor,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollEncounter());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _MonsterQuickButton(
+                      title: 'Roll Tracks',
+                      subtitle: '1d6-1@ with disadvantage',
+                      icon: Icons.pets,
+                      color: JuiceTheme.sepia,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollTracks());
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // By Difficulty section
+              _MonsterSectionHeader(icon: Icons.trending_up, title: 'By Difficulty'),
+              const SizedBox(height: 6),
+              // 2x2 grid for difficulties
+              Row(
+                children: [
+                  Expanded(
+                    child: _MonsterDifficultyChip(
+                      label: 'Easy (1-4)',
+                      subtitle: 'Lower CR monsters',
+                      color: JuiceTheme.success,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.easy));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _MonsterDifficultyChip(
+                      label: 'Medium (5-8)',
+                      subtitle: 'Standard CR',
+                      color: JuiceTheme.juiceOrange,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.medium));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MonsterDifficultyChip(
+                      label: 'Hard (9-0)',
+                      subtitle: 'Higher CR monsters',
+                      color: JuiceTheme.danger,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.hard));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _MonsterDifficultyChip(
+                      label: 'Boss',
+                      subtitle: 'Legendary monster',
+                      color: JuiceTheme.mystic,
+                      icon: Icons.star,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollEncounter(forcedDifficulty: MonsterDifficulty.boss));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Special Rows section
+              _MonsterSectionHeader(icon: Icons.star_border, title: 'Special Rows'),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MonsterSpecialRowButton(
+                      label: '* (Nature/Plants)',
+                      subtitle: 'Blights, hags, plant creatures',
+                      icon: Icons.eco,
+                      color: JuiceTheme.categoryExplore,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollSpecialRow(humanoid: false));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _MonsterSpecialRowButton(
+                      label: '** (Humanoids)',
+                      subtitle: 'Bandits, scouts, veterans',
+                      icon: Icons.person,
+                      color: JuiceTheme.rust,
+                      onTap: () {
+                        widget.onRoll(MonsterEncounter.rollSpecialRow(humanoid: true));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text('Close', style: TextStyle(color: JuiceTheme.parchmentDark)),
         ),
       ],
+    );
+  }
+}
+
+/// Section header for Monster Encounter dialog
+class _MonsterSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  
+  const _MonsterSectionHeader({required this.icon, required this.title});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: JuiceTheme.categoryCombat),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            color: JuiceTheme.categoryCombat,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: JuiceTheme.categoryCombat.withValues(alpha: 0.2),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Primary action button for Monster dialog
+class _MonsterPrimaryButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+  
+  const _MonsterPrimaryButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    final combatColor = JuiceTheme.categoryCombat;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: combatColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: combatColor.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: combatColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, size: 18, color: combatColor),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: combatColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 18, color: combatColor.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quick roll button for Monster dialog
+class _MonsterQuickButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  
+  const _MonsterQuickButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 14, color: color),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: JuiceTheme.parchmentDark,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Difficulty chip for Monster dialog
+class _MonsterDifficultyChip extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final Color color;
+  final IconData? icon;
+  final VoidCallback onTap;
+  
+  const _MonsterDifficultyChip({
+    required this.label,
+    required this.subtitle,
+    required this.color,
+    this.icon,
+    required this.onTap,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 12, color: color),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 14, color: color.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Special row button for Monster dialog
+class _MonsterSpecialRowButton extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  
+  const _MonsterSpecialRowButton({
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 12, color: color),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 12, color: color.withValues(alpha: 0.5)),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 8,
+                  color: JuiceTheme.parchmentDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -6665,98 +7876,372 @@ class _LocationDialog extends StatelessWidget {
 
   const _LocationDialog({required this.onRoll});
 
+  // Theme color for location - rust for exploration/maps
+  static const Color _locationColor = JuiceTheme.rust;
+  static const Color _compassColor = JuiceTheme.categoryExplore;
+  static const Color _zoomColor = JuiceTheme.mystic;
+
+  // Build a method card with icon and description
+  Widget _buildMethodCard({
+    required String title,
+    required IconData icon,
+    required String description,
+    required String useFor,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, size: 16, color: color),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilySerif,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 11,
+              color: JuiceTheme.parchment.withValues(alpha: 0.9),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.lightbulb_outline, size: 12, color: color.withValues(alpha: 0.8)),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    useFor,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      color: color.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build the visual grid representation
+  Widget _buildGridVisual() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: JuiceTheme.inkDark.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _locationColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          // North label
+          Text(
+            'N',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: _compassColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Grid
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // West label
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Text(
+                  'W',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    color: _compassColor,
+                  ),
+                ),
+              ),
+              // 5x5 grid
+              Column(
+                children: List.generate(5, (row) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(5, (col) {
+                      // Determine ring: 0=center, 1=close, 2=far
+                      final isCenter = row == 2 && col == 2;
+                      final isClose = !isCenter && 
+                          row >= 1 && row <= 3 && 
+                          col >= 1 && col <= 3;
+                      
+                      Color cellColor;
+                      String symbol;
+                      if (isCenter) {
+                        cellColor = JuiceTheme.gold;
+                        symbol = '◉';
+                      } else if (isClose) {
+                        cellColor = _locationColor;
+                        symbol = '○';
+                      } else {
+                        cellColor = JuiceTheme.parchmentDark;
+                        symbol = '·';
+                      }
+                      
+                      return Container(
+                        width: 24,
+                        height: 24,
+                        margin: const EdgeInsets.all(1),
+                        decoration: BoxDecoration(
+                          color: cellColor.withValues(alpha: isCenter ? 0.3 : 0.15),
+                          borderRadius: BorderRadius.circular(3),
+                          border: Border.all(
+                            color: cellColor.withValues(alpha: 0.4),
+                            width: isCenter ? 1.5 : 0.5,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            symbol,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cellColor,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  );
+                }),
+              ),
+              // East label
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Text(
+                  'E',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    color: _compassColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // South label
+          Text(
+            'S',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: _compassColor,
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Legend
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem('◉', 'Center', JuiceTheme.gold),
+              const SizedBox(width: 16),
+              _buildLegendItem('○', 'Close', _locationColor),
+              const SizedBox(width: 16),
+              _buildLegendItem('·', 'Far', JuiceTheme.parchmentDark),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String symbol, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          symbol,
+          style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: JuiceTheme.parchment.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Location Grid'),
+      title: Row(
+        children: [
+          Icon(Icons.grid_on, size: 22, color: _locationColor),
+          const SizedBox(width: 10),
+          Text(
+            'Location Grid',
+            style: TextStyle(
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: _locationColor,
+            ),
+          ),
+        ],
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 350,
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        child: _ScrollableDialogContent(
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 350),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Introduction
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.brown.withValues(alpha: 0.1),
+                  color: _locationColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _locationColor.withValues(alpha: 0.2)),
                 ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      'A 5×5 bullseye grid. Roll 1d100 to get both a direction and a distance.',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              const _SectionHeader(icon: Icons.explore, title: 'Compass Method'),
-              const SizedBox(height: 4),
-              const Text(
-                'Imagine your PC at the center. Roll to get:\n'
-                '• Direction (N, S, E, W, NE, NW, SE, SW)\n'
-                '• Distance (Close or Far based on ring)\n\n'
-                'Use for: next town location, hex map population, travel days, road directions.',
-                style: TextStyle(fontSize: 11),
-              ),
-              const Divider(),
-              const _SectionHeader(icon: Icons.zoom_in, title: 'Zoom Method'),
-              const SizedBox(height: 4),
-              const Text(
-                'Use iterative zooming:\n'
-                '1. Grid overlays world map → roll to zoom in\n'
-                '2. Grid overlays region → roll again\n'
-                '3. Grid overlays settlement → roll for building\n'
-                '4. Keep zooming until you have your answer\n\n'
-                'Use for: Remote Events, finding hidden treasure locations.',
-                style: TextStyle(fontSize: 11),
-              ),
-              const Divider(),
-              // Show the grid legend
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Grid Rings:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                    SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text('◉ Center (origin)', style: TextStyle(fontSize: 10)),
-                        SizedBox(width: 12),
-                        Text('○ Close', style: TextStyle(fontSize: 10)),
-                        SizedBox(width: 12),
-                        Text('· Far', style: TextStyle(fontSize: 10)),
-                      ],
+                    Icon(Icons.info_outline, size: 16, color: _locationColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'A 5×5 bullseye grid. Roll 1d100 to get both a direction and a distance.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
+              
+              // Compass Method
+              _buildMethodCard(
+                title: 'Compass Method',
+                icon: Icons.explore,
+                color: _compassColor,
+                description: 'Imagine your PC at the center. Roll to get:\n'
+                    '• Direction (N, S, E, W, NE, NW, SE, SW)\n'
+                    '• Distance (Close or Far based on ring)',
+                useFor: 'Next town, hex population, travel days, roads',
+              ),
+              
+              // Zoom Method
+              _buildMethodCard(
+                title: 'Zoom Method',
+                icon: Icons.zoom_in,
+                color: _zoomColor,
+                description: 'Use iterative zooming:\n'
+                    '1. Grid overlays world map → roll to zoom in\n'
+                    '2. Grid overlays region → roll again\n'
+                    '3. Grid overlays settlement → roll for building\n'
+                    '4. Keep zooming until you have your answer',
+                useFor: 'Remote Events, hidden treasure locations',
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Visual Grid
+              _buildGridVisual(),
+              
+              const SizedBox(height: 16),
+              
+              // Roll button
+              Container(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    onRoll(Location.roll());
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.casino),
-                  label: const Text('Roll 1d100'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.brown,
-                    foregroundColor: Colors.white,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _locationColor,
+                      _locationColor.withValues(alpha: 0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _locationColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      onRoll(Location.roll());
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.casino, color: Colors.white, size: 20),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Roll 1d100',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: JuiceTheme.fontFamilyMono,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -6767,7 +8252,7 @@ class _LocationDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text('Close', style: TextStyle(color: _locationColor)),
         ),
       ],
     );
@@ -6790,7 +8275,13 @@ class _DialogGeneratorDialog extends StatefulWidget {
 }
 
 class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
-  DialogResult? _lastResult;
+  // Color mappings for tones
+  static const Map<String, Color> _toneColors = {
+    'Neutral': JuiceTheme.info,
+    'Defensive': JuiceTheme.rust,
+    'Aggressive': JuiceTheme.danger,
+    'Helpful': JuiceTheme.success,
+  };
   
   @override
   void initState() {
@@ -6803,49 +8294,19 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
 
   void _rollDialog() {
     final result = widget.dialogGenerator.generate();
-    setState(() {
-      _lastResult = result;
-    });
     widget.onRoll(result);
-    
-    // Show snackbar for special events
-    if (result.isDoubles) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('DOUBLES! Conversation has ended.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    }
+    // Close dialog to show result in roll history
+    Navigator.pop(context);
   }
 
   void _startNewConversation() {
     widget.dialogGenerator.startConversation();
-    setState(() {
-      _lastResult = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('New conversation started at "Fact"'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    setState(() {});
   }
 
   void _setPosition(int row, int col) {
     widget.dialogGenerator.setPosition(row, col);
-    setState(() {
-      _lastResult = null;
-    });
-    final fragment = DialogGenerator.grid[row][col];
-    final isPast = row <= 1;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Starting position set to "$fragment" ${isPast ? "(Past)" : "(Present)"}'),
-        backgroundColor: Colors.cyan,
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    setState(() {});
   }
 
   Widget _buildGridCell(int row, int col) {
@@ -6857,29 +8318,38 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
     return GestureDetector(
       onTap: () => _setPosition(row, col),
       child: Container(
-        width: 52,
-        height: 40,
+        width: 54,
+        height: 36,
         margin: const EdgeInsets.all(1),
         decoration: BoxDecoration(
           color: isCurrentPos 
-              ? Colors.cyan.withValues(alpha: 0.4)
+              ? JuiceTheme.mystic.withValues(alpha: 0.35)
               : isPastRow 
-                  ? Colors.grey.withValues(alpha: 0.15)
-                  : Colors.grey.withValues(alpha: 0.05),
+                  ? JuiceTheme.sepia.withValues(alpha: 0.15)
+                  : JuiceTheme.parchment.withValues(alpha: 0.08),
           border: Border.all(
-            color: isCurrentPos ? Colors.cyan : Colors.grey.withValues(alpha: 0.3),
+            color: isCurrentPos 
+                ? JuiceTheme.mystic 
+                : isPastRow 
+                    ? JuiceTheme.sepia.withValues(alpha: 0.4)
+                    : Colors.grey.withValues(alpha: 0.3),
             width: isCurrentPos ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Center(
           child: Text(
             fragment,
             style: TextStyle(
               fontSize: 9,
+              fontFamily: JuiceTheme.fontFamilySerif,
               fontWeight: isCurrentPos ? FontWeight.bold : FontWeight.normal,
               fontStyle: isPastRow ? FontStyle.italic : FontStyle.normal,
-              color: isCurrentPos ? Colors.cyan : Colors.white70,
+              color: isCurrentPos 
+                  ? JuiceTheme.mystic 
+                  : isPastRow 
+                      ? JuiceTheme.sepia 
+                      : Colors.white70,
             ),
             textAlign: TextAlign.center,
           ),
@@ -6891,15 +8361,16 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
   Widget _buildGrid() {
     return Column(
       children: [
-        // Row labels for Past/Present
-        const Padding(
-          padding: EdgeInsets.only(bottom: 4),
+        // Row labels for Past/Present with sepia styling
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Top 2 rows = ', style: TextStyle(fontSize: 9)),
-              Text('Past', style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic)),
-              Text(' / Bottom 3 = Present', style: TextStyle(fontSize: 9)),
+              Text('Top 2 rows = ', style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+              Text('Past', style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: JuiceTheme.sepia)),
+              Text(' / Bottom 3 = ', style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+              const Text('Present', style: TextStyle(fontSize: 10)),
             ],
           ),
         ),
@@ -6915,69 +8386,137 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
       ],
     );
   }
-
+  
+  Widget _buildToneLegendChip(String tone, String direction, String range, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            direction,
+            style: TextStyle(fontSize: 11, color: color),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            tone,
+            style: TextStyle(
+              fontSize: 9,
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            range,
+            style: TextStyle(
+              fontSize: 8,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: color.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _getDirectionArrow(String direction) {
+    switch (direction) {
+      case 'up': return '↑';
+      case 'down': return '↓';
+      case 'left': return '←';
+      case 'right': return '→';
+      default: return '·';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final isActive = widget.dialogGenerator.isConversationActive;
     final currentFragment = widget.dialogGenerator.currentPositionLabel;
     final isPast = widget.dialogGenerator.isCurrentPast;
+    final dialogColor = JuiceTheme.mystic;
     
     return AlertDialog(
-      title: const Text('NPC Dialog Grid'),
+      title: Row(
+        children: [
+          Icon(Icons.forum, color: dialogColor, size: 24),
+          const SizedBox(width: 8),
+          const Text('NPC Dialog Grid'),
+        ],
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       content: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 320,
-          maxHeight: MediaQuery.of(context).size.height * 0.75,
+          maxWidth: 340,
+          maxHeight: MediaQuery.of(context).size.height * 0.78,
         ),
-        child: _ScrollableDialogContent(
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Instructions header
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.cyan.withValues(alpha: 0.1),
+                  color: dialogColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: dialogColor.withValues(alpha: 0.3)),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'A mini-game to generate NPC conversations.',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(Icons.tips_and_updates, size: 14, color: dialogColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          'A mini-game to generate NPC conversations.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: dialogColor,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       '• Tap any cell to set your starting position\n'
                       '• Roll 2d10: 1st = Direction + Tone, 2nd = Subject\n'
                       '• Doubles = Conversation ends\n'
                       '• Edges wrap around',
-                      style: TextStyle(fontSize: 10),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade300,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               
               // The grid
               _buildGrid(),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               
-              // Current state
+              // Current state panel
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isActive 
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.orange.withValues(alpha: 0.1),
+                      ? JuiceTheme.success.withValues(alpha: 0.1)
+                      : JuiceTheme.juiceOrange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isActive ? Colors.green : Colors.orange,
+                    color: isActive ? JuiceTheme.success : JuiceTheme.juiceOrange,
                     width: 1,
                   ),
                 ),
@@ -6987,84 +8526,127 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
                     Row(
                       children: [
                         Icon(
-                          isActive ? Icons.chat_bubble : Icons.chat_bubble_outline,
+                          isActive ? Icons.record_voice_over : Icons.voice_over_off,
                           size: 16,
-                          color: isActive ? Colors.green : Colors.orange,
+                          color: isActive ? JuiceTheme.success : JuiceTheme.juiceOrange,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Text(
                           isActive ? 'Conversation Active' : 'Conversation Ended',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isActive ? Colors.green : Colors.orange,
+                            color: isActive ? JuiceTheme.success : JuiceTheme.juiceOrange,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Current: $currentFragment ${isPast ? "(Past)" : "(Present)"}',
-                      style: const TextStyle(fontSize: 12),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Text(
+                          'Current: ',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: dialogColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            currentFragment,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: JuiceTheme.fontFamilySerif,
+                              fontStyle: isPast ? FontStyle.italic : FontStyle.normal,
+                              color: dialogColor,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isPast 
+                                ? JuiceTheme.sepia.withValues(alpha: 0.2)
+                                : Colors.grey.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isPast ? 'Past' : 'Present',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontStyle: isPast ? FontStyle.italic : FontStyle.normal,
+                              color: isPast ? JuiceTheme.sepia : Colors.grey.shade400,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    if (DialogGenerator.fragmentDescriptions[currentFragment] != null)
+                    if (DialogGenerator.fragmentDescriptions[currentFragment] != null) ...[
+                      const SizedBox(height: 4),
                       Text(
                         DialogGenerator.fragmentDescriptions[currentFragment]!,
-                        style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
+                    ],
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
               
-              // Last result display
-              if (_lastResult != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Last Roll: ${_lastResult!.directionRoll}, ${_lastResult!.subjectRoll}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _lastResult!.isDoubles 
-                            ? 'DOUBLES - Conversation Ended'
-                            : _lastResult!.movementDescription,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      Text(
-                        '${_lastResult!.tone} tone about ${_lastResult!.subject}',
-                        style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 8),
-              
-              // Direction legend
+              // Direction/Tone legend - compact 2x2 grid
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
+                  color: Colors.grey.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('1st Die (Direction + Tone):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                    Text('1-2: ↑ Up (Neutral)  3-5: ← Left (Defensive)', style: TextStyle(fontSize: 9)),
-                    Text('6-8: → Right (Aggressive)  9-0: ↓ Down (Helpful)', style: TextStyle(fontSize: 9)),
-                    SizedBox(height: 4),
-                    Text('2nd Die (Subject):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                    Text('1-2: Them  3-5: Me  6-8: You  9-0: Us', style: TextStyle(fontSize: 9)),
+                    Text(
+                      '1st Die (Direction + Tone):',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        _buildToneLegendChip('Neutral', '↑', '1-2', JuiceTheme.info),
+                        _buildToneLegendChip('Defensive', '←', '3-5', JuiceTheme.rust),
+                        _buildToneLegendChip('Aggressive', '→', '6-8', JuiceTheme.danger),
+                        _buildToneLegendChip('Helpful', '↓', '9-0', JuiceTheme.success),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '2nd Die (Subject):',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '1-2: Them  •  3-5: Me  •  6-8: You  •  9-0: Us',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -7076,11 +8658,12 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: _rollDialog,
-                      icon: const Icon(Icons.casino),
+                      icon: const Icon(Icons.casino, size: 18),
                       label: Text(isActive ? 'Roll 2d10' : 'Roll (New)'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyan,
+                        backgroundColor: dialogColor,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
@@ -7088,9 +8671,10 @@ class _DialogGeneratorDialogState extends State<_DialogGeneratorDialog> {
                   IconButton(
                     onPressed: _startNewConversation,
                     icon: const Icon(Icons.refresh),
-                    tooltip: 'Start New Conversation',
+                    tooltip: 'Reset to Fact (center)',
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.green.withValues(alpha: 0.2),
+                      backgroundColor: JuiceTheme.success.withValues(alpha: 0.2),
+                      foregroundColor: JuiceTheme.success,
                     ),
                   ),
                 ],
@@ -7125,15 +8709,214 @@ class _ExtendedNpcConversationDialog extends StatefulWidget {
 }
 
 class _ExtendedNpcConversationDialogState extends State<_ExtendedNpcConversationDialog> {
+  // Theme colors for NPC conversation - character/social interactions
+  static const Color _npcColor = JuiceTheme.categoryCharacter;
+  static const Color _infoColor = JuiceTheme.info;  // Blue for information
+  static const Color _companionColor = JuiceTheme.success;  // Green for companion responses
+  static const Color _topicColor = JuiceTheme.juiceOrange;  // Orange for dialog topics
+  static const Color _opposedColor = JuiceTheme.danger;  // Red for opposed
+  static const Color _favorColor = JuiceTheme.success;  // Green for in favor
+
   // Companion Response skew settings
   SkewType _companionSkew = SkewType.none;
 
-  String _getCompanionSkewLabel() {
+  // Build a themed section header with icon
+  Widget _buildSectionHeader(String title, IconData icon, {Color? color}) {
+    final c = color ?? _npcColor;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, top: 4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: c.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, size: 14, color: c),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: c,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build an info/tip box
+  Widget _buildInfoBox(String content, {Color? color}) {
+    final c = color ?? _npcColor;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        content,
+        style: TextStyle(
+          fontSize: 10,
+          fontStyle: FontStyle.italic,
+          color: JuiceTheme.parchment.withValues(alpha: 0.85),
+        ),
+      ),
+    );
+  }
+
+  // Build a themed skew chip
+  Widget _buildSkewChip(String label, SkewType type, IconData icon, Color color) {
+    final isSelected = _companionSkew == type;
+    return GestureDetector(
+      onTap: () => setState(() => _companionSkew = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.withValues(alpha: 0.4),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected)
+              Icon(Icons.check, size: 12, color: color),
+            if (isSelected)
+              const SizedBox(width: 4),
+            Icon(icon, size: 14, color: isSelected ? color : Colors.grey.shade500),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontFamily: JuiceTheme.fontFamilyMono,
+                color: isSelected ? color : Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build a themed roll button
+  Widget _buildRollButton({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.08)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, size: 18, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: JuiceTheme.parchmentDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: color.withValues(alpha: 0.6)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build a favor level row
+  Widget _buildFavorLevelRow(String range, String label, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              range,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 9,
+                fontFamily: JuiceTheme.fontFamilyMono,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: JuiceTheme.parchment.withValues(alpha: 0.9),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getSkewLabel() {
     switch (_companionSkew) {
       case SkewType.advantage:
-        return '@+ In Favor';
+        return ' @+ In Favor';
       case SkewType.disadvantage:
-        return '@- Opposed';
+        return ' @- Opposed';
       case SkewType.none:
         return '';
     }
@@ -7142,195 +8925,259 @@ class _ExtendedNpcConversationDialogState extends State<_ExtendedNpcConversation
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Extended NPC Conversation'),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: _npcColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.record_voice_over, size: 20, color: _npcColor),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Extended NPC Conversation',
+              style: TextStyle(
+                fontFamily: JuiceTheme.fontFamilySerif,
+                fontSize: 17,
+                color: _npcColor,
+              ),
+            ),
+          ),
+        ],
+      ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 320,
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        child: _ScrollableDialogContent(
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header explanation
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    colors: [
+                      _npcColor.withValues(alpha: 0.12),
+                      _npcColor.withValues(alpha: 0.06),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _npcColor.withValues(alpha: 0.25)),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Plot Knowledge / Companion Responses / Dialog Topics',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(Icons.chat, size: 14, color: _npcColor),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Plot Knowledge • Companion Responses • Dialog Topics',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: _npcColor,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
-                      'Alternative to the Dialog Grid mini-game. '
-                      'NPCs make the world feel alive!',
-                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                      'Alternative to the Dialog Grid mini-game. NPCs make the world feel alive!',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.parchment.withValues(alpha: 0.8),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Divider(),
+              const SizedBox(height: 12),
               
-              // Information Section
-              const _SectionHeader(icon: Icons.info_outline, title: 'Information (2d100)'),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
-                ),
-                child: const Text(
-                  'Roll 2d100 to determine what an NPC is talking about. '
-                  'Could be a response to asking for info, or something overheard.',
-                  style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                ),
+              // ═══════════════════════════════════════════════════════════════
+              // INFORMATION SECTION (2d100)
+              // ═══════════════════════════════════════════════════════════════
+              _buildSectionHeader('Information', Icons.info_outline, color: _infoColor),
+              _buildInfoBox(
+                'Roll 2d100 to determine what an NPC is talking about. '
+                'Could be a response to asking for info, or something overheard.',
+                color: _infoColor,
               ),
-              const SizedBox(height: 4),
-              _DialogOption(
+              const SizedBox(height: 8),
+              _buildRollButton(
                 title: 'Roll Information',
-                subtitle: 'Type of Information + Topic (2d100)',
+                subtitle: 'Type + Topic (2d100)',
+                icon: Icons.library_books,
+                color: _infoColor,
                 onTap: () {
                   widget.onRoll(widget.extendedNpcConversation.rollInformation());
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
               
-              // Companion Response Section
-              const _SectionHeader(icon: Icons.groups, title: 'Companion Response (1d100)'),
-              const SizedBox(height: 4),
+              const SizedBox(height: 16),
+              
+              // ═══════════════════════════════════════════════════════════════
+              // COMPANION RESPONSE SECTION (1d100)
+              // ═══════════════════════════════════════════════════════════════
+              _buildSectionHeader('Companion Response', Icons.groups, color: _companionColor),
+              _buildInfoBox(
+                'Responses to "the plan". Ordered such that bigger numbers '
+                'are more in favor, smaller numbers are more opposed.',
+                color: _companionColor,
+              ),
+              const SizedBox(height: 8),
+              // Skew selection
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.05),
+                  color: JuiceTheme.inkDark.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Responses to "the plan". Ordered such that bigger numbers '
-                      'are more in favor, smaller numbers are more opposed.',
-                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                    Row(
+                      children: [
+                        Icon(Icons.tune, size: 12, color: JuiceTheme.parchmentDark),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Attitude Bias',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: JuiceTheme.parchmentDark,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      '@+ = More likely to agree (Advantage)\n'
-                      '@- = More likely to oppose (Disadvantage)',
-                      style: TextStyle(fontSize: 10),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _buildSkewChip('None', SkewType.none, Icons.horizontal_rule, JuiceTheme.parchmentDark),
+                        _buildSkewChip('@- Opposed', SkewType.disadvantage, Icons.thumb_down_outlined, _opposedColor),
+                        _buildSkewChip('@+ In Favor', SkewType.advantage, Icons.thumb_up_outlined, _favorColor),
+                      ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  ChoiceChip(
-                    label: const Text('None'),
-                    selected: _companionSkew == SkewType.none,
-                    onSelected: (s) => setState(() => _companionSkew = SkewType.none),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  ChoiceChip(
-                    label: const Text('@- Opposed'),
-                    selected: _companionSkew == SkewType.disadvantage,
-                    onSelected: (s) => setState(() => _companionSkew = SkewType.disadvantage),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  ChoiceChip(
-                    label: const Text('@+ In Favor'),
-                    selected: _companionSkew == SkewType.advantage,
-                    onSelected: (s) => setState(() => _companionSkew = SkewType.advantage),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              _DialogOption(
+              _buildRollButton(
                 title: 'Roll Companion Response',
-                subtitle: '1d100${_companionSkew != SkewType.none ? ' ${_getCompanionSkewLabel()}' : ''}',
+                subtitle: '1d100${_getSkewLabel()}',
+                icon: Icons.question_answer,
+                color: _companionColor,
                 onTap: () {
                   widget.onRoll(widget.extendedNpcConversation.rollCompanionResponse(skew: _companionSkew));
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
               
-              // Dialog Topic Section
-              const _SectionHeader(icon: Icons.topic, title: 'Dialog Topic (1d100)'),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
-                ),
-                child: const Text(
-                  'What are NPCs talking about? More topics than the standard table. '
-                  'Also usable for News, letters, books, writing on walls, etc.',
-                  style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
-                ),
+              const SizedBox(height: 16),
+              
+              // ═══════════════════════════════════════════════════════════════
+              // DIALOG TOPIC SECTION (1d100)
+              // ═══════════════════════════════════════════════════════════════
+              _buildSectionHeader('Dialog Topic', Icons.topic, color: _topicColor),
+              _buildInfoBox(
+                'What are NPCs talking about? More topics than the standard table. '
+                'Also usable for News, letters, books, writing on walls, etc.',
+                color: _topicColor,
               ),
-              const SizedBox(height: 4),
-              _DialogOption(
+              const SizedBox(height: 8),
+              _buildRollButton(
                 title: 'Roll Dialog Topic',
                 subtitle: 'What NPCs are discussing (1d100)',
+                icon: Icons.forum,
+                color: _topicColor,
                 onTap: () {
                   widget.onRoll(widget.extendedNpcConversation.rollDialogTopic());
                   Navigator.pop(context);
                 },
               ),
-              const Divider(),
               
-              // Reference section
+              const SizedBox(height: 16),
+              
+              // ═══════════════════════════════════════════════════════════════
+              // REFERENCE: RESPONSE FAVOR LEVELS
+              // ═══════════════════════════════════════════════════════════════
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: JuiceTheme.inkDark.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _companionColor.withValues(alpha: 0.2)),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Response Favor Levels:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                    SizedBox(height: 4),
-                    Text(
-                      '1-20: Strongly Opposed\n'
-                      '21-40: Hesitant\n'
-                      '41-60: Neutral/Questioning\n'
-                      '61-80: Cautious Support\n'
-                      '81-100: Strongly In Favor',
-                      style: TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                    Row(
+                      children: [
+                        Icon(Icons.sentiment_satisfied_alt, size: 14, color: _companionColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Response Favor Levels',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: JuiceTheme.fontFamilySerif,
+                            color: _companionColor,
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 8),
+                    _buildFavorLevelRow('1-20', 'Strongly Opposed', JuiceTheme.danger),
+                    _buildFavorLevelRow('21-40', 'Hesitant', JuiceTheme.juiceOrange),
+                    _buildFavorLevelRow('41-60', 'Neutral / Questioning', JuiceTheme.parchmentDark),
+                    _buildFavorLevelRow('61-80', 'Cautious Support', JuiceTheme.info),
+                    _buildFavorLevelRow('81-100', 'Strongly In Favor', JuiceTheme.success),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              
+              const SizedBox(height: 12),
+              
+              // ═══════════════════════════════════════════════════════════════
+              // TIP: DIALOG GRID
+              // ═══════════════════════════════════════════════════════════════
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  color: JuiceTheme.mystic.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.25)),
                 ),
-                child: const Text(
-                  'Tip: Use the Dialog Grid (Dialog button) for a more interactive '
-                  'mini-game experience with position tracking.',
-                  style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                child: Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline, size: 16, color: JuiceTheme.mystic),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Tip: Use the Dialog Grid (Dialog button) for a more interactive '
+                        'mini-game experience with position tracking.',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: JuiceTheme.parchment.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -7340,7 +9187,10 @@ class _ExtendedNpcConversationDialogState extends State<_ExtendedNpcConversation
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(
+            'Close',
+            style: TextStyle(color: _npcColor),
+          ),
         ),
       ],
     );
@@ -7353,89 +9203,474 @@ class _AbstractIconsDialog extends StatelessWidget {
   final AbstractIcons abstractIcons;
   final void Function(RollResult) onRoll;
 
+  // Theme colors - success green for abstract/visual creativity
+  static const Color _iconColor = JuiceTheme.success;
+  static const Color _gridColor = JuiceTheme.mystic;
+
   const _AbstractIconsDialog({
     required this.abstractIcons,
     required this.onRoll,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Abstract Icons'),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+  // Build a use case item
+  Widget _buildUseCase(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header explanation
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.lime.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Roll 1d10 + 1d6 to pick an icon. These abstract images can be '
-              'used for inspiration instead of words. Inspired by Rory\'s Story Cubes.',
-              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Usage hints
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Uses:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                SizedBox(height: 4),
-                Text(
-                  '• Alternative to word-based meaning tables\n'
-                  '• Visual inspiration for scenes or encounters\n'
-                  '• Interpret the symbol in your current context\n'
-                  '• Use multiple icons for complex situations',
-                  style: TextStyle(fontSize: 10),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Roll button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                final result = abstractIcons.generate();
-                onRoll(result);
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.image),
-              label: const Text('Roll 1d10 + 1d6'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lime,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+          Icon(icon, size: 14, color: _iconColor.withValues(alpha: 0.8)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 11,
+                color: JuiceTheme.parchment.withValues(alpha: 0.9),
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          // Grid reference
-          const Text(
-            'Grid: 10 rows (1-9, 0) × 6 columns (1-6)',
-            style: TextStyle(fontSize: 10, color: Colors.grey),
-            textAlign: TextAlign.center,
+        ],
+      ),
+    );
+  }
+
+  // Build a grid cell preview
+  Widget _buildGridCell(int row, int col, {bool isHighlighted = false}) {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        color: isHighlighted 
+            ? _iconColor.withValues(alpha: 0.4)
+            : JuiceTheme.inkDark.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: isHighlighted 
+              ? _iconColor 
+              : JuiceTheme.parchmentDark.withValues(alpha: 0.3),
+          width: isHighlighted ? 1.5 : 0.5,
+        ),
+      ),
+      child: isHighlighted
+          ? Icon(Icons.image, size: 12, color: _iconColor)
+          : null,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: _iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.auto_awesome, size: 20, color: _iconColor),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Abstract Icons',
+            style: TextStyle(
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: _iconColor,
+            ),
           ),
         ],
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header explanation
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _iconColor.withValues(alpha: 0.12),
+                      _iconColor.withValues(alpha: 0.06),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _iconColor.withValues(alpha: 0.25)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.palette, size: 14, color: _iconColor),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Visual Inspiration • Symbol Interpretation',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: _iconColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Roll 1d10 + 1d6 to pick an icon. These abstract images can be '
+                      'used for inspiration instead of words. Inspired by Rory\'s Story Cubes.',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                        color: JuiceTheme.parchment.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              
+              // Mini grid visualization
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.inkDark.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _gridColor.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  children: [
+                    // Grid header
+                    Row(
+                      children: [
+                        Icon(Icons.grid_view, size: 14, color: _gridColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Icon Grid',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: _gridColor,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _gridColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '10 × 6 = 60 icons',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontFamily: JuiceTheme.fontFamilyMono,
+                              color: _gridColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Mini grid preview (showing 4x4 sample)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Row labels
+                        Column(
+                          children: [
+                            const SizedBox(height: 22),  // Offset for column labels
+                            for (int r = 1; r <= 4; r++)
+                              Container(
+                                width: 16,
+                                height: 20,
+                                margin: const EdgeInsets.only(bottom: 2),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '$r',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontFamily: JuiceTheme.fontFamilyMono,
+                                    color: JuiceTheme.parchmentDark,
+                                  ),
+                                ),
+                              ),
+                            Container(
+                              width: 16,
+                              height: 20,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '⋮',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: JuiceTheme.parchmentDark.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 4),
+                        // Grid cells
+                        Column(
+                          children: [
+                            // Column labels
+                            Row(
+                              children: [
+                                for (int c = 1; c <= 4; c++)
+                                  Container(
+                                    width: 20,
+                                    height: 16,
+                                    margin: const EdgeInsets.only(right: 2),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '$c',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontFamily: JuiceTheme.fontFamilyMono,
+                                        color: JuiceTheme.parchmentDark,
+                                      ),
+                                    ),
+                                  ),
+                                Container(
+                                  width: 20,
+                                  height: 16,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '⋯',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: JuiceTheme.parchmentDark.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            // Grid rows
+                            for (int r = 1; r <= 4; r++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Row(
+                                  children: [
+                                    for (int c = 1; c <= 4; c++)
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 2),
+                                        child: _buildGridCell(r, c, isHighlighted: r == 2 && c == 3),
+                                      ),
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '⋯',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: JuiceTheme.parchmentDark.withValues(alpha: 0.4),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            // Ellipsis row
+                            Row(
+                              children: [
+                                for (int c = 1; c <= 5; c++)
+                                  Container(
+                                    width: 20,
+                                    height: 20,
+                                    margin: const EdgeInsets.only(right: 2),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '⋮',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: JuiceTheme.parchmentDark.withValues(alpha: 0.4),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Dice indicators
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: JuiceTheme.rust.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: JuiceTheme.rust.withValues(alpha: 0.4)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.casino, size: 12, color: JuiceTheme.rust),
+                              const SizedBox(width: 4),
+                              Text(
+                                '1d10 → Row',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontFamily: JuiceTheme.fontFamilyMono,
+                                  fontWeight: FontWeight.bold,
+                                  color: JuiceTheme.rust,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: JuiceTheme.info.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: JuiceTheme.info.withValues(alpha: 0.4)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.casino, size: 12, color: JuiceTheme.info),
+                              const SizedBox(width: 4),
+                              Text(
+                                '1d6 → Col',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontFamily: JuiceTheme.fontFamilyMono,
+                                  fontWeight: FontWeight.bold,
+                                  color: JuiceTheme.info,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              
+              // Usage hints section
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.inkDark.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.lightbulb_outline, size: 14, color: JuiceTheme.gold),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Uses',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: JuiceTheme.fontFamilySerif,
+                            color: JuiceTheme.gold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    _buildUseCase(Icons.swap_horiz, 'Alternative to word-based meaning tables'),
+                    _buildUseCase(Icons.visibility, 'Visual inspiration for scenes or encounters'),
+                    _buildUseCase(Icons.psychology, 'Interpret the symbol in your current context'),
+                    _buildUseCase(Icons.layers, 'Use multiple icons for complex situations'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              
+              // Roll button
+              InkWell(
+                onTap: () {
+                  final result = abstractIcons.generate();
+                  onRoll(result);
+                  Navigator.pop(context);
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        _iconColor,
+                        _iconColor.withValues(alpha: 0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _iconColor.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.auto_awesome, size: 20, color: JuiceTheme.inkDark),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Roll 1d10 + 1d6',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: JuiceTheme.fontFamilyMono,
+                          color: JuiceTheme.inkDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // Grid reference footer
+              Center(
+                child: Text(
+                  'Rows: 1-9, 0  •  Columns: 1-6',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    color: JuiceTheme.parchmentDark.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(
+            'Close',
+            style: TextStyle(color: _iconColor),
+          ),
         ),
       ],
     );
