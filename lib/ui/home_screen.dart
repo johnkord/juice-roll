@@ -6792,7 +6792,55 @@ class _WildernessDialogState extends State<_WildernessDialog> {
             children: [
               // Show current state if initialized
               if (isInitialized) ...[
-                _WildernessStateCard(state: state),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _WildernessStateCard(state: state)),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Reset Wilderness?'),
+                            content: const Text('This will clear the current wilderness state. You will need to initialize a new starting area.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  widget.wilderness.reset();
+                                  Navigator.pop(ctx);
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Wilderness state reset')),
+                                  );
+                                },
+                                child: const Text('Reset'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: JuiceTheme.sepia.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: JuiceTheme.sepia.withValues(alpha: 0.3)),
+                        ),
+                        child: Icon(
+                          Icons.refresh,
+                          size: 18,
+                          color: JuiceTheme.sepia.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
               ],
 
@@ -6824,7 +6872,7 @@ class _WildernessDialogState extends State<_WildernessDialog> {
                 ),
               ] else ...[
                 _WildernessActionButton(
-                  title: 'Transition to Next Hex',
+                  title: 'Transition to Next Area',
                   subtitle: 'Move to adjacent area (2dF env + 1dF type)',
                   icon: Icons.arrow_forward,
                   color: JuiceTheme.categoryExplore,

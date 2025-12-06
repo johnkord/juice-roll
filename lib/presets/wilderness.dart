@@ -139,6 +139,12 @@ class Wilderness {
   /// Get current state (null if not initialized)
   WildernessState? get state => _state;
 
+  /// Reset wilderness state to uninitialized
+  /// This allows the user to start fresh with a new wilderness exploration
+  void reset() {
+    _state = null;
+  }
+
   /// Initialize wilderness with a random starting environment
   WildernessAreaResult initializeRandom() {
     final envRoll = _rollEngine.rollDie(10);
@@ -193,7 +199,7 @@ class Wilderness {
     );
   }
 
-  /// Transition to a new hex using 2dF for environment + 1dF for type
+  /// Transition to a new area using 2dF for environment + 1dF for type
   /// This is the main method for wilderness exploration
   WildernessAreaResult transition() {
     if (_state == null) {

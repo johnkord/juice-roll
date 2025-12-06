@@ -33,10 +33,46 @@
   <link rel="manifest" href="manifest.json">
 
   <script>
-    // Check for service worker updates and reload when new version available
+    // Aggressive service worker update handling for reliable cache busting
     if ('serviceWorker' in navigator) {
+      // Reload when a new service worker takes control
+      let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
+      // On page load, check for updates and activate immediately
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            // Check for updates immediately
+            await registration.update();
+            
+            // If there's a waiting service worker, activate it immediately
+            if (registration.waiting) {
+              registration.waiting.postMessage('skipWaiting');
+            }
+            
+            // Listen for new service workers becoming available
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // New version available, activate it
+                    newWorker.postMessage('skipWaiting');
+                  }
+                });
+              }
+            });
+          }
+        } catch (e) {
+          console.log('Service worker update check failed:', e);
+        }
       });
     }
   </script>
