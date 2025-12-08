@@ -47,6 +47,8 @@ class SectionRenderer extends StatelessWidget {
         return _buildVisualLayout(sections);
       case ResultDisplayType.standard:
         return _buildStandardLayout(sections);
+      case ResultDisplayType.ironsworn:
+        return _buildIronswornLayout(sections);
     }
   }
 
@@ -481,6 +483,14 @@ class SectionRenderer extends StatelessWidget {
     }
     
     // Fallback if no image
+    return _buildStandardLayout(sections);
+  }
+
+  /// Ironsworn layout for action/progress/oracle results
+  Widget _buildIronswornLayout(List<ResultSection> sections) {
+    // Ironsworn results have action dice vs challenge dice, or oracle rolls
+    // For now, use standard layout which works well for Ironsworn
+    // The specialized displays are in ResultDisplayBuilder
     return _buildStandardLayout(sections);
   }
 

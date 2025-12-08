@@ -55,6 +55,15 @@ class HomeState {
   
   /// Wilderness exploration state
   final WildernessState? wildernessState;
+  
+  /// Dice dialog mode: 0 = Standard, 1 = Fate, 2 = Ironsworn
+  final int diceDialogMode;
+  
+  /// Ironsworn roll type: 'action', 'progress', 'oracle', 'yesno', 'cursed'
+  final String diceDialogIronswornRollType;
+  
+  /// Oracle die type: 6, 20, or 100
+  final int diceDialogOracleDieType;
 
   const HomeState({
     this.history = const [],
@@ -65,6 +74,9 @@ class HomeState {
     this.isDungeonTwoPassMode = false,
     this.twoPassHasFirstDoubles = false,
     this.wildernessState,
+    this.diceDialogMode = 0,
+    this.diceDialogIronswornRollType = 'action',
+    this.diceDialogOracleDieType = 100,
   });
 
   /// Create a copy with updated fields
@@ -79,6 +91,9 @@ class HomeState {
     bool? twoPassHasFirstDoubles,
     WildernessState? wildernessState,
     bool clearWildernessState = false,
+    int? diceDialogMode,
+    String? diceDialogIronswornRollType,
+    int? diceDialogOracleDieType,
   }) {
     return HomeState(
       history: history ?? this.history,
@@ -89,6 +104,9 @@ class HomeState {
       isDungeonTwoPassMode: isDungeonTwoPassMode ?? this.isDungeonTwoPassMode,
       twoPassHasFirstDoubles: twoPassHasFirstDoubles ?? this.twoPassHasFirstDoubles,
       wildernessState: clearWildernessState ? null : (wildernessState ?? this.wildernessState),
+      diceDialogMode: diceDialogMode ?? this.diceDialogMode,
+      diceDialogIronswornRollType: diceDialogIronswornRollType ?? this.diceDialogIronswornRollType,
+      diceDialogOracleDieType: diceDialogOracleDieType ?? this.diceDialogOracleDieType,
     );
   }
 
@@ -103,7 +121,10 @@ class HomeState {
         other.isDungeonEntering == isDungeonEntering &&
         other.isDungeonTwoPassMode == isDungeonTwoPassMode &&
         other.twoPassHasFirstDoubles == twoPassHasFirstDoubles &&
-        other.wildernessState == wildernessState;
+        other.wildernessState == wildernessState &&
+        other.diceDialogMode == diceDialogMode &&
+        other.diceDialogIronswornRollType == diceDialogIronswornRollType &&
+        other.diceDialogOracleDieType == diceDialogOracleDieType;
   }
 
   @override
@@ -117,6 +138,9 @@ class HomeState {
       isDungeonTwoPassMode,
       twoPassHasFirstDoubles,
       wildernessState,
+      diceDialogMode,
+      diceDialogIronswornRollType,
+      diceDialogOracleDieType,
     );
   }
 }
@@ -211,6 +235,9 @@ class HomeStateNotifier extends ChangeNotifier {
         isDungeonTwoPassMode: session.dungeonIsTwoPassMode,
         twoPassHasFirstDoubles: session.twoPassHasFirstDoubles,
         wildernessState: wildernessState,
+        diceDialogMode: session.diceDialogMode,
+        diceDialogIronswornRollType: session.diceDialogIronswornRollType,
+        diceDialogOracleDieType: session.diceDialogOracleDieType,
       ));
     } catch (e) {
       _updateState(_state.copyWith(isLoading: false));
@@ -252,6 +279,9 @@ class HomeStateNotifier extends ChangeNotifier {
       isDungeonTwoPassMode: fullSession.dungeonIsTwoPassMode,
       twoPassHasFirstDoubles: fullSession.twoPassHasFirstDoubles,
       wildernessState: wildernessState,
+      diceDialogMode: fullSession.diceDialogMode,
+      diceDialogIronswornRollType: fullSession.diceDialogIronswornRollType,
+      diceDialogOracleDieType: fullSession.diceDialogOracleDieType,
     ));
   }
 
@@ -471,6 +501,22 @@ class HomeStateNotifier extends ChangeNotifier {
     addToHistory(result);
   }
 
+  // ========== Dice Dialog State Management ==========
+
+  /// Update dice dialog state (mode, roll type, die type)
+  void updateDiceDialogState({
+    int? mode,
+    String? ironswornRollType,
+    int? oracleDieType,
+  }) {
+    _updateState(_state.copyWith(
+      diceDialogMode: mode,
+      diceDialogIronswornRollType: ironswornRollType,
+      diceDialogOracleDieType: oracleDieType,
+    ));
+    _saveSessionState();
+  }
+
   // ========== Private Helpers ==========
 
   void _updateState(HomeState newState) {
@@ -497,6 +543,11 @@ class HomeStateNotifier extends ChangeNotifier {
       _state.currentSession!.wildernessTypeRow = null;
       _state.currentSession!.wildernessIsLost = false;
     }
+    
+    // Save dice dialog state
+    _state.currentSession!.diceDialogMode = _state.diceDialogMode;
+    _state.currentSession!.diceDialogIronswornRollType = _state.diceDialogIronswornRollType;
+    _state.currentSession!.diceDialogOracleDieType = _state.diceDialogOracleDieType;
     
     await _sessionService.saveSession(_state.currentSession!);
   }

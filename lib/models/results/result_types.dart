@@ -23,6 +23,9 @@ enum ResultDisplayType {
   
   /// Has image/icon display (Abstract Icons)
   visual,
+  
+  /// Ironsworn-style action/progress roll (1d6 action vs 2d10 challenge)
+  ironsworn,
 }
 
 /// A displayable section within a result.

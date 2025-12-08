@@ -264,11 +264,16 @@ class _HomeScreenState extends State<HomeScreen> {
   // ========== Oracle Dialogs ==========
 
   void _showDiceRollDialog() {
+    final state = _notifier.state;
     showDialog(
       context: context,
       builder: (context) => DiceRollDialog(
         rollEngine: _notifier.rollEngine,
         onRoll: _notifier.addToHistory,
+        initialDiceMode: state.diceDialogMode,
+        initialIronswornRollType: state.diceDialogIronswornRollType,
+        initialOracleDieType: state.diceDialogOracleDieType,
+        onStateChanged: _notifier.updateDiceDialogState,
       ),
     );
   }

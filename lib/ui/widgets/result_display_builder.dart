@@ -33,6 +33,7 @@ import '../../presets/abstract_icons.dart';
 import '../../presets/dungeon_generator.dart';
 import '../../presets/extended_npc_conversation.dart';
 import '../../presets/name_generator.dart';
+import '../../models/results/ironsworn_result.dart';
 import '../theme/juice_theme.dart';
 
 /// Centralized result display builder.
@@ -163,6 +164,18 @@ class ResultDisplayBuilder {
       return _buildDialogTopicDisplay(result);
     } else if (result is NameResult) {
       return _buildNameResultDisplay(result);
+    } else if (result is IronswornActionResult) {
+      return _buildIronswornActionDisplay(result);
+    } else if (result is IronswornProgressResult) {
+      return _buildIronswornProgressDisplay(result);
+    } else if (result is IronswornOracleResult) {
+      return _buildIronswornOracleDisplay(result);
+    } else if (result is IronswornYesNoResult) {
+      return _buildIronswornYesNoDisplay(result);
+    } else if (result is IronswornCursedOracleResult) {
+      return _buildIronswornCursedOracleDisplay(result);
+    } else if (result is IronswornMomentumBurnResult) {
+      return _buildIronswornMomentumBurnDisplay(result);
     }
 
     // Handle standard dice roll types
@@ -5980,5 +5993,953 @@ class ResultDisplayBuilder {
         ],
       ],
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IRONSWORN / STARFORGED DISPLAYS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static const _ironswornColor = Color(0xFF5C6BC0); // Indigo for Ironsworn
+
+  Widget _buildIronswornActionDisplay(IronswornActionResult result) {
+    final outcomeColor = result.outcome == IronswornOutcome.strongHit
+        ? JuiceTheme.success
+        : result.outcome == IronswornOutcome.weakHit
+            ? JuiceTheme.gold
+            : JuiceTheme.danger;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dice row: action die vs challenge dice
+        Row(
+          children: [
+            // Action Die
+            _buildIronswornDieBox(
+              label: '1d6',
+              value: result.actionDie,
+              color: _ironswornColor,
+            ),
+            const SizedBox(width: 6),
+            // Stat + Adds if present
+            if (result.statBonus > 0 || result.adds > 0) ...[
+              Text(
+                '+${result.statBonus + result.adds}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.parchment,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            // Action Score
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _ironswornColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: _ironswornColor.withOpacity(0.4)),
+              ),
+              child: Text(
+                '= ${result.actionScore}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: _ironswornColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // "vs" divider
+            Text(
+              'vs',
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Challenge Dice
+            _buildIronswornDieBox(
+              label: 'd10',
+              value: result.challengeDice[0],
+              color: _getChallengeColor(result.actionScore, result.challengeDice[0]),
+              isBeaten: result.actionScore > result.challengeDice[0],
+            ),
+            const SizedBox(width: 6),
+            _buildIronswornDieBox(
+              label: 'd10',
+              value: result.challengeDice[1],
+              color: _getChallengeColor(result.actionScore, result.challengeDice[1]),
+              isBeaten: result.actionScore > result.challengeDice[1],
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Outcome row
+        Row(
+          children: [
+            // Outcome chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    outcomeColor.withOpacity(0.3),
+                    outcomeColor.withOpacity(0.15),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: outcomeColor.withOpacity(0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    result.outcome == IronswornOutcome.strongHit
+                        ? Icons.check_circle
+                        : result.outcome == IronswornOutcome.weakHit
+                            ? Icons.remove_circle
+                            : Icons.cancel,
+                    size: 18,
+                    color: outcomeColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    result.outcome.displayText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: outcomeColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Match indicator
+            if (result.isMatch) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (result.outcome.isSuccess 
+                      ? JuiceTheme.success 
+                      : JuiceTheme.danger).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: (result.outcome.isSuccess 
+                        ? JuiceTheme.success 
+                        : JuiceTheme.danger).withOpacity(0.4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: result.outcome.isSuccess 
+                          ? JuiceTheme.success 
+                          : JuiceTheme.danger,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Match!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: result.outcome.isSuccess 
+                            ? JuiceTheme.success 
+                            : JuiceTheme.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIronswornProgressDisplay(IronswornProgressResult result) {
+    final outcomeColor = result.outcome == IronswornOutcome.strongHit
+        ? JuiceTheme.success
+        : result.outcome == IronswornOutcome.weakHit
+            ? JuiceTheme.gold
+            : JuiceTheme.danger;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Progress vs Challenge row
+        Row(
+          children: [
+            // Progress Score
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _ironswornColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _ironswornColor.withOpacity(0.4)),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Progress',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: _ironswornColor.withOpacity(0.8),
+                    ),
+                  ),
+                  Text(
+                    '${result.progressScore}',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: _ironswornColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // "vs" divider
+            Text(
+              'vs',
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Challenge Dice
+            _buildIronswornDieBox(
+              label: 'd10',
+              value: result.challengeDice[0],
+              color: _getChallengeColor(result.progressScore, result.challengeDice[0]),
+              isBeaten: result.progressScore > result.challengeDice[0],
+            ),
+            const SizedBox(width: 6),
+            _buildIronswornDieBox(
+              label: 'd10',
+              value: result.challengeDice[1],
+              color: _getChallengeColor(result.progressScore, result.challengeDice[1]),
+              isBeaten: result.progressScore > result.challengeDice[1],
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Outcome row
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    outcomeColor.withOpacity(0.3),
+                    outcomeColor.withOpacity(0.15),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: outcomeColor.withOpacity(0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    result.outcome == IronswornOutcome.strongHit
+                        ? Icons.check_circle
+                        : result.outcome == IronswornOutcome.weakHit
+                            ? Icons.remove_circle
+                            : Icons.cancel,
+                    size: 18,
+                    color: outcomeColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    result.outcome.displayText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: outcomeColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (result.isMatch) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (result.outcome.isSuccess 
+                      ? JuiceTheme.success 
+                      : JuiceTheme.danger).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: (result.outcome.isSuccess 
+                        ? JuiceTheme.success 
+                        : JuiceTheme.danger).withOpacity(0.4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: result.outcome.isSuccess 
+                          ? JuiceTheme.success 
+                          : JuiceTheme.danger,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Match!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: result.outcome.isSuccess 
+                            ? JuiceTheme.success 
+                            : JuiceTheme.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIronswornOracleDisplay(IronswornOracleResult result) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: _ironswornColor.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _ironswornColor.withOpacity(0.4)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.casino,
+                size: 20,
+                color: _ironswornColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '1d${result.dieType}:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: _ironswornColor.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${result.oracleRoll}',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: _ironswornColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (result.oracleTable != null) ...[
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              result.oracleTable!,
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildIronswornYesNoDisplay(IronswornYesNoResult result) {
+    final isYes = result.isYes;
+    final answerColor = isYes ? JuiceTheme.success : JuiceTheme.danger;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Roll display
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _ironswornColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _ironswornColor.withOpacity(0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'd100:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _ironswornColor.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${result.roll}',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: _ironswornColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Odds indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.mystic.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                result.odds.displayText,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: JuiceTheme.mystic,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Threshold
+            Text(
+              '≥${result.odds.yesThreshold}',
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: JuiceTheme.fontFamilyMono,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Answer display
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                answerColor.withOpacity(0.25),
+                answerColor.withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: answerColor.withOpacity(0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isYes ? Icons.check_circle : Icons.cancel,
+                size: 22,
+                color: answerColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isYes ? 'YES' : 'NO',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: answerColor,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Match indicator for extreme result
+        if (result.isMatch) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: JuiceTheme.gold.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: JuiceTheme.gold.withOpacity(0.4)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  size: 14,
+                  color: JuiceTheme.gold,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Extreme Result!',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.gold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildIronswornCursedOracleDisplay(IronswornCursedOracleResult result) {
+    final cursedColor = const Color(0xFF9C27B0); // Purple for cursed
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Oracle roll
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _ironswornColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _ironswornColor.withOpacity(0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'd100:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _ironswornColor.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${result.oracleRoll}',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: _ironswornColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Cursed die
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: (result.isCursed 
+                    ? cursedColor 
+                    : JuiceTheme.parchmentDark).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: (result.isCursed 
+                      ? cursedColor 
+                      : JuiceTheme.parchmentDark).withOpacity(0.4),
+                  width: result.isCursed ? 2 : 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    result.isCursed ? Icons.warning_amber : Icons.shield_outlined,
+                    size: 16,
+                    color: result.isCursed 
+                        ? cursedColor 
+                        : JuiceTheme.parchmentDark,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Cursed d10:',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: (result.isCursed 
+                          ? cursedColor 
+                          : JuiceTheme.parchmentDark).withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${result.cursedDie}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: result.isCursed 
+                          ? cursedColor 
+                          : JuiceTheme.parchmentDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        // Curse triggered banner
+        if (result.isCursed) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  cursedColor.withOpacity(0.25),
+                  cursedColor.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: cursedColor.withOpacity(0.5)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber,
+                  size: 22,
+                  color: cursedColor,
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CURSE TRIGGERED!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: cursedColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      'Draw from curse deck or consult curse table',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildIronswornMomentumBurnDisplay(IronswornMomentumBurnResult result) {
+    final outcomeColor = result.burnedOutcome == IronswornOutcome.strongHit
+        ? JuiceTheme.success
+        : result.burnedOutcome == IronswornOutcome.weakHit
+            ? JuiceTheme.gold
+            : JuiceTheme.danger;
+
+    final originalOutcome = result.originalOutcome;
+    final originalColor = originalOutcome == IronswornOutcome.strongHit
+        ? JuiceTheme.success
+        : originalOutcome == IronswornOutcome.weakHit
+            ? JuiceTheme.gold
+            : JuiceTheme.danger;
+    
+    final improved = result.wasUpgraded;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Original roll info
+        Row(
+          children: [
+            _buildIronswornDieBox(
+              label: '1d6',
+              value: result.actionDie,
+              color: JuiceTheme.parchmentDark.withOpacity(0.6),
+            ),
+            const SizedBox(width: 6),
+            if (result.statBonus > 0 || result.adds > 0) ...[
+              Text(
+                '+${result.statBonus + result.adds}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            // Original action score (struck through)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: originalColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '${result.originalActionScore}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Arrow to momentum
+            Icon(
+              Icons.arrow_forward,
+              size: 16,
+              color: JuiceTheme.gold,
+            ),
+            const SizedBox(width: 10),
+            // Momentum value (the new action score)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: JuiceTheme.gold.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.gold.withOpacity(0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.local_fire_department,
+                    size: 16,
+                    color: JuiceTheme.gold,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${result.momentumValue}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: JuiceTheme.gold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'vs',
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: JuiceTheme.parchmentDark,
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Challenge Dice
+            _buildIronswornDieBox(
+              label: 'd10',
+              value: result.challengeDice[0],
+              color: _getChallengeColor(result.momentumValue, result.challengeDice[0]),
+              isBeaten: result.momentumValue > result.challengeDice[0],
+            ),
+            const SizedBox(width: 6),
+            _buildIronswornDieBox(
+              label: 'd10',
+              value: result.challengeDice[1],
+              color: _getChallengeColor(result.momentumValue, result.challengeDice[1]),
+              isBeaten: result.momentumValue > result.challengeDice[1],
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Outcome row with improvement indicator
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    outcomeColor.withOpacity(0.3),
+                    outcomeColor.withOpacity(0.15),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: outcomeColor.withOpacity(0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    result.burnedOutcome == IronswornOutcome.strongHit
+                        ? Icons.check_circle
+                        : result.burnedOutcome == IronswornOutcome.weakHit
+                            ? Icons.remove_circle
+                            : Icons.cancel,
+                    size: 18,
+                    color: outcomeColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    result.burnedOutcome.displayText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: outcomeColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (improved) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: JuiceTheme.gold.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.gold.withOpacity(0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.trending_up,
+                      size: 14,
+                      color: JuiceTheme.gold,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Burned!',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.gold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (result.isMatch) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (result.burnedOutcome.isSuccess 
+                      ? JuiceTheme.success 
+                      : JuiceTheme.danger).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: (result.burnedOutcome.isSuccess 
+                        ? JuiceTheme.success 
+                        : JuiceTheme.danger).withOpacity(0.4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: result.burnedOutcome.isSuccess 
+                          ? JuiceTheme.success 
+                          : JuiceTheme.danger,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Match!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: result.burnedOutcome.isSuccess 
+                            ? JuiceTheme.success 
+                            : JuiceTheme.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIronswornDieBox({
+    required String label,
+    required int value,
+    required Color color,
+    bool isBeaten = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              color: color.withOpacity(0.7),
+            ),
+          ),
+          Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilyMono,
+              color: color,
+              decoration: isBeaten ? TextDecoration.lineThrough : null,
+              decorationColor: color.withOpacity(0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getChallengeColor(int actionScore, int challengeValue) {
+    return actionScore > challengeValue 
+        ? JuiceTheme.success.withOpacity(0.8)  // Beaten
+        : JuiceTheme.danger.withOpacity(0.8);  // Not beaten
   }
 }

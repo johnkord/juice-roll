@@ -1,5 +1,6 @@
 import '../roll_result.dart';
 import 'table_lookup_result.dart';
+import 'ironsworn_result.dart';
 
 // Import oracle result types from preset files
 import '../../presets/fate_check.dart' show FateCheckResult;
@@ -88,6 +89,16 @@ class ResultRegistry {
     register('FocusResult', FocusResult.fromJson);
     register('DiscoverMeaningResult', DiscoverMeaningResult.fromJson);
     register('InterruptPlotPointResult', InterruptPlotPointResult.fromJson);
+    
+    // =========================================================================
+    // IRONSWORN/STARFORGED RESULTS
+    // =========================================================================
+    register('IronswornActionResult', IronswornActionResult.fromJson);
+    register('IronswornProgressResult', IronswornProgressResult.fromJson);
+    register('IronswornOracleResult', IronswornOracleResult.fromJson);
+    register('IronswornYesNoResult', IronswornYesNoResult.fromJson);
+    register('IronswornCursedOracleResult', IronswornCursedOracleResult.fromJson);
+    register('IronswornMomentumBurnResult', IronswornMomentumBurnResult.fromJson);
     
     // Note: Additional result types can be registered as needed.
     // For comprehensive coverage, see RollResultFactory which registers all types.

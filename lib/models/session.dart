@@ -17,6 +17,11 @@ class Session {
   bool dungeonIsTwoPassMode;
   bool twoPassHasFirstDoubles;
   
+  // Dice dialog state
+  int diceDialogMode; // 0 = Standard, 1 = Fate, 2 = Ironsworn
+  String diceDialogIronswornRollType; // 'action', 'progress', 'oracle', 'yesno', 'cursed'
+  int diceDialogOracleDieType; // 6, 20, or 100
+  
   // Session settings
   int? maxRollsPerSession; // null = unlimited history
   
@@ -35,6 +40,9 @@ class Session {
     this.dungeonIsEntering = true,
     this.dungeonIsTwoPassMode = false,
     this.twoPassHasFirstDoubles = false,
+    this.diceDialogMode = 0,
+    this.diceDialogIronswornRollType = 'action',
+    this.diceDialogOracleDieType = 100,
     this.maxRollsPerSession,
     List<Map<String, dynamic>>? history,
   }) : history = history ?? [];
@@ -66,6 +74,9 @@ class Session {
     bool? dungeonIsEntering,
     bool? dungeonIsTwoPassMode,
     bool? twoPassHasFirstDoubles,
+    int? diceDialogMode,
+    String? diceDialogIronswornRollType,
+    int? diceDialogOracleDieType,
     int? maxRollsPerSession,
     bool clearMaxRollsPerSession = false,
     List<Map<String, dynamic>>? history,
@@ -82,6 +93,9 @@ class Session {
       dungeonIsEntering: dungeonIsEntering ?? this.dungeonIsEntering,
       dungeonIsTwoPassMode: dungeonIsTwoPassMode ?? this.dungeonIsTwoPassMode,
       twoPassHasFirstDoubles: twoPassHasFirstDoubles ?? this.twoPassHasFirstDoubles,
+      diceDialogMode: diceDialogMode ?? this.diceDialogMode,
+      diceDialogIronswornRollType: diceDialogIronswornRollType ?? this.diceDialogIronswornRollType,
+      diceDialogOracleDieType: diceDialogOracleDieType ?? this.diceDialogOracleDieType,
       maxRollsPerSession: clearMaxRollsPerSession ? null : (maxRollsPerSession ?? this.maxRollsPerSession),
       history: history ?? List<Map<String, dynamic>>.from(this.history),
     );
@@ -99,6 +113,9 @@ class Session {
     'dungeonIsEntering': dungeonIsEntering,
     'dungeonIsTwoPassMode': dungeonIsTwoPassMode,
     'twoPassHasFirstDoubles': twoPassHasFirstDoubles,
+    'diceDialogMode': diceDialogMode,
+    'diceDialogIronswornRollType': diceDialogIronswornRollType,
+    'diceDialogOracleDieType': diceDialogOracleDieType,
     'maxRollsPerSession': maxRollsPerSession,
     'history': history,
   };
@@ -116,6 +133,9 @@ class Session {
       dungeonIsEntering: json['dungeonIsEntering'] as bool? ?? true,
       dungeonIsTwoPassMode: json['dungeonIsTwoPassMode'] as bool? ?? false,
       twoPassHasFirstDoubles: json['twoPassHasFirstDoubles'] as bool? ?? false,
+      diceDialogMode: json['diceDialogMode'] as int? ?? 0,
+      diceDialogIronswornRollType: json['diceDialogIronswornRollType'] as String? ?? 'action',
+      diceDialogOracleDieType: json['diceDialogOracleDieType'] as int? ?? 100,
       maxRollsPerSession: json['maxRollsPerSession'] as int?,
       history: (json['history'] as List<dynamic>?)
           ?.map((e) => Map<String, dynamic>.from(e as Map))
@@ -188,6 +208,9 @@ class Session {
         dungeonIsEntering: imported.dungeonIsEntering,
         dungeonIsTwoPassMode: imported.dungeonIsTwoPassMode,
         twoPassHasFirstDoubles: imported.twoPassHasFirstDoubles,
+        diceDialogMode: imported.diceDialogMode,
+        diceDialogIronswornRollType: imported.diceDialogIronswornRollType,
+        diceDialogOracleDieType: imported.diceDialogOracleDieType,
         maxRollsPerSession: imported.maxRollsPerSession,
         history: imported.history,
       );
@@ -244,6 +267,9 @@ class SessionExport {
           dungeonIsEntering: imported.dungeonIsEntering,
           dungeonIsTwoPassMode: imported.dungeonIsTwoPassMode,
           twoPassHasFirstDoubles: imported.twoPassHasFirstDoubles,
+          diceDialogMode: imported.diceDialogMode,
+          diceDialogIronswornRollType: imported.diceDialogIronswornRollType,
+          diceDialogOracleDieType: imported.diceDialogOracleDieType,
           maxRollsPerSession: imported.maxRollsPerSession,
           history: imported.history,
         );

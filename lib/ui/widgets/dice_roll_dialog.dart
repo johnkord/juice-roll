@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/roll_engine.dart';
 import '../../models/roll_result.dart';
+import '../../models/results/ironsworn_result.dart';
 import '../theme/juice_theme.dart';
 
 /// Dialog for rolling custom dice (NdX, Fate, advantage/disadvantage, skewed).
@@ -14,11 +15,27 @@ import '../theme/juice_theme.dart';
 class DiceRollDialog extends StatefulWidget {
   final RollEngine rollEngine;
   final void Function(RollResult) onRoll;
+  
+  /// Initial dice mode: 0 = Standard, 1 = Fate, 2 = Ironsworn
+  final int initialDiceMode;
+  
+  /// Initial Ironsworn roll type: 'action', 'progress', 'oracle', 'yesno', 'cursed'
+  final String initialIronswornRollType;
+  
+  /// Initial oracle die type: 6, 20, or 100
+  final int initialOracleDieType;
+  
+  /// Callback when dice mode or roll type changes (for persistence)
+  final void Function({int? mode, String? ironswornRollType, int? oracleDieType})? onStateChanged;
 
   const DiceRollDialog({
     super.key,
     required this.rollEngine,
     required this.onRoll,
+    this.initialDiceMode = 0,
+    this.initialIronswornRollType = 'action',
+    this.initialOracleDieType = 100,
+    this.onStateChanged,
   });
 
   @override
@@ -30,6 +47,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   static const _primaryColor = JuiceTheme.gold;
   static const _fateColor = JuiceTheme.mystic;
   static const _standardColor = JuiceTheme.rust;
+  static const _ironswornColor = Color(0xFF5C6BC0); // Indigo for Ironsworn
   static const _successColor = JuiceTheme.success;
   static const _dangerColor = JuiceTheme.danger;
 
@@ -39,7 +57,41 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   int _skew = 0;
   bool _advantage = false;
   bool _disadvantage = false;
-  bool _useFateDice = false;
+  
+  // Dice mode: 0 = Standard, 1 = Fate, 2 = Ironsworn
+  late int _diceMode;
+  
+  // Ironsworn-specific state
+  int _ironswornStat = 0;
+  int _ironswornAdds = 0;
+  int _ironswornProgress = 5;
+  late String _ironswornRollType; // 'action', 'progress', 'oracle', 'yesno', 'cursed'
+  
+  // Oracle type selection
+  late int _oracleDieType; // 6, 20, or 100 for table oracles
+  IronswornOdds _yesNoOdds = IronswornOdds.likely;
+  
+  // Momentum burn for action rolls
+  int _momentum = 0;
+  bool _useMomentumBurn = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Initialize from widget properties (persisted state)
+    _diceMode = widget.initialDiceMode;
+    _ironswornRollType = widget.initialIronswornRollType;
+    _oracleDieType = widget.initialOracleDieType;
+  }
+  
+  /// Notify parent of state changes for persistence
+  void _notifyStateChanged() {
+    widget.onStateChanged?.call(
+      mode: _diceMode,
+      ironswornRollType: _ironswornRollType,
+      oracleDieType: _oracleDieType,
+    );
+  }
 
   // Quick preset definitions
   static const List<_DicePreset> _standardPresets = [
@@ -57,9 +109,15 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
     _DicePreset('1dF', 1, 0, 'Single Fate die'),
   ];
 
+  // Helper to check current mode
+  bool get _useFateDice => _diceMode == 1;
+  bool get _useIronsworn => _diceMode == 2;
+
   @override
   Widget build(BuildContext context) {
-    final themeColor = _useFateDice ? _fateColor : _standardColor;
+    final themeColor = _useIronsworn 
+        ? _ironswornColor 
+        : (_useFateDice ? _fateColor : _standardColor);
     
     return Dialog(
       backgroundColor: JuiceTheme.surface,
@@ -152,7 +210,9 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              _useFateDice ? Icons.auto_awesome : Icons.casino,
+              _useIronsworn 
+                  ? Icons.shield_outlined 
+                  : (_useFateDice ? Icons.auto_awesome : Icons.casino),
               color: themeColor,
               size: 24,
             ),
@@ -172,7 +232,9 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                   ),
                 ),
                 Text(
-                  _useFateDice ? 'Fate dice for oracle checks' : 'Standard polyhedral dice',
+                  _useIronsworn 
+                      ? 'Ironsworn/Starforged dice' 
+                      : (_useFateDice ? 'Fate dice for oracle checks' : 'Standard polyhedral dice'),
                   style: TextStyle(
                     fontSize: 12,
                     color: JuiceTheme.parchmentDark,
@@ -204,25 +266,45 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             child: _buildToggleOption(
               'Standard',
               Icons.casino,
-              !_useFateDice,
+              _diceMode == 0,
               _standardColor,
-              () => setState(() {
-                _useFateDice = false;
-                _diceCount = 2;
-                _diceSides = 6;
-              }),
+              () {
+                setState(() {
+                  _diceMode = 0;
+                  _diceCount = 2;
+                  _diceSides = 6;
+                });
+                _notifyStateChanged();
+              },
             ),
           ),
           Expanded(
             child: _buildToggleOption(
               'Fate',
               Icons.auto_awesome,
-              _useFateDice,
+              _diceMode == 1,
               _fateColor,
-              () => setState(() {
-                _useFateDice = true;
-                _diceCount = 2; // Default to 2dF for Juice Fate Check
-              }),
+              () {
+                setState(() {
+                  _diceMode = 1;
+                  _diceCount = 2; // Default to 2dF for Juice Fate Check
+                });
+                _notifyStateChanged();
+              },
+            ),
+          ),
+          Expanded(
+            child: _buildToggleOption(
+              'Ironsworn',
+              Icons.shield_outlined,
+              _diceMode == 2,
+              _ironswornColor,
+              () {
+                setState(() {
+                  _diceMode = 2;
+                });
+                _notifyStateChanged();
+              },
             ),
           ),
         ],
@@ -298,12 +380,84 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   }
 
   Widget _buildQuickPresets() {
+    // For Ironsworn, we show roll type selection instead of dice presets
+    if (_useIronsworn) {
+      return _buildIronswornRollTypeSelector();
+    }
+    
     final presets = _useFateDice ? _fatePresets : _standardPresets;
     
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: presets.map((preset) => _buildPresetChip(preset)).toList(),
+    );
+  }
+
+  Widget _buildIronswornRollTypeSelector() {
+    final rollTypes = [
+      ('action', 'Action', '1d6 + stat vs 2d10'),
+      ('progress', 'Progress', 'Progress vs 2d10'),
+      ('oracle', 'Oracle', 'd6/d20/d100 lookup'),
+      ('yesno', 'Yes/No', 'Ask the Oracle'),
+      ('cursed', 'Cursed', 'Sundered Isles d10'),
+    ];
+    
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: rollTypes.map((type) {
+        final (value, label, desc) = type;
+        final isSelected = _ironswornRollType == value;
+        
+        return Tooltip(
+          message: desc,
+          child: InkWell(
+            onTap: () {
+              setState(() => _ironswornRollType = value);
+              _notifyStateChanged();
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: [
+                          _ironswornColor.withOpacity(0.3),
+                          _ironswornColor.withOpacity(0.15),
+                        ],
+                      )
+                    : null,
+                color: isSelected ? null : JuiceTheme.ink.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isSelected ? _ironswornColor : JuiceTheme.parchmentDark.withOpacity(0.3),
+                  width: isSelected ? 1.5 : 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: _ironswornColor.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  fontSize: 12,
+                  color: isSelected ? _ironswornColor : JuiceTheme.parchment,
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -379,7 +533,10 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       ),
       child: Column(
         children: [
-          if (!_useFateDice) ...[
+          if (_useIronsworn) ...[
+            // Ironsworn configuration
+            _buildIronswornConfiguration(themeColor),
+          ] else if (!_useFateDice) ...[
             // Dice Count & Sides Row
             Row(
               children: [
@@ -411,6 +568,10 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             // Advantage/Disadvantage
             const SizedBox(height: 12),
             _buildAdvantageControl(),
+            
+            // Modifier (standard mode)
+            const SizedBox(height: 12),
+            _buildModifierControl(themeColor),
           ] else ...[
             // Fate Dice Count
             _buildNumberControl(
@@ -428,13 +589,416 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               'Juice uses 2dF for Fate Checks.',
               color: _fateColor,
             ),
+            
+            // Modifier (fate mode)
+            const SizedBox(height: 12),
+            _buildModifierControl(themeColor),
           ],
-          
-          // Modifier (both modes)
-          const SizedBox(height: 12),
-          _buildModifierControl(themeColor),
         ],
       ),
+    );
+  }
+
+  Widget _buildIronswornConfiguration(Color themeColor) {
+    switch (_ironswornRollType) {
+      case 'action':
+        return _buildIronswornActionConfig(themeColor);
+      case 'progress':
+        return _buildIronswornProgressConfig(themeColor);
+      case 'oracle':
+        return _buildIronswornTableOracleConfig(themeColor);
+      case 'yesno':
+        return _buildIronswornYesNoConfig(themeColor);
+      case 'cursed':
+        return _buildIronswornCursedConfig(themeColor);
+      default:
+        return _buildIronswornActionConfig(themeColor);
+    }
+  }
+
+  Widget _buildIronswornActionConfig(Color themeColor) {
+    return Column(
+      children: [
+        // Stat and Adds row
+        Row(
+          children: [
+            Expanded(
+              child: _buildNumberControl(
+                label: 'Stat',
+                value: _ironswornStat,
+                min: 0,
+                max: 5,
+                color: themeColor,
+                onChanged: (v) => setState(() => _ironswornStat = v),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildNumberControl(
+                label: 'Adds',
+                value: _ironswornAdds,
+                min: 0,
+                max: 10,
+                color: themeColor,
+                onChanged: (v) => setState(() => _ironswornAdds = v),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Momentum burn option
+        _buildMomentumBurnControl(themeColor),
+        const SizedBox(height: 12),
+        _buildInfoBox(
+          'Roll 1d6 + Stat + Adds vs 2d10 challenge dice.\n'
+          '• Strong Hit: Beat both dice\n'
+          '• Weak Hit: Beat one die\n'
+          '• Miss: Beat neither\n'
+          '• Match: Both challenge dice show same value',
+          color: themeColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMomentumBurnControl(Color themeColor) {
+    final momentumColor = _useMomentumBurn ? JuiceTheme.gold : JuiceTheme.parchmentDark;
+    
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: _useMomentumBurn 
+            ? JuiceTheme.gold.withOpacity(0.1) 
+            : JuiceTheme.ink.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: momentumColor.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              InkWell(
+                onTap: () => setState(() => _useMomentumBurn = !_useMomentumBurn),
+                borderRadius: BorderRadius.circular(4),
+                child: Row(
+                  children: [
+                    Icon(
+                      _useMomentumBurn 
+                          ? Icons.check_box 
+                          : Icons.check_box_outline_blank,
+                      size: 20,
+                      color: momentumColor,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Momentum Burn',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: momentumColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              if (_useMomentumBurn) ...[
+                _buildControlButton(
+                  Icons.remove,
+                  _momentum > -6 ? () => setState(() => _momentum--) : null,
+                  momentumColor,
+                ),
+                Container(
+                  constraints: const BoxConstraints(minWidth: 36),
+                  child: Center(
+                    child: Text(
+                      '$_momentum',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        color: momentumColor,
+                      ),
+                    ),
+                  ),
+                ),
+                _buildControlButton(
+                  Icons.add,
+                  _momentum < 10 ? () => setState(() => _momentum++) : null,
+                  momentumColor,
+                ),
+              ],
+            ],
+          ),
+          if (_useMomentumBurn) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Burn momentum to replace action score with momentum value.',
+              style: TextStyle(
+                fontSize: 10,
+                fontStyle: FontStyle.italic,
+                color: JuiceTheme.parchmentDark.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIronswornProgressConfig(Color themeColor) {
+    return Column(
+      children: [
+        _buildNumberControl(
+          label: 'Progress Score',
+          value: _ironswornProgress,
+          min: 0,
+          max: 10,
+          color: themeColor,
+          onChanged: (v) => setState(() => _ironswornProgress = v),
+        ),
+        const SizedBox(height: 12),
+        _buildInfoBox(
+          'Compare your progress score (0-10) vs 2d10 challenge dice.\n'
+          'Used for Fulfill Your Vow, Reach a Milestone, etc.\n'
+          '• Strong Hit: Beat both dice\n'
+          '• Weak Hit: Beat one die\n'
+          '• Miss: Beat neither',
+          color: themeColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIronswornTableOracleConfig(Color themeColor) {
+    final dieOptions = [
+      (6, 'd6', 'Simple oracles'),
+      (20, 'd20', 'Character oracles'),
+      (100, 'd100', 'Standard oracles'),
+    ];
+    
+    return Column(
+      children: [
+        // Die type selector
+        Row(
+          children: [
+            Text(
+              'Die Type',
+              style: TextStyle(
+                fontSize: 11,
+                color: JuiceTheme.parchmentDark,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: dieOptions.map((option) {
+            final (sides, label, desc) = option;
+            final isSelected = _oracleDieType == sides;
+            
+            return Tooltip(
+              message: desc,
+              child: InkWell(
+                onTap: () {
+                  setState(() => _oracleDieType = sides);
+                  _notifyStateChanged();
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? themeColor.withOpacity(0.2) 
+                        : JuiceTheme.ink.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected 
+                          ? themeColor 
+                          : JuiceTheme.parchmentDark.withOpacity(0.3),
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontSize: 14,
+                      color: isSelected ? themeColor : JuiceTheme.parchment,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+        _buildInfoBox(
+          'Roll for Ironsworn/Starforged oracle tables.\n'
+          '• d6: Simple result tables (1-6)\n'
+          '• d20: Character/creature oracles\n'
+          '• d100: Standard percentile oracles',
+          color: themeColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIronswornYesNoConfig(Color themeColor) {
+    final oddsOptions = [
+      (IronswornOdds.almostCertain, 'Almost Certain', '11+', JuiceTheme.success),
+      (IronswornOdds.likely, 'Likely', '26+', Color(0xFF8BC34A)),
+      (IronswornOdds.fiftyFifty, '50/50', '51+', JuiceTheme.gold),
+      (IronswornOdds.unlikely, 'Unlikely', '76+', JuiceTheme.juiceOrange),
+      (IronswornOdds.smallChance, 'Small Chance', '91+', JuiceTheme.danger),
+    ];
+    
+    return Column(
+      children: [
+        Text(
+          'Select Odds',
+          style: TextStyle(
+            fontSize: 11,
+            color: JuiceTheme.parchmentDark,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...oddsOptions.map((option) {
+          final (value, label, threshold, color) = option;
+          final isSelected = _yesNoOdds == value;
+          
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: InkWell(
+              onTap: () => setState(() => _yesNoOdds = value),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected 
+                      ? color.withOpacity(0.2) 
+                      : JuiceTheme.ink.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isSelected ? color : JuiceTheme.parchmentDark.withOpacity(0.3),
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected ? Icons.radio_button_on : Icons.radio_button_off,
+                      size: 18,
+                      color: isSelected ? color : JuiceTheme.parchmentDark,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 13,
+                          color: isSelected ? color : JuiceTheme.parchment,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Yes on $threshold',
+                        style: TextStyle(
+                          fontFamily: JuiceTheme.fontFamilyMono,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 8),
+        _buildInfoBox(
+          'Ask the Oracle a yes/no question.\n'
+          'Roll d100 and compare against the threshold based on odds.',
+          color: themeColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIronswornCursedConfig(Color themeColor) {
+    final cursedColor = const Color(0xFF9C27B0); // Purple for cursed
+    
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                cursedColor.withOpacity(0.15),
+                cursedColor.withOpacity(0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: cursedColor.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber, color: cursedColor, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sundered Isles',
+                      style: TextStyle(
+                        fontFamily: JuiceTheme.fontFamilySerif,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: cursedColor,
+                      ),
+                    ),
+                    Text(
+                      'Cursed Die adds danger to oracle rolls',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildInfoBox(
+          'Roll d100 for the oracle + d10 cursed die.\n'
+          '• 10 on cursed die = Curse triggers!\n'
+          '• Draw from your curse deck or consult curse table.\n'
+          'Used in Sundered Isles for supernatural peril.',
+          color: cursedColor,
+        ),
+      ],
     );
   }
 
@@ -895,7 +1459,9 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                _useFateDice ? Icons.auto_awesome : Icons.casino,
+                _useIronsworn 
+                    ? Icons.shield_outlined 
+                    : (_useFateDice ? Icons.auto_awesome : Icons.casino),
                 color: themeColor,
                 size: 28,
               ),
@@ -912,7 +1478,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               ),
             ],
           ),
-          if (_advantage || _disadvantage || (_skew != 0 && _diceSides == 6)) ...[
+          if (!_useIronsworn && (_advantage || _disadvantage || (_skew != 0 && _diceSides == 6))) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
@@ -1029,14 +1595,49 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   String _buildRollDescription() {
     final buffer = StringBuffer();
 
-    if (_useFateDice) {
+    if (_useIronsworn) {
+      switch (_ironswornRollType) {
+        case 'action':
+          buffer.write('1d6');
+          final total = _ironswornStat + _ironswornAdds;
+          if (total > 0) {
+            buffer.write('+$total');
+          }
+          buffer.write(' vs 2d10');
+          if (_useMomentumBurn) {
+            buffer.write(' (M:$_momentum)');
+          }
+          break;
+        case 'progress':
+          buffer.write('$_ironswornProgress vs 2d10');
+          break;
+        case 'oracle':
+          buffer.write('1d$_oracleDieType');
+          break;
+        case 'yesno':
+          final oddsLabels = {
+            IronswornOdds.almostCertain: 'AC',
+            IronswornOdds.likely: 'L',
+            IronswornOdds.fiftyFifty: '50/50',
+            IronswornOdds.unlikely: 'UL',
+            IronswornOdds.smallChance: 'SC',
+          };
+          buffer.write('d100 ${oddsLabels[_yesNoOdds]}');
+          break;
+        case 'cursed':
+          buffer.write('d100 + Cursed d10');
+          break;
+      }
+    } else if (_useFateDice) {
       buffer.write('${_diceCount}dF');
+      if (_modifier != 0) {
+        buffer.write(_modifier >= 0 ? '+$_modifier' : '$_modifier');
+      }
     } else {
       buffer.write('${_diceCount}d$_diceSides');
-    }
-
-    if (_modifier != 0) {
-      buffer.write(_modifier >= 0 ? '+$_modifier' : '$_modifier');
+      if (_modifier != 0) {
+        buffer.write(_modifier >= 0 ? '+$_modifier' : '$_modifier');
+      }
     }
 
     return buffer.toString();
@@ -1045,7 +1646,9 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   void _performRoll() {
     RollResult result;
 
-    if (_useFateDice) {
+    if (_useIronsworn) {
+      result = _performIronswornRoll();
+    } else if (_useFateDice) {
       final dice = widget.rollEngine.rollFateDice(_diceCount);
       final sum = dice.reduce((a, b) => a + b) + _modifier;
 
@@ -1105,6 +1708,77 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
 
     widget.onRoll(result);
     Navigator.pop(context);
+  }
+
+  RollResult _performIronswornRoll() {
+    switch (_ironswornRollType) {
+      case 'action':
+        // Roll 1d6 action die + 2d10 challenge dice
+        final actionDie = widget.rollEngine.rollDie(6);
+        final challengeDice = widget.rollEngine.rollDice(2, 10);
+        
+        // Check if momentum burn is being used
+        if (_useMomentumBurn) {
+          return IronswornMomentumBurnResult(
+            actionDie: actionDie,
+            challengeDice: challengeDice,
+            statBonus: _ironswornStat,
+            adds: _ironswornAdds,
+            momentumValue: _momentum,
+          );
+        }
+        
+        return IronswornActionResult(
+          actionDie: actionDie,
+          challengeDice: challengeDice,
+          statBonus: _ironswornStat,
+          adds: _ironswornAdds,
+        );
+      
+      case 'progress':
+        // Roll 2d10 challenge dice vs progress score
+        final challengeDice = widget.rollEngine.rollDice(2, 10);
+        return IronswornProgressResult(
+          progressScore: _ironswornProgress,
+          challengeDice: challengeDice,
+        );
+      
+      case 'oracle':
+        // Roll specified die type for oracle lookup
+        final oracleRoll = widget.rollEngine.rollDie(_oracleDieType);
+        return IronswornOracleResult(
+          oracleRoll: oracleRoll,
+          dieType: _oracleDieType,
+        );
+      
+      case 'yesno':
+        // Roll d100 for yes/no oracle
+        final yesNoRoll = widget.rollEngine.rollDie(100);
+        return IronswornYesNoResult(
+          roll: yesNoRoll,
+          odds: _yesNoOdds,
+        );
+      
+      case 'cursed':
+        // Roll d100 + cursed d10 for Sundered Isles
+        final oracleRoll = widget.rollEngine.rollDie(100);
+        final cursedDie = widget.rollEngine.rollDie(10);
+        return IronswornCursedOracleResult(
+          oracleRoll: oracleRoll,
+          cursedDie: cursedDie,
+        );
+      
+      default:
+        // Fallback to action roll
+        final actionDie = widget.rollEngine.rollDie(6);
+        final challengeDice = widget.rollEngine.rollDice(2, 10);
+        return IronswornActionResult(
+          actionDie: actionDie,
+          challengeDice: challengeDice,
+          statBonus: _ironswornStat,
+          adds: _ironswornAdds,
+        );
+    }
   }
 }
 

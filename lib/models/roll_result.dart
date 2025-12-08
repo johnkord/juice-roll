@@ -10,6 +10,11 @@ enum RollType {
   skewed,
   tableLookup,
   
+  // Ironsworn/Starforged
+  ironswornAction,
+  ironswornProgress,
+  ironswornOracle,
+  
   // Core Oracle
   fateCheck,
   nextScene,
