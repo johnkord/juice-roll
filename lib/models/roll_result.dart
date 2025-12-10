@@ -58,10 +58,33 @@ enum RollType {
 /// - Serialization: toJson/fromJson with className for type preservation
 /// - Display hints: displayType and sections for generic UI rendering
 /// 
-/// Subclasses should:
-/// 1. Override [className] to return their specific class name
-/// 2. Register themselves with [ResultRegistry] for proper deserialization
-/// 3. Optionally set [displayType] and [sections] for enhanced UI rendering
+/// ## IMPORTANT: Creating a new RollResult subclass
+/// 
+/// When creating a new subclass, you MUST:
+/// 
+/// 1. Override [className] to return your class name as a String
+///    ```dart
+///    @override
+///    String get className => 'MyNewResult';
+///    ```
+/// 
+/// 2. Implement a `fromJson` factory constructor
+///    ```dart
+///    factory MyNewResult.fromJson(Map<String, dynamic> json) { ... }
+///    ```
+/// 
+/// 3. **Register your class in [RollResultFactory]** (lib/models/roll_result_factory.dart)
+///    Add an entry to the `_registry` map:
+///    ```dart
+///    'MyNewResult': MyNewResult.fromJson,
+///    ```
+///    
+///    ⚠️ If you skip this step, your result will not survive app reload!
+///    The history will fall back to a generic RollResult and lose its
+///    custom display formatting.
+/// 
+/// 4. Optionally add a display builder in `result_display_builder.dart`
+///    for custom UI rendering.
 class RollResult {
   final RollType type;
   final String description;

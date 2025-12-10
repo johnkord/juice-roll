@@ -30,9 +30,29 @@ import '../presets/name_generator.dart';
 /// 
 /// This factory uses the 'className' field stored in the JSON to determine
 /// which specific subclass to instantiate.
+/// 
+/// ## IMPORTANT: Adding new RollResult subclasses
+/// 
+/// When you create a new class that extends [RollResult], you MUST register
+/// it in the [_registry] map below. Otherwise:
+/// 
+/// - Roll history will not persist correctly across app reloads
+/// - Your custom result type will fall back to a generic RollResult
+/// - Custom display formatting will be lost after reload
+/// 
+/// To register a new result class:
+/// 
+/// 1. Import the file containing your result class at the top of this file
+/// 2. Add an entry to [_registry]: `'YourClassName': YourClassName.fromJson,`
+/// 3. Ensure your class overrides `className` and implements `fromJson`
+/// 
+/// See [RollResult] documentation for the full checklist.
 class RollResultFactory {
   /// Registry of class names to their fromJson constructors.
-  /// Classes not in this registry will fall back to base RollResult.
+  /// 
+  /// ⚠️ REMINDER: Add your new RollResult subclass here!
+  /// If you created a new result type and it's not in this map,
+  /// it will not deserialize correctly after app reload.
   static final Map<String, RollResult Function(Map<String, dynamic>)> _registry = {
     // Base
     'RollResult': RollResult.fromJson,
@@ -159,6 +179,14 @@ class RollResultFactory {
     'IronswornYesNoResult': IronswornYesNoResult.fromJson,
     'IronswornCursedOracleResult': IronswornCursedOracleResult.fromJson,
     'IronswornMomentumBurnResult': IronswornMomentumBurnResult.fromJson,
+    
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │  👆 ADD NEW RESULT CLASSES ABOVE THIS LINE!                     │
+    // │                                                                 │
+    // │  Format: 'ClassName': ClassName.fromJson,                       │
+    // │                                                                 │
+    // │  Don't forget to also import the file at the top!               │
+    // └─────────────────────────────────────────────────────────────────┘
   };
 
   /// Reconstruct a RollResult from JSON, using the appropriate subclass.
