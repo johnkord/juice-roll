@@ -14,7 +14,6 @@
 /// 1. Call [registerAllDisplayBuilders] during app initialization:
 /// ```dart
 /// void main() {
-///   ResultRegistry.initialize();      // For JSON deserialization  
 ///   registerAllDisplayBuilders();     // For UI display
 ///   runApp(const JuiceRollApp());
 /// }
@@ -28,7 +27,7 @@
 /// ## Adding New Result Types
 /// 
 /// 1. Create the result class (extends RollResult)
-/// 2. Register in ResultRegistry (for JSON serialization)
+/// 2. Register in RollResultFactory (for JSON serialization)
 /// 3. Add display function to appropriate display module
 /// 4. Register in that module's register function
 /// 
@@ -83,11 +82,10 @@ import '../result_display_registry.dart';
 
 /// Register all display builders with the registry.
 /// 
-/// Call this once during app initialization, after ResultRegistry.initialize().
+/// Call this once during app initialization.
 /// 
 /// ```dart
 /// void main() {
-///   ResultRegistry.initialize();
 ///   registerAllDisplayBuilders();
 ///   runApp(const JuiceRollApp());
 /// }

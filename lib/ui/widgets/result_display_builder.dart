@@ -14,7 +14,7 @@
 /// ## Adding New Result Types
 ///
 /// 1. Create result class in appropriate preset file
-/// 2. Register JSON serialization in ResultRegistry
+/// 2. Register JSON serialization in RollResultFactory
 /// 3. Add display function to appropriate display module in result_displays/
 /// 4. Register display in that module's register function
 ///

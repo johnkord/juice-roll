@@ -325,11 +325,11 @@ The dialog files are large but reasonably scoped:
 ## Summary: Recommended Action Order
 
 | Priority | Task | Impact | Effort | Status |
-|----------|------|--------|--------|--------|
+|----------|------|--------|--------|---------|
 | 1 | Refactor `ResultDisplayBuilder` using registry pattern | High | Medium | ✅ **COMPLETE** |
 | 2 | Extract result classes from preset files | High | High | ⬜ Not started |
-| 3 | Consolidate motive expansion logic | Medium | Low | ⬜ Not started |
-| 4 | Consolidate need skew logic | Medium | Low | ⬜ Not started |
+| 3 | Consolidate motive expansion logic | Medium | Low | ✅ **COMPLETE** |
+| 4 | Consolidate need skew logic | Medium | Low | ✅ **COMPLETE** |
 | 5 | Complete data extraction to `lib/data/` | Low | Low | ⬜ Not started |
 | 6 | Evaluate `freezed` for new result classes | Low | High | ⬜ Not started |
 

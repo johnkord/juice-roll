@@ -25,8 +25,8 @@ typedef DisplayBuilder<T extends RollResult> = Widget Function(T result, ThemeDa
 /// 
 /// ## Architecture
 /// 
-/// This registry works alongside ResultRegistry (for JSON deserialization):
-/// - `ResultRegistry` - Maps className strings → factory functions for JSON
+/// This registry works alongside RollResultFactory (for JSON deserialization):
+/// - `RollResultFactory` - Maps className strings → factory functions for JSON
 /// - `ResultDisplayRegistry` - Maps Type → display builder functions for UI
 /// 
 /// Both registries should be initialized at app startup.

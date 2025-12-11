@@ -563,8 +563,7 @@ void registerAllDisplayBuilders() {
 
 ```dart
 void main() {
-  // Initialize registries
-  ResultRegistry.initialize();     // For JSON deserialization
+  // Initialize display builders registry
   registerAllDisplayBuilders();    // For UI display
   
   runApp(const JuiceRollApp());
@@ -724,6 +723,6 @@ void main() {
 - [ ] New tests for registry and displays
 - [ ] Adding a new result type requires only:
   1. Create the result class
-  2. Register in ResultRegistry (for JSON)
+  2. Register in RollResultFactory (for JSON)
   3. Create display function
   4. Register in ResultDisplayRegistry (for UI)

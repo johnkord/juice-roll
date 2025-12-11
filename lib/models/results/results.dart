@@ -5,9 +5,6 @@
 // import 'package:juice_roll/models/results/results.dart';
 // ```
 
-// Registry for serialization
-export 'result_registry.dart';
-
 // Lightweight value objects for embedded data
 export 'value_objects.dart';
 
