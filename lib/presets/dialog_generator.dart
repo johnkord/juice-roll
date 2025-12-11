@@ -1,4 +1,5 @@
 import '../core/roll_engine.dart';
+import '../data/dialog_generator_data.dart' as data;
 import '../models/roll_result.dart';
 
 /// Dialog Generator preset for the Juice Oracle.
@@ -28,18 +29,7 @@ class DialogGenerator {
   /// Row 0-1: Past tense (italics in pocketfold)
   /// Row 2-4: Present tense
   /// Center (2,2): "Fact" - starting position
-  static const List<List<String>> grid = [
-    // Row 0 (Past)
-    ['Fact', 'Denial', 'Query', 'Denial', 'Action'],
-    // Row 1 (Past)
-    ['Want', 'Query', 'Need', 'Query', 'Fact'],
-    // Row 2 (Present) - Center row
-    ['Action', 'Need', 'Fact', 'Action', 'Denial'],
-    // Row 3 (Present)
-    ['Need', 'Query', 'Denial', 'Query', 'Want'],
-    // Row 4 (Present)
-    ['Query', 'Support', 'Query', 'Support', 'Need'],
-  ];
+  static List<List<String>> get grid => data.grid;
 
   /// Direction mapping based on first d10 roll
   /// 1-2: Move up (Neutral tone)
@@ -73,15 +63,7 @@ class DialogGenerator {
   }
 
   /// Dialog fragment descriptions for each type
-  static const Map<String, String> fragmentDescriptions = {
-    'Fact': 'NPC states a fact or observation',
-    'Query': 'NPC asks a question',
-    'Need': 'NPC expresses a need or requirement',
-    'Want': 'NPC expresses a desire or wish',
-    'Action': 'NPC describes or suggests an action',
-    'Denial': 'NPC denies, refuses, or disagrees',
-    'Support': 'NPC offers support or agreement',
-  };
+  static Map<String, String> get fragmentDescriptions => data.fragmentDescriptions;
 
   DialogGenerator([RollEngine? rollEngine])
       : _rollEngine = rollEngine ?? RollEngine();
