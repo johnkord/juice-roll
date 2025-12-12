@@ -106,7 +106,7 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
       case FateCheckOutcome.noAnd:
         return 'Strong No - with additional negative consequence';
       case FateCheckOutcome.noBecause:
-        return 'No - use Intensity to determine the reason why';
+        return 'No - discover WHY using the Intensity to scale the reason';
       case FateCheckOutcome.no:
         return 'Plain No answer (Likely/Unlikely mode)';
       case FateCheckOutcome.noBut:
@@ -120,27 +120,31 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
       case FateCheckOutcome.yes:
         return 'Plain Yes answer (Likely/Unlikely mode)';
       case FateCheckOutcome.yesBecause:
-        return 'Yes - use Intensity to determine the reason why';
+        return 'Yes - discover WHY using the Intensity to scale the reason';
       case FateCheckOutcome.yesAnd:
         return 'Strong Yes - with additional benefit';
     }
   }
 
-  /// Get contextual guidance for favorable/unfavorable results.
-  /// Returns null for non-contextual outcomes.
+  /// Get contextual guidance for outcomes that need player interpretation.
+  /// Returns null for straightforward outcomes.
   String? get contextualGuidance {
     switch (this) {
       case FateCheckOutcome.favorable:
         return 'Consider your character\'s current goal. What answer would help them succeed?';
       case FateCheckOutcome.unfavorable:
         return 'Consider your character\'s current goal. What answer would create the most difficulty?';
+      case FateCheckOutcome.yesBecause:
+        return 'Yes! Now use the Intensity to craft a reason WHY. Higher = more significant reason.';
+      case FateCheckOutcome.noBecause:
+        return 'No. Now use the Intensity to craft a reason WHY. Higher = more significant reason.';
       default:
         return null;
     }
   }
 
-  /// Get example interpretations for favorable/unfavorable.
-  /// Based on the tavern example from Juice instructions.
+  /// Get example interpretations for outcomes that need interpretation.
+  /// Based on examples from Juice instructions.
   List<String>? get exampleInterpretations {
     switch (this) {
       case FateCheckOutcome.favorable:
@@ -152,6 +156,16 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
         return [
           'Looking for someone? → "Yes, busy" (hard to find them)',
           'Trying to hide? → "No, not busy" (you stand out)',
+        ];
+      case FateCheckOutcome.yesBecause:
+        return [
+          'Minor (1-2): "Yes, busier than usual - birthday party"',
+          'Major (5-6): "Yes, packed tight - popular band playing!"',
+        ];
+      case FateCheckOutcome.noBecause:
+        return [
+          'Minor (1-2): "No, quieter than normal - slow afternoon"',
+          'Major (5-6): "No, completely empty - everyone fled town"',
         ];
       default:
         return null;
@@ -178,6 +192,17 @@ extension FateCheckOutcomeDisplay on FateCheckOutcome {
   bool get isContextual {
     return this == FateCheckOutcome.favorable ||
            this == FateCheckOutcome.unfavorable;
+  }
+  
+  /// Whether this is a "because" result requiring Intensity interpretation.
+  bool get isBecause {
+    return this == FateCheckOutcome.yesBecause ||
+           this == FateCheckOutcome.noBecause;
+  }
+  
+  /// Whether this outcome needs additional guidance (contextual or because).
+  bool get needsGuidance {
+    return isContextual || isBecause;
   }
 }
 

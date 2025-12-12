@@ -117,6 +117,11 @@ Widget buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
         const SizedBox(height: 8),
         _buildContextualGuidanceWidget(result.outcome, theme),
       ],
+      // Guidance for "Because" results - use Intensity to craft reason
+      if (result.outcome.isBecause) ...[
+        const SizedBox(height: 8),
+        _buildBecauseGuidanceWidget(result.outcome, result.intensity, result.intensityDescription, theme),
+      ],
       // Special trigger (Random Event / Invalid Assumption)
       if (result.hasSpecialTrigger) ...[
         const SizedBox(height: 8),
@@ -389,6 +394,163 @@ Widget _buildInvalidAssumptionGuidanceWidget(SpecialTrigger trigger, ThemeData t
         ],
       ],
     ),
+  );
+}
+
+/// Builds a guidance widget for "Because" results (Yes, because... / No, because...).
+/// 
+/// These outcomes require the player to use the Intensity roll to craft a reason
+/// WHY the answer is Yes or No. Higher intensity = more significant reason.
+Widget _buildBecauseGuidanceWidget(FateCheckOutcome outcome, int intensity, String intensityDescription, ThemeData theme) {
+  final isYes = outcome == FateCheckOutcome.yesBecause;
+  final guidance = outcome.contextualGuidance;
+  final examples = outcome.exampleInterpretations;
+  
+  // Color based on Yes/No
+  final color = isYes ? JuiceTheme.success : JuiceTheme.danger;
+  
+  return Container(
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: color.withValues(alpha: 0.4)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header with icon - emphasize Intensity
+        Row(
+          children: [
+            Icon(
+              Icons.lightbulb_outline,
+              size: 16,
+              color: color,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Why? Intensity: $intensityDescription ($intensity)',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Guidance text
+        if (guidance != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            guidance,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: JuiceTheme.parchment,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+        // Intensity scale visualization
+        const SizedBox(height: 8),
+        _buildIntensityScale(intensity, color, theme),
+        // Example interpretations
+        if (examples != null && examples.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: JuiceTheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '"Is the tavern busy?"',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: JuiceTheme.parchmentDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ...examples.map((example) => Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '• $example',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                      fontSize: 11,
+                    ),
+                  ),
+                )),
+              ],
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+/// Builds a visual intensity scale showing where the rolled value falls.
+Widget _buildIntensityScale(int intensity, Color activeColor, ThemeData theme) {
+  return Row(
+    children: [
+      Text(
+        'Minor',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: JuiceTheme.parchmentDark,
+          fontSize: 10,
+        ),
+      ),
+      const SizedBox(width: 6),
+      Expanded(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(6, (index) {
+            final value = index + 1;
+            final isActive = value == intensity;
+            final isPast = value < intensity;
+            return Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: isActive 
+                    ? activeColor 
+                    : isPast 
+                        ? activeColor.withValues(alpha: 0.3)
+                        : JuiceTheme.surface,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: isActive ? activeColor : JuiceTheme.parchmentDark.withValues(alpha: 0.3),
+                  width: isActive ? 2 : 1,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  '$value',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                    color: isActive 
+                        ? JuiceTheme.surface 
+                        : JuiceTheme.parchmentDark,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+      const SizedBox(width: 6),
+      Text(
+        'Major',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: JuiceTheme.parchmentDark,
+          fontSize: 10,
+        ),
+      ),
+    ],
   );
 }
 

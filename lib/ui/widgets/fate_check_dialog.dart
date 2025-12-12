@@ -116,7 +116,11 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _ReferenceRow(symbol: '++', result: 'Yes And'),
-                            _ReferenceRow(symbol: '+0', result: 'Yes Because'),
+                            _ReferenceRow(
+                              symbol: '+0', 
+                              result: 'Yes Because*',
+                              tooltip: 'Use Intensity to scale the reason WHY',
+                            ),
                             _ReferenceRow(symbol: '+-', result: 'Yes But'),
                             _ReferenceRow(
                               symbol: '0+', 
@@ -143,7 +147,11 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
                               tooltip: 'Answer = what HURTS your character',
                             ),
                             _ReferenceRow(symbol: '-+', result: 'No But'),
-                            _ReferenceRow(symbol: '-0', result: 'No Because'),
+                            _ReferenceRow(
+                              symbol: '-0', 
+                              result: 'No Because*',
+                              tooltip: 'Use Intensity to scale the reason WHY',
+                            ),
                             _ReferenceRow(symbol: '--', result: 'No And'),
                           ],
                         ),
