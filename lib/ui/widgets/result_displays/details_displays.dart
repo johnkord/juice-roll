@@ -9,6 +9,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../../data/detail_guidance_data.dart';
 import '../../../presets/details.dart';
 import '../../theme/juice_theme.dart';
 import '../result_display_registry.dart';
@@ -204,21 +205,122 @@ Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 Widget _buildDetailWithFollowUpDisplay(DetailWithFollowUpResult result, ThemeData theme) {
+  // Get guidance for the detail modifier result
+  final guidance = result.detailResult.guidance;
+  
+  // Determine accent color based on guidance
+  final Color accentColor;
+  final IconData icon;
+  if (guidance != null) {
+    accentColor = _getDetailModifierColor(guidance);
+    icon = _getDetailModifierIcon(guidance);
+  } else {
+    accentColor = Colors.teal;
+    icon = Icons.help_outline;
+  }
+  
   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Row(children: [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(color: Colors.teal.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-        child: Text('d10: ${result.detailResult.roll}', style: TextStyle(fontSize: 10, fontFamily: JuiceTheme.fontFamilyMono, color: Colors.teal)),
+    // Dice roll display
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: accentColor.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
       ),
-      const SizedBox(width: 8),
-      Chip(label: Text(result.detailResult.detailType.name), backgroundColor: Colors.teal.withOpacity(0.1), side: const BorderSide(color: Colors.teal), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
-      const SizedBox(width: 8),
-      Expanded(child: Text(result.detailResult.result, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold))),
-    ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            result.detailResult.secondRoll != null ? 'd10 @' : 'd10',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontFamily: JuiceTheme.fontFamilyMono,
+              fontWeight: FontWeight.bold,
+              color: accentColor,
+              fontSize: 10,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              result.detailResult.secondRoll != null 
+                  ? '${result.detailResult.roll}, ${result.detailResult.secondRoll}'
+                  : '${result.detailResult.roll}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontFamily: JuiceTheme.fontFamilyMono,
+                fontWeight: FontWeight.bold,
+                color: JuiceTheme.parchment,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+    const SizedBox(height: 8),
+    // Result display with icon
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            accentColor.withOpacity(0.12),
+            accentColor.withOpacity(0.06),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: accentColor.withOpacity(0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: accentColor),
+          const SizedBox(width: 8),
+          Text(
+            result.detailResult.result,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontFamily: JuiceTheme.fontFamilySerif,
+              color: accentColor,
+            ),
+          ),
+        ],
+      ),
+    ),
+    // Show follow-up result (History or Property sub-roll)
     if (result.hasFollowUp && result.followUpText != null) ...[
-      const SizedBox(height: 4),
-      Text('→ ${result.followUpText}', style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: Colors.grey)),
+      const SizedBox(height: 6),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: JuiceTheme.gold.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: JuiceTheme.gold.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.subdirectory_arrow_right, size: 14, color: JuiceTheme.gold),
+            const SizedBox(width: 4),
+            Text(
+              result.followUpText!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: JuiceTheme.gold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+    // Show guidance for Detail Modifier results (Favors/Disfavors, Emotions, etc.)
+    if (guidance != null) ...[
+      const SizedBox(height: 10),
+      _buildDetailModifierGuidance(guidance, accentColor, theme),
     ],
   ]);
 }
@@ -231,8 +333,10 @@ Widget _buildDetailResultDisplay(DetailResult result, ThemeData theme) {
   // Different styling based on detail type
   final isColor = result.detailType == DetailType.color;
   final isHistory = result.detailType == DetailType.history;
+  final isDetailModifier = result.detailType == DetailType.detail;
+  final guidance = result.guidance;
   
-  // Theme colors based on type
+  // Theme colors based on type and guidance
   final Color accentColor;
   final IconData icon;
   if (isColor) {
@@ -241,6 +345,10 @@ Widget _buildDetailResultDisplay(DetailResult result, ThemeData theme) {
   } else if (isHistory) {
     accentColor = JuiceTheme.rust;
     icon = Icons.history;
+  } else if (isDetailModifier && guidance != null) {
+    // Use guidance-based colors for detail modifier results
+    accentColor = _getDetailModifierColor(guidance);
+    icon = _getDetailModifierIcon(guidance);
   } else {
     accentColor = JuiceTheme.mystic;
     icon = Icons.help_outline;
@@ -324,7 +432,111 @@ Widget _buildDetailResultDisplay(DetailResult result, ThemeData theme) {
           ),
         ),
       ],
+      // Show guidance for Detail Modifier results (Favors/Disfavors, Emotions, etc.)
+      if (isDetailModifier && guidance != null) ...[
+        const SizedBox(height: 10),
+        _buildDetailModifierGuidance(guidance, accentColor, theme),
+      ],
     ],
+  );
+}
+
+/// Get the accent color for a detail modifier based on its guidance.
+Color _getDetailModifierColor(DetailModifierGuidance guidance) {
+  switch (guidance.category) {
+    case DetailModifierCategory.emotion:
+      return guidance.isPositive ? JuiceTheme.success : JuiceTheme.danger;
+    case DetailModifierCategory.pc:
+      return guidance.isPositive ? JuiceTheme.success : JuiceTheme.danger;
+    case DetailModifierCategory.thread:
+      return guidance.isPositive ? JuiceTheme.info : JuiceTheme.juiceOrange;
+    case DetailModifierCategory.npc:
+      return guidance.isPositive ? JuiceTheme.mystic : JuiceTheme.rust;
+    case DetailModifierCategory.followUp:
+      return JuiceTheme.gold;
+  }
+}
+
+/// Get the icon for a detail modifier based on its guidance.
+IconData _getDetailModifierIcon(DetailModifierGuidance guidance) {
+  switch (guidance.category) {
+    case DetailModifierCategory.emotion:
+      return guidance.isPositive ? Icons.sentiment_satisfied_alt : Icons.sentiment_dissatisfied;
+    case DetailModifierCategory.pc:
+      return guidance.isPositive ? Icons.thumb_up : Icons.thumb_down;
+    case DetailModifierCategory.thread:
+      return guidance.isPositive ? Icons.trending_up : Icons.trending_down;
+    case DetailModifierCategory.npc:
+      return guidance.isPositive ? Icons.person_add : Icons.person_remove;
+    case DetailModifierCategory.followUp:
+      return Icons.arrow_forward;
+  }
+}
+
+/// Build the guidance widget for detail modifier results.
+/// Based on Juice Oracle instructions pages 29-31.
+/// Compact version - shows key prompt and follow-up roll only.
+Widget _buildDetailModifierGuidance(
+  DetailModifierGuidance guidance,
+  Color accentColor,
+  ThemeData theme,
+) {
+  return Container(
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+      color: accentColor.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: accentColor.withOpacity(0.25)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Main prompt - the key question to answer
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.help_outline,
+              size: 14,
+              color: accentColor,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                guidance.prompt,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: accentColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Follow-up roll requirement (for Thread/NPC)
+        if (guidance.followUpRoll != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(
+                Icons.casino,
+                size: 12,
+                color: JuiceTheme.gold,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                guidance.followUpRoll!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: JuiceTheme.gold,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    ),
   );
 }
 

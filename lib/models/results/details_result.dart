@@ -1,4 +1,5 @@
 import '../roll_result.dart';
+import '../../data/detail_guidance_data.dart';
 
 /// Skew type for rolls
 enum SkewType {
@@ -88,6 +89,54 @@ class DetailResult extends RollResult {
       requiresFollowUp: meta['requiresFollowUp'] as bool? ?? false,
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
+  }
+
+  // =========================================================================
+  // GUIDANCE PROPERTIES (for Detail type results)
+  // =========================================================================
+  
+  /// Get guidance for this detail result (only for DetailType.detail).
+  DetailModifierGuidance? get guidance {
+    if (detailType != DetailType.detail) return null;
+    return getDetailGuidance(result);
+  }
+  
+  /// Whether this detail result has guidance available.
+  bool get hasGuidance => guidance != null;
+  
+  /// Whether this is a positive/favorable result.
+  bool get isPositive => guidance?.isPositive ?? false;
+  
+  /// Whether this result requires rolling on another list (Thread/NPC list).
+  bool get requiresListRoll {
+    final g = guidance;
+    if (g == null) return false;
+    return g.category == DetailModifierCategory.thread ||
+           g.category == DetailModifierCategory.npc;
+  }
+  
+  /// Whether this result is about emotions.
+  bool get isEmotionResult {
+    final g = guidance;
+    return g?.category == DetailModifierCategory.emotion;
+  }
+  
+  /// Whether this result affects the PC directly.
+  bool get affectsPC {
+    final g = guidance;
+    return g?.category == DetailModifierCategory.pc;
+  }
+  
+  /// Whether this result affects a thread.
+  bool get affectsThread {
+    final g = guidance;
+    return g?.category == DetailModifierCategory.thread;
+  }
+  
+  /// Whether this result affects an NPC.
+  bool get affectsNPC {
+    final g = guidance;
+    return g?.category == DetailModifierCategory.npc;
   }
 
   @override
