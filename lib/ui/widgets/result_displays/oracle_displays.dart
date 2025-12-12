@@ -474,18 +474,18 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
         const SizedBox(height: 8),
         Row(
           children: [
-            const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+            Icon(Icons.arrow_forward, size: 16, color: JuiceTheme.parchmentDark),
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: JuiceTheme.ink.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '2d10: [${result.ideaResult!.modifierRoll}, ${result.ideaResult!.ideaRoll}]',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
+                  fontFamily: JuiceTheme.fontFamilyMono,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -507,18 +507,18 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
         const SizedBox(height: 8),
         Row(
           children: [
-            const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+            Icon(Icons.arrow_forward, size: 16, color: JuiceTheme.parchmentDark),
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: JuiceTheme.ink.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '2d10: [${result.plotPointResult!.categoryRoll}, ${result.plotPointResult!.eventRoll}]',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
+                  fontFamily: JuiceTheme.fontFamilyMono,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -526,8 +526,8 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
             const SizedBox(width: 4),
             Chip(
               label: Text(result.plotPointResult!.category),
-              backgroundColor: Colors.purple.withValues(alpha: 0.2),
-              side: const BorderSide(color: Colors.purple),
+              backgroundColor: JuiceTheme.mystic.withValues(alpha: 0.2),
+              side: BorderSide(color: JuiceTheme.mystic),
               padding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
             ),
@@ -555,13 +555,48 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
   final description = random_event_data.eventFocusDescriptions[result.focus] ?? '';
   final actions = random_event_data.eventFocusActions[result.focus] ?? [];
   
-  // Special styling for Plot Armor
+  // Special styling for Plot Armor - it's a gift!
   final isPlotArmor = result.focus == 'Plot Armor';
   final focusColor = isPlotArmor ? JuiceTheme.success : Colors.amber;
   
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      // Plot Armor celebration banner
+      if (isPlotArmor) ...[
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                JuiceTheme.success.withValues(alpha: 0.3),
+                JuiceTheme.gold.withValues(alpha: 0.2),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.success),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.auto_awesome, size: 18, color: JuiceTheme.success),
+              const SizedBox(width: 8),
+              Text(
+                'Your problem is SOLVED!',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: JuiceTheme.success,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.auto_awesome, size: 18, color: JuiceTheme.success),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
+      
       // Dice rolls
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -669,6 +704,40 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
         ),
       ],
       
+      // Extended guidance for specific focuses (deeper context from Juice instructions)
+      if (random_event_data.eventFocusExtendedGuidance.containsKey(result.focus)) ...[
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: JuiceTheme.mystic.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: JuiceTheme.mystic.withOpacity(0.15)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 14,
+                color: JuiceTheme.mystic.withOpacity(0.7),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  random_event_data.eventFocusExtendedGuidance[result.focus]!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 10,
+                    color: JuiceTheme.parchmentDark,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      
       // Suggested follow-up actions
       if (actions.isNotEmpty) ...[
         const SizedBox(height: 10),
@@ -706,6 +775,41 @@ Widget buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData the
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      // Plot Armor celebration banner
+      if (isPlotArmor) ...[
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                JuiceTheme.success.withValues(alpha: 0.3),
+                JuiceTheme.gold.withValues(alpha: 0.2),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.success),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.auto_awesome, size: 18, color: JuiceTheme.success),
+              const SizedBox(width: 8),
+              Text(
+                'Your problem is SOLVED!',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: JuiceTheme.success,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.auto_awesome, size: 18, color: JuiceTheme.success),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
+      
       // Dice roll display
       Row(
         children: [
@@ -780,6 +884,40 @@ Widget buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData the
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontStyle: FontStyle.italic,
                     color: JuiceTheme.parchment,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      
+      // Extended guidance for specific focuses (deeper context from Juice instructions)
+      if (random_event_data.eventFocusExtendedGuidance.containsKey(result.focus)) ...[
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: JuiceTheme.mystic.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: JuiceTheme.mystic.withOpacity(0.15)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 14,
+                color: JuiceTheme.mystic.withOpacity(0.7),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  random_event_data.eventFocusExtendedGuidance[result.focus]!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 10,
+                    color: JuiceTheme.parchmentDark,
                     height: 1.4,
                   ),
                 ),
@@ -875,31 +1013,167 @@ Widget _buildActionChip(random_event_data.EventFocusAction action, ThemeData the
 // IDEA DISPLAY
 // =============================================================================
 
+/// Display for Modifier + Idea results.
+/// In "Simple Mode", this replaces the Random Event Focus table.
+/// Reference: Juice instructions - Pro Tip about Simple Mode.
 Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
+  final categoryDescription = random_event_data.ideaCategoryDescriptions[result.ideaCategory] ?? '';
+  final categoryRange = random_event_data.ideaCategoryRanges[result.ideaCategory] ?? '';
+  
+  // Color coding by category
+  Color categoryColor;
+  IconData categoryIcon;
+  switch (result.ideaCategory) {
+    case 'Idea':
+      categoryColor = JuiceTheme.mystic;
+      categoryIcon = Icons.lightbulb_outline;
+    case 'Event':
+      categoryColor = JuiceTheme.danger;
+      categoryIcon = Icons.flash_on;
+    case 'Person':
+      categoryColor = JuiceTheme.info;
+      categoryIcon = Icons.person;
+    case 'Object':
+      categoryColor = JuiceTheme.success;
+      categoryIcon = Icons.category;
+    default:
+      categoryColor = JuiceTheme.gold;
+      categoryIcon = Icons.auto_awesome;
+  }
+  
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          '2d10: ${result.modifierRoll}, ${result.ideaRoll}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontFamily: 'monospace',
-            fontWeight: FontWeight.bold,
-            color: Colors.orange.shade700,
+      // Dice rolls with category context
+      Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: JuiceTheme.juiceOrange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '2d10: ${result.modifierRoll}, ${result.ideaRoll}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontFamily: JuiceTheme.fontFamilyMono,
+                fontWeight: FontWeight.bold,
+                color: JuiceTheme.juiceOrange,
+              ),
+            ),
           ),
+          const SizedBox(width: 8),
+          // Category chip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: categoryColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: categoryColor.withOpacity(0.5)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(categoryIcon, size: 12, color: categoryColor),
+                const SizedBox(width: 4),
+                Text(
+                  result.ideaCategory,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: categoryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  categoryRange,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: categoryColor.withOpacity(0.7),
+                    fontSize: 9,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      
+      // The main phrase - prominently displayed
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: JuiceTheme.juiceOrange.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome, size: 16, color: JuiceTheme.juiceOrange),
+            const SizedBox(width: 8),
+            Text(
+              '${result.modifier} ${result.idea}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
+                fontFamily: JuiceTheme.fontFamilySerif,
+                color: JuiceTheme.parchment,
+              ),
+            ),
+          ],
         ),
       ),
-      const SizedBox(height: 4),
-      Text(
-        '${result.modifier} ${result.idea}',
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontStyle: FontStyle.italic,
+      
+      // Category guidance
+      if (categoryDescription.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              categoryIcon,
+              size: 14,
+              color: categoryColor.withOpacity(0.7),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                categoryDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: JuiceTheme.parchmentDark,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+      
+      // Simple Mode tip
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: JuiceTheme.gold.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: JuiceTheme.gold.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.tips_and_updates, size: 12, color: JuiceTheme.gold),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Simple Mode: Use this in place of the Random Event Focus table.',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                  color: JuiceTheme.gold,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     ],
