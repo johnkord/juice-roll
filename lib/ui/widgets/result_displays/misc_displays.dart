@@ -592,16 +592,25 @@ Widget buildFateRollDisplay(RollResult r, ThemeData theme) {
 // DIALOG DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// Build display for DialogResult - shows direction, tone, subject.
+/// Build display for DialogResult - shows the full Dialog Grid mini-game state.
+/// 
+/// Per Juice instructions, the Dialog Grid tracks:
+/// - Fragment: The type of dialog (Fact, Query, Need, Want, Action, Denial, Support)
+/// - Movement: Old position → New position on the 5x5 grid
+/// - Tone: Neutral, Defensive, Aggressive, or Helpful (based on first d10)
+/// - Subject: Who the NPC is referring to - Them, Me, You, Us (based on second d10)
+/// - Tense: Past (rows 0-1) or Present (rows 2-4)
+/// - Doubles: If both dice match, the conversation ends
 Widget buildDialogDisplay(RollResult r, ThemeData theme) {
   final result = r as DialogResult;
   final hasDoubles = result.isDoubles;
   final accentColor = hasDoubles ? JuiceTheme.gold : JuiceTheme.info;
+  final tenseColor = result.isPast ? JuiceTheme.juiceOrange : JuiceTheme.success;
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      // Dice roll display
+      // Dice roll display with doubles indicator
       Row(
         children: [
           Container(
@@ -623,19 +632,140 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
           ],
         ],
       ),
+      const SizedBox(height: 12),
+
+      // Main fragment display - the most important piece
+      if (hasDoubles) ...[
+        // Conversation ends display
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: JuiceTheme.gold.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: JuiceTheme.gold.withOpacity(0.4)),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.stop_circle_outlined, size: 28, color: JuiceTheme.gold),
+              const SizedBox(height: 6),
+              Text(
+                'Conversation Ends',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: JuiceTheme.gold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'The NPC wants to stop. They might be done talking, walk away, or retreat.',
+                style: TextStyle(fontSize: 11, color: JuiceTheme.parchmentDark, fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ] else ...[
+        // Fragment movement: Old → New
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: accentColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: accentColor.withOpacity(0.3)),
+          ),
+          child: Column(
+            children: [
+              // Movement indicator: Old Fragment → New Fragment
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    result.oldFragment,
+                    style: TextStyle(fontSize: 14, color: JuiceTheme.parchmentDark.withOpacity(0.6)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 20,
+                      color: accentColor,
+                    ),
+                  ),
+                  Text(
+                    result.newFragment,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: JuiceTheme.parchment),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Fragment description
+              Text(
+                result.fragmentDescription,
+                style: TextStyle(fontSize: 12, color: JuiceTheme.parchmentDark, fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              // Past/Present tense indicator
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: tenseColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  result.isPast ? '📜 About the Past' : '📍 About the Present',
+                  style: TextStyle(fontSize: 10, color: tenseColor, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+
       const SizedBox(height: 10),
-      // Dialog components
+
+      // Tone and Subject - the context for HOW the NPC says it
       Wrap(
         spacing: 8,
         runSpacing: 8,
         children: [
-          _buildDialogComponentChip('Direction', result.direction, Icons.arrow_forward, accentColor),
-          _buildDialogComponentChip('Tone', result.tone, Icons.mood, accentColor),
-          _buildDialogComponentChip('Subject', result.subject, Icons.chat, accentColor),
+          _buildDialogComponentChip('Tone', result.tone, _getToneIcon(result.tone), accentColor),
+          _buildDialogComponentChip('Subject', result.subject, _getSubjectIcon(result.subject), accentColor),
         ],
       ),
     ],
   );
+}
+
+/// Get an appropriate icon for the dialog tone.
+IconData _getToneIcon(String tone) {
+  switch (tone.toLowerCase()) {
+    case 'neutral':
+      return Icons.sentiment_neutral;
+    case 'defensive':
+      return Icons.shield;
+    case 'aggressive':
+      return Icons.local_fire_department;
+    case 'helpful':
+      return Icons.favorite;
+    default:
+      return Icons.mood;
+  }
+}
+
+/// Get an appropriate icon for the dialog subject.
+IconData _getSubjectIcon(String subject) {
+  switch (subject.toLowerCase()) {
+    case 'you':
+      return Icons.person_outline; // Referring to the PC
+    case 'me':
+      return Icons.record_voice_over; // NPC talking about themselves
+    case 'them':
+      return Icons.groups; // Third parties
+    case 'us':
+      return Icons.handshake; // Mutual/shared
+    default:
+      return Icons.person;
+  }
 }
 
 /// Helper to build dialog component chip.

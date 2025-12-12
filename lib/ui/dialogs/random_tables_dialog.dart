@@ -4,10 +4,11 @@ import '../shared/oracle_dialog.dart';
 import '../shared/dialog_components.dart';
 import '../../presets/random_event.dart';
 import '../../models/roll_result.dart';
+import '../../data/random_event_data.dart' as random_event_data;
 
 /// Dialog for Random Tables options.
 /// Provides access to modifier, idea, event, person, and object tables.
-class RandomTablesDialog extends StatelessWidget {
+class RandomTablesDialog extends StatefulWidget {
   final RandomEvent randomEvent;
   final void Function(RollResult) onRoll;
 
@@ -16,6 +17,13 @@ class RandomTablesDialog extends StatelessWidget {
     required this.randomEvent,
     required this.onRoll,
   });
+
+  @override
+  State<RandomTablesDialog> createState() => _RandomTablesDialogState();
+}
+
+class _RandomTablesDialogState extends State<RandomTablesDialog> {
+  bool _showDetailedReference = false;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +55,7 @@ class RandomTablesDialog extends StatelessWidget {
             subtitle: 'Replaces Random Event table • 2d10',
             examples: 'Stop Food, Strange Resource, Increase Attention',
             onTap: () {
-              onRoll(randomEvent.rollModifierPlusIdea());
+              widget.onRoll(widget.randomEvent.rollModifierPlusIdea());
               Navigator.pop(context);
             },
           ),
@@ -65,7 +73,7 @@ class RandomTablesDialog extends StatelessWidget {
             examples: 'Change, Continue, Decrease, Extra, Increase, Stop, Strange...',
             color: JuiceTheme.rust,
             onTap: () {
-              onRoll(randomEvent.rollModifier());
+              widget.onRoll(widget.randomEvent.rollModifier());
               Navigator.pop(context);
             },
           ),
@@ -75,7 +83,7 @@ class RandomTablesDialog extends StatelessWidget {
             examples: 'Attention, Communication, Danger, Element, Food, Home...',
             color: JuiceTheme.mystic,
             onTap: () {
-              onRoll(randomEvent.rollIdea());
+              widget.onRoll(widget.randomEvent.rollIdea());
               Navigator.pop(context);
             },
           ),
@@ -85,7 +93,7 @@ class RandomTablesDialog extends StatelessWidget {
             examples: 'Ambush, Anomaly, Blessing, Caravan, Curse, Discovery...',
             color: JuiceTheme.danger,
             onTap: () {
-              onRoll(randomEvent.rollEvent());
+              widget.onRoll(widget.randomEvent.rollEvent());
               Navigator.pop(context);
             },
           ),
@@ -95,7 +103,7 @@ class RandomTablesDialog extends StatelessWidget {
             examples: 'Criminal, Entertainer, Expert, Mage, Mercenary, Noble...',
             color: JuiceTheme.info,
             onTap: () {
-              onRoll(randomEvent.rollPerson());
+              widget.onRoll(widget.randomEvent.rollPerson());
               Navigator.pop(context);
             },
           ),
@@ -105,7 +113,7 @@ class RandomTablesDialog extends StatelessWidget {
             examples: 'Arrow, Candle, Cauldron, Chain, Claw, Hook, Quill, Skull...',
             color: JuiceTheme.success,
             onTap: () {
-              onRoll(randomEvent.rollObject());
+              widget.onRoll(widget.randomEvent.rollObject());
               Navigator.pop(context);
             },
           ),
@@ -127,7 +135,7 @@ class RandomTablesDialog extends StatelessWidget {
                   hint: '1-3: Idea, 4-6: Event\n7-8: Person, 9-0: Object',
                   color: JuiceTheme.parchmentDark,
                   onTap: () {
-                    onRoll(randomEvent.generateIdea());
+                    widget.onRoll(widget.randomEvent.generateIdea());
                     Navigator.pop(context);
                   },
                 ),
@@ -139,7 +147,7 @@ class RandomTablesDialog extends StatelessWidget {
                   hint: 'Scene triggers',
                   color: JuiceTheme.danger,
                   onTap: () {
-                    onRoll(randomEvent.generateIdea(category: IdeaCategory.event));
+                    widget.onRoll(widget.randomEvent.generateIdea(category: IdeaCategory.event));
                     Navigator.pop(context);
                   },
                 ),
@@ -155,7 +163,7 @@ class RandomTablesDialog extends StatelessWidget {
                   hint: 'NPC generation',
                   color: JuiceTheme.info,
                   onTap: () {
-                    onRoll(randomEvent.generateIdea(category: IdeaCategory.person));
+                    widget.onRoll(widget.randomEvent.generateIdea(category: IdeaCategory.person));
                     Navigator.pop(context);
                   },
                 ),
@@ -167,7 +175,7 @@ class RandomTablesDialog extends StatelessWidget {
                   hint: 'Items & things',
                   color: JuiceTheme.success,
                   onTap: () {
-                    onRoll(randomEvent.generateIdea(category: IdeaCategory.object));
+                    widget.onRoll(widget.randomEvent.generateIdea(category: IdeaCategory.object));
                     Navigator.pop(context);
                   },
                 ),
@@ -195,7 +203,7 @@ class RandomTablesDialog extends StatelessWidget {
                   title: 'Focus Only',
                   subtitle: '1d10',
                   onTap: () {
-                    onRoll(randomEvent.generateFocus());
+                    widget.onRoll(widget.randomEvent.generateFocus());
                     Navigator.pop(context);
                   },
                 ),
@@ -207,7 +215,7 @@ class RandomTablesDialog extends StatelessWidget {
                   subtitle: '3d10',
                   isPrimary: true,
                   onTap: () {
-                    onRoll(randomEvent.generate());
+                    widget.onRoll(widget.randomEvent.generate());
                     Navigator.pop(context);
                   },
                 ),
@@ -216,38 +224,8 @@ class RandomTablesDialog extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Compact Focus Reference
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              color: JuiceTheme.parchmentDark.withOpacity(0.06),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Event Focus Reference:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 9,
-                    color: JuiceTheme.parchmentDark,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '1 Advance Time  2 Close Thread  3 Converge  4 Diverge  5 Immersion\n'
-                  '6 Keyed Event  7 New Character  8 NPC Action  9 Plot Armor  0 Remote',
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontFamily: JuiceTheme.fontFamilyMono,
-                    color: JuiceTheme.parchment,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Expandable Focus Reference
+          _buildEventFocusReference(),
           const SizedBox(height: 8),
 
           // Tip box
@@ -272,6 +250,146 @@ class RandomTablesDialog extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventFocusReference() {
+    return Container(
+      decoration: BoxDecoration(
+        color: JuiceTheme.parchmentDark.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header (always visible) - tap to expand
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => setState(() => _showDetailedReference = !_showDetailedReference),
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.help_outline,
+                      size: 12,
+                      color: JuiceTheme.parchmentDark,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Event Focus Reference',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: JuiceTheme.parchmentDark,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      _showDetailedReference ? Icons.expand_less : Icons.expand_more,
+                      size: 16,
+                      color: JuiceTheme.parchmentDark,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // Compact reference (shown when collapsed)
+          if (!_showDetailedReference)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+              child: Text(
+                '1 Advance Time  2 Close Thread  3 Converge  4 Diverge  5 Immersion\n'
+                '6 Keyed Event  7 New Character  8 NPC Action  9 Plot Armor  0 Remote',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: JuiceTheme.parchment,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          
+          // Detailed reference (shown when expanded)
+          if (_showDetailedReference)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(height: 8, thickness: 0.5),
+                  ...random_event_data.eventFocusTypes.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final focus = entry.value;
+                    final roll = index == 9 ? 0 : index + 1;
+                    final description = random_event_data.eventFocusDescriptions[focus] ?? '';
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Roll number
+                          Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: JuiceTheme.gold.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$roll',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: JuiceTheme.fontFamilyMono,
+                                  color: JuiceTheme.gold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          // Focus name and description
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  focus,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: JuiceTheme.parchment,
+                                  ),
+                                ),
+                                if (description.isNotEmpty)
+                                  Text(
+                                    description,
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      fontStyle: FontStyle.italic,
+                                      color: JuiceTheme.parchmentDark,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
         ],
       ),
     );

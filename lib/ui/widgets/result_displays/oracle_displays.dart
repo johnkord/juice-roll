@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/fate_dice_formatter.dart';
+import '../../../data/random_event_data.dart' as random_event_data;
 import '../../../presets/fate_check.dart';
 import '../../../presets/expectation_check.dart';
 import '../../../presets/scale.dart';
@@ -551,40 +552,141 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
 // =============================================================================
 
 Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
+  final description = random_event_data.eventFocusDescriptions[result.focus] ?? '';
+  final actions = random_event_data.eventFocusActions[result.focus] ?? [];
+  
+  // Special styling for Plot Armor
+  final isPlotArmor = result.focus == 'Plot Armor';
+  final focusColor = isPlotArmor ? JuiceTheme.success : Colors.amber;
+  
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      // Dice rolls
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.amber.withValues(alpha: 0.1),
+          color: focusColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           '3d10: ${result.focusRoll}, ${result.modifierRoll}, ${result.ideaRoll}',
           style: theme.textTheme.bodyMedium?.copyWith(
-            fontFamily: 'monospace',
+            fontFamily: JuiceTheme.fontFamilyMono,
             fontWeight: FontWeight.bold,
-            color: Colors.amber.shade700,
+            color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade700,
           ),
         ),
       ),
-      const SizedBox(height: 6),
-      Chip(
-        label: Text(result.focus),
-        backgroundColor: Colors.amber.withValues(alpha: 0.2),
-        side: const BorderSide(color: Colors.amber),
-        padding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
-      ),
-      const SizedBox(height: 4),
-      Text(
-        '${result.modifier} ${result.idea}',
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontStyle: FontStyle.italic,
+      const SizedBox(height: 8),
+      
+      // Focus type with icon
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: focusColor.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: focusColor),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _getEventFocusIcon(result.focus),
+              size: 14,
+              color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade700,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              result.focus,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade800,
+              ),
+            ),
+          ],
         ),
       ),
+      
+      // Modifier + Idea phrase (the "meaning" component)
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: JuiceTheme.juiceOrange.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome, size: 16, color: JuiceTheme.juiceOrange),
+            const SizedBox(width: 8),
+            Text(
+              '${result.modifier} ${result.idea}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
+                fontFamily: JuiceTheme.fontFamilySerif,
+                color: JuiceTheme.parchment,
+              ),
+            ),
+          ],
+        ),
+      ),
+      
+      // Description / Guidance
+      if (description.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: JuiceTheme.sepia.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.sepia.withOpacity(0.2)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                size: 16,
+                color: JuiceTheme.gold,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: JuiceTheme.parchment,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      
+      // Suggested follow-up actions
+      if (actions.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Text(
+          'Suggested Follow-up:',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: JuiceTheme.parchmentDark,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: actions.map((action) => _buildActionChip(action, theme)).toList(),
+        ),
+      ],
     ],
   );
 }
@@ -594,33 +696,178 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
 // =============================================================================
 
 Widget buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData theme) {
+  final description = random_event_data.eventFocusDescriptions[result.focus] ?? '';
+  final actions = random_event_data.eventFocusActions[result.focus] ?? [];
+  
+  // Special styling for Plot Armor (it's a gift!)
+  final isPlotArmor = result.focus == 'Plot Armor';
+  final focusColor = isPlotArmor ? JuiceTheme.success : Colors.amber;
+  
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.amber.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          '1d10: ${result.focusRoll}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontFamily: 'monospace',
-            fontWeight: FontWeight.bold,
-            color: Colors.amber.shade700,
+      // Dice roll display
+      Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: focusColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '1d10: ${result.focusRoll}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontFamily: JuiceTheme.fontFamilyMono,
+                fontWeight: FontWeight.bold,
+                color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Focus type chip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: focusColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: focusColor),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getEventFocusIcon(result.focus),
+                  size: 14,
+                  color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade700,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  result.focus,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      
+      // Description / Guidance
+      if (description.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: JuiceTheme.sepia.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.sepia.withOpacity(0.2)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                size: 16,
+                color: JuiceTheme.gold,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: JuiceTheme.parchment,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-      const SizedBox(height: 4),
-      Chip(
-        label: Text(result.focus),
-        backgroundColor: Colors.amber.withValues(alpha: 0.2),
-        side: const BorderSide(color: Colors.amber),
-        padding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
-      ),
+      ],
+      
+      // Suggested follow-up actions
+      if (actions.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Text(
+          'Suggested Follow-up:',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: JuiceTheme.parchmentDark,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: actions.map((action) => _buildActionChip(action, theme)).toList(),
+        ),
+      ],
     ],
+  );
+}
+
+/// Get appropriate icon for each event focus type.
+IconData _getEventFocusIcon(String focus) {
+  switch (focus) {
+    case 'Advance Time':
+      return Icons.schedule;
+    case 'Close Thread':
+      return Icons.cancel_outlined;
+    case 'Converge Thread':
+      return Icons.merge;
+    case 'Diverge Thread':
+      return Icons.call_split;
+    case 'Immersion':
+      return Icons.self_improvement;
+    case 'Keyed Event':
+      return Icons.vpn_key;
+    case 'New Character':
+      return Icons.person_add;
+    case 'NPC Action':
+      return Icons.directions_run;
+    case 'Plot Armor':
+      return Icons.shield;
+    case 'Remote Event':
+      return Icons.public;
+    default:
+      return Icons.flash_on;
+  }
+}
+
+/// Build a compact action chip for suggested follow-ups.
+Widget _buildActionChip(random_event_data.EventFocusAction action, ThemeData theme) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: JuiceTheme.mystic.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: JuiceTheme.mystic.withOpacity(0.3)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          action.label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: JuiceTheme.mystic,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '• ${action.hint}',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: JuiceTheme.parchmentDark,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    ),
   );
 }
 

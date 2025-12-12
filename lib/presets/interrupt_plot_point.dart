@@ -1,6 +1,10 @@
 import '../core/roll_engine.dart';
 import '../data/interrupt_plot_point_data.dart' as data;
-import '../models/roll_result.dart';
+
+// Re-export result class for backward compatibility
+export '../models/results/interrupt_plot_point_result.dart';
+
+import '../models/results/interrupt_plot_point_result.dart';
 
 /// Interrupt / Plot Point preset for the Juice Oracle.
 /// Uses interrupt-plot-point.md for story interruptions.
@@ -67,51 +71,4 @@ class InterruptPlotPoint {
       event: event,
     );
   }
-}
-
-/// Result of an Interrupt/Plot Point roll.
-class InterruptPlotPointResult extends RollResult {
-  final int categoryRoll;
-  final String category;
-  final int eventRoll;
-  final String event;
-
-  InterruptPlotPointResult({
-    required this.categoryRoll,
-    required this.category,
-    required this.eventRoll,
-    required this.event,
-    DateTime? timestamp,
-  }) : super(
-          type: RollType.interruptPlotPoint,
-          description: 'Interrupt / Plot Point',
-          diceResults: [categoryRoll, eventRoll],
-          total: categoryRoll + eventRoll,
-          interpretation: '$category: $event',
-          timestamp: timestamp,
-          metadata: {
-            'category': category,
-            'event': event,
-            'categoryRoll': categoryRoll,
-            'eventRoll': eventRoll,
-          },
-        );
-
-  @override
-  String get className => 'InterruptPlotPointResult';
-
-  factory InterruptPlotPointResult.fromJson(Map<String, dynamic> json) {
-    final meta = json['metadata'] as Map<String, dynamic>;
-    final diceResults = (json['diceResults'] as List).cast<int>();
-    return InterruptPlotPointResult(
-      categoryRoll: meta['categoryRoll'] as int? ?? diceResults[0],
-      category: meta['category'] as String,
-      eventRoll: meta['eventRoll'] as int? ?? diceResults[1],
-      event: meta['event'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-    );
-  }
-
-  @override
-  String toString() => 'Interrupt ($category): $event';
 }
