@@ -62,6 +62,42 @@ extension SceneTypeDisplay on SceneType {
         return 'Plot Point';
     }
   }
+
+  /// Whether this is an Alter scene type that needs interpretation guidance.
+  bool get isAlter => this == SceneType.alterAdd || this == SceneType.alterRemove;
+
+  /// Contextual guidance for Alter scene types.
+  String? get alterGuidance {
+    switch (this) {
+      case SceneType.alterAdd:
+        return 'Introduce or emphasize this element in the scene.';
+      case SceneType.alterRemove:
+        return 'Diminish or remove this element\'s influence from the scene.';
+      default:
+        return null;
+    }
+  }
+
+  /// Example interpretations for Alter scene types.
+  /// Returns a list of (focus, interpretation) pairs.
+  List<(String, String)>? get alterExamples {
+    switch (this) {
+      case SceneType.alterAdd:
+        return [
+          ('Ally', 'A friend unexpectedly shows up'),
+          ('Enemy', 'A rival appears in the scene'),
+          ('Environment', 'Weather or terrain becomes a factor'),
+        ];
+      case SceneType.alterRemove:
+        return [
+          ('Environment → Arctic', 'An extremely hot morning; clear skies instead of snow'),
+          ('Enemy', 'Your foe is absent or distracted'),
+          ('Community', 'The usual crowds are gone'),
+        ];
+      default:
+        return null;
+    }
+  }
 }
 
 /// Result of a Next Scene roll.

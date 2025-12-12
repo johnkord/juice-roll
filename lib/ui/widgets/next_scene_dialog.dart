@@ -173,11 +173,13 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
                       symbols: '+ +',
                       label: 'Alter (Add)',
                       color: JuiceTheme.success,
+                      tooltip: 'Roll Focus: Introduce or emphasize this element in the scene',
                     ),
                     _OutcomeRow(
                       symbols: '+ −',
                       label: 'Alter (Remove)',
                       color: JuiceTheme.categoryWorld,
+                      tooltip: 'Roll Focus: Diminish or remove this element\'s influence from the scene',
                     ),
                   ],
                 ),
@@ -407,16 +409,18 @@ class _OutcomeRow extends StatelessWidget {
   final String symbols;
   final String label;
   final Color color;
+  final String? tooltip;
 
   const _OutcomeRow({
     required this.symbols,
     required this.label,
     required this.color,
+    this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 1),
       child: Row(
         children: [
@@ -443,9 +447,25 @@ class _OutcomeRow extends StatelessWidget {
             label,
             style: TextStyle(fontSize: 10, color: color),
           ),
+          if (tooltip != null) ...[
+            const SizedBox(width: 2),
+            Text(
+              '*',
+              style: TextStyle(fontSize: 8, color: color),
+            ),
+          ],
         ],
       ),
     );
+    
+    if (tooltip != null) {
+      return Tooltip(
+        message: tooltip!,
+        preferBelow: false,
+        child: row,
+      );
+    }
+    return row;
   }
 }
 

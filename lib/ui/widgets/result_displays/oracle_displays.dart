@@ -822,6 +822,105 @@ Widget _buildModifiedIdeaGuidanceWidget(ExpectationOutcome outcome, DiscoverMean
 }
 
 // =============================================================================
+// ALTER SCENE GUIDANCE WIDGET
+// =============================================================================
+
+/// Builds a guidance widget for Alter (Add/Remove Focus) scene results.
+/// Explains how to interpret "Add" vs "Remove" with examples.
+Widget _buildAlterSceneGuidanceWidget(SceneType sceneType, String focus, ThemeData theme) {
+  final guidance = sceneType.alterGuidance;
+  final examples = sceneType.alterExamples;
+  final isAdd = sceneType == SceneType.alterAdd;
+  
+  return Container(
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: JuiceTheme.gold.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.4)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header with icon and action verb
+        Row(
+          children: [
+            Icon(
+              isAdd ? Icons.add_circle_outline : Icons.remove_circle_outline,
+              size: 16,
+              color: JuiceTheme.gold,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                isAdd ? 'Add "$focus" to the scene' : 'Remove "$focus" from the scene',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: JuiceTheme.gold,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Guidance text
+        if (guidance != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            guidance,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: JuiceTheme.parchment,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+        // Examples section
+        if (examples != null && examples.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: JuiceTheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Examples:',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: JuiceTheme.parchmentDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ...examples.take(2).map((example) => Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: RichText(
+                    text: TextSpan(
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                        fontSize: 11,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: '${example.$1}: ',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(text: example.$2),
+                      ],
+                    ),
+                  ),
+                )),
+              ],
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+// =============================================================================
 // SCALE DISPLAY
 // =============================================================================
 
@@ -1023,6 +1122,11 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
             ),
           ],
         ),
+        // Add guidance for Alter scene types
+        if (sceneResult.sceneType.isAlter) ...[
+          const SizedBox(height: 8),
+          _buildAlterSceneGuidanceWidget(sceneResult.sceneType, result.focusResult!.focus, theme),
+        ],
       ],
       if (result.ideaResult != null) ...[
         const SizedBox(height: 8),
