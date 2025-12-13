@@ -59,7 +59,6 @@ coverage/
 
 # Local deployment configs (contain real infrastructure values)
 scripts/deploy.local.sh
-k8s/*.local.yaml
 
 # Exceptions to above rules.
 !**/ios/**/default.pbxuser

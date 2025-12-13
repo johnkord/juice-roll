@@ -1,6 +1,8 @@
+
 # Azure Infrastructure for Juice Roll
 
 This directory contains the Azure Bicep templates for deploying Juice Roll as an Azure Static Web App.
+All previous AKS/Kubernetes deployment files and instructions have been removed. Use Azure Static Web Apps for deployment.
 
 ## Prerequisites
 

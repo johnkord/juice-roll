@@ -1,5 +1,7 @@
+
 // Azure Static Web App deployment for Juice Roll Flutter application
 // This Bicep template creates an Azure Static Web App to host the Flutter web build
+// All AKS/Kubernetes resources have been removed. Use Azure Static Web Apps for deployment.
 
 @description('The name of the Static Web App resource.')
 param staticWebAppName string

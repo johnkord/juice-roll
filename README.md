@@ -205,15 +205,8 @@ See [infra/README.md](infra/README.md) for detailed instructions.
 
 ### Docker/Kubernetes
 
-The project also includes Docker and Kubernetes configurations:
-
-```bash
-# Build Docker image
-docker build -t juice-roll .
-
-# Deploy to Kubernetes
-kubectl apply -f k8s/
-```
+Previous Docker and Kubernetes deployment instructions have been removed.
+Use Azure Static Web Apps (see above) for hosting the web build.
 
 ## License
 
