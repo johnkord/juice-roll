@@ -73,6 +73,15 @@ class _RollHistoryCard extends StatelessWidget {
     }
   }
 
+  // Cached shadow list to avoid recreating on every build
+  static final _cardShadows = [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.2),
+      blurRadius: 4,
+      offset: const Offset(0, 2),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -81,18 +90,12 @@ class _RollHistoryCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
-        color: JuiceTheme.inkDark.withOpacity(0.6),
+        color: JuiceTheme.inkDark60,
         borderRadius: BorderRadius.circular(8),
         border: Border(
           left: BorderSide(color: categoryColor, width: 4),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: _cardShadows,
       ),
       child: Material(
         color: Colors.transparent,

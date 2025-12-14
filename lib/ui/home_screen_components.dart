@@ -468,14 +468,14 @@ class HistorySection extends StatelessWidget {
                 Icon(
                   Icons.auto_stories,
                   size: 48,
-                  color: JuiceTheme.parchmentDark.withOpacity(0.3),
+                  color: JuiceTheme.parchmentDark30,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'No rolls yet',
                   style: TextStyle(
                     fontFamily: JuiceTheme.fontFamilySerif,
-                    color: JuiceTheme.parchmentDark.withOpacity(0.5),
+                    color: JuiceTheme.parchmentDark50,
                     fontSize: 16,
                   ),
                 ),
@@ -483,7 +483,7 @@ class HistorySection extends StatelessWidget {
                 Text(
                   'Tap an oracle button to begin',
                   style: TextStyle(
-                    color: JuiceTheme.parchmentDark.withOpacity(0.35),
+                    color: JuiceTheme.parchmentDark35,
                     fontSize: 12,
                   ),
                 ),
@@ -516,10 +516,10 @@ class HistorySectionHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
       decoration: BoxDecoration(
-        color: JuiceTheme.ink.withOpacity(0.3),
+        color: JuiceTheme.ink30,
         border: Border(
           top: BorderSide(
-            color: JuiceTheme.parchmentDark.withOpacity(0.2),
+            color: JuiceTheme.parchmentDark20,
             width: 1,
           ),
         ),
@@ -529,14 +529,14 @@ class HistorySectionHeader extends StatelessWidget {
           Icon(
             Icons.history,
             size: 12,
-            color: JuiceTheme.parchmentDark.withOpacity(0.6),
+            color: JuiceTheme.parchmentDark60,
           ),
           const SizedBox(width: 6),
           Text(
             'Roll History',
             style: TextStyle(
               fontSize: 11,
-              color: JuiceTheme.parchmentDark.withOpacity(0.6),
+              color: JuiceTheme.parchmentDark60,
             ),
           ),
         ],
