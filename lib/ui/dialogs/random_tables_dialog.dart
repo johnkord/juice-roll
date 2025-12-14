@@ -38,7 +38,7 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           OracleDialogIntro(
             icon: Icons.auto_awesome,
             iconColor: JuiceTheme.gold,
-            backgroundColor: JuiceTheme.sepia.withOpacity(0.12),
+            backgroundColor: JuiceTheme.sepia12,
             text: '"Discover Meaning" provides abstract concepts. These tables provide something more concrete for nouns.',
           ),
           const SizedBox(height: 14),
@@ -232,7 +232,7 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
-              color: JuiceTheme.gold.withOpacity(0.1),
+              color: JuiceTheme.gold10,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -258,9 +258,9 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
   Widget _buildEventFocusReference() {
     return Container(
       decoration: BoxDecoration(
-        color: JuiceTheme.parchmentDark.withOpacity(0.06),
+        color: JuiceTheme.parchmentDark06,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.15)),
+        border: Border.all(color: JuiceTheme.parchmentDark15),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,7 +341,7 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
                             width: 18,
                             height: 18,
                             decoration: BoxDecoration(
-                              color: JuiceTheme.gold.withOpacity(0.15),
+                              color: JuiceTheme.gold15,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Center(
@@ -422,12 +422,12 @@ class _RandomPrimaryOption extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                JuiceTheme.gold.withOpacity(0.15),
-                JuiceTheme.juiceOrange.withOpacity(0.1),
+                JuiceTheme.gold15,
+                JuiceTheme.juiceOrange10,
               ],
             ),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: JuiceTheme.gold.withOpacity(0.4)),
+            border: Border.all(color: JuiceTheme.gold40),
           ),
           child: Row(
             children: [

@@ -83,9 +83,9 @@ class _TreasureDialogState extends State<TreasureDialog> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.mystic.withOpacity(0.08),
+                  color: JuiceTheme.mystic08,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: JuiceTheme.mystic.withOpacity(0.2)),
+                  border: Border.all(color: JuiceTheme.mystic20),
                 ),
                 child: Row(
                   children: [
@@ -96,12 +96,12 @@ class _TreasureDialogState extends State<TreasureDialog> {
                         value: _includeColor,
                         onChanged: (v) => setState(() => _includeColor = v ?? false),
                         visualDensity: VisualDensity.compact,
-                        side: BorderSide(color: JuiceTheme.mystic.withOpacity(0.6)),
+                        side: BorderSide(color: JuiceTheme.mystic60),
                         activeColor: JuiceTheme.mystic,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.palette, size: 14, color: JuiceTheme.mystic.withOpacity(0.7)),
+                    Icon(Icons.palette, size: 14, color: JuiceTheme.mystic70),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(

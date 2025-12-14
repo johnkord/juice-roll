@@ -121,9 +121,9 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.sepia.withOpacity(0.08),
+                  color: JuiceTheme.sepia08,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: JuiceTheme.sepia.withOpacity(0.2)),
+                  border: Border.all(color: JuiceTheme.sepia20),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,10 +228,10 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: JuiceTheme.info.withOpacity(0.1),
+                          color: JuiceTheme.info10,
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: JuiceTheme.info.withOpacity(0.3),
+                            color: JuiceTheme.info30,
                           ),
                         ),
                         child: Row(
@@ -343,9 +343,9 @@ class _QuickPresetChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: JuiceTheme.gold.withOpacity(0.1),
+          color: JuiceTheme.gold10,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: JuiceTheme.gold.withOpacity(0.3)),
+          border: Border.all(color: JuiceTheme.gold30),
         ),
         child: Text(
           label,

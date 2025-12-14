@@ -231,7 +231,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
         style: TextStyle(
           fontSize: isCompact ? 9 : 10,
           fontStyle: FontStyle.italic,
-          color: JuiceTheme.parchment.withOpacity(0.85),
+          color: JuiceTheme.parchment85,
         ),
       ),
     );
@@ -446,12 +446,12 @@ class _DungeonDialogState extends State<DungeonDialog> {
                     end: Alignment.bottomCenter,
                     colors: [
                       JuiceTheme.surface,
-                      JuiceTheme.surface.withOpacity(0),
+                      JuiceTheme.surface00,
                     ],
                   ),
                 ),
                 child: Center(
-                  child: Icon(Icons.keyboard_arrow_up, size: 12, color: JuiceTheme.parchmentDark.withOpacity(0.6)),
+                  child: Icon(Icons.keyboard_arrow_up, size: 12, color: JuiceTheme.parchmentDark60),
                 ),
               ),
             // Main scrollable content
@@ -650,9 +650,9 @@ class _DungeonDialogState extends State<DungeonDialog> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: JuiceTheme.mystic.withOpacity(0.08),
+                            color: JuiceTheme.mystic08,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: JuiceTheme.mystic.withOpacity(0.25)),
+                            border: Border.all(color: JuiceTheme.mystic25),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -678,7 +678,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
                                 style: TextStyle(
                                   fontSize: 9,
                                   fontStyle: FontStyle.italic,
-                                  color: JuiceTheme.parchment.withOpacity(0.7),
+                                  color: JuiceTheme.parchment70,
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -725,7 +725,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontStyle: FontStyle.italic,
-                                  color: JuiceTheme.parchment.withOpacity(0.7),
+                                  color: JuiceTheme.parchment70,
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -845,7 +845,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
                                 'another encounter (d6). Only 1 action per room is "free".',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: JuiceTheme.parchment.withOpacity(0.85),
+                                  color: JuiceTheme.parchment85,
                                 ),
                               ),
                             ],
@@ -856,9 +856,9 @@ class _DungeonDialogState extends State<DungeonDialog> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: JuiceTheme.sepia.withOpacity(0.1),
+                            color: JuiceTheme.sepia10,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: JuiceTheme.sepia.withOpacity(0.2)),
+                            border: Border.all(color: JuiceTheme.sepia20),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -883,7 +883,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
                                 style: TextStyle(
                                   fontSize: 9,
                                   fontFamily: JuiceTheme.fontFamilyMono,
-                                  color: JuiceTheme.parchment.withOpacity(0.85),
+                                  color: JuiceTheme.parchment85,
                                 ),
                               ),
                             ],
@@ -906,12 +906,12 @@ class _DungeonDialogState extends State<DungeonDialog> {
                     end: Alignment.topCenter,
                     colors: [
                       JuiceTheme.surface,
-                      JuiceTheme.surface.withOpacity(0),
+                      JuiceTheme.surface00,
                     ],
                   ),
                 ),
                 child: Center(
-                  child: Icon(Icons.keyboard_arrow_down, size: 14, color: JuiceTheme.parchmentDark.withOpacity(0.6)),
+                  child: Icon(Icons.keyboard_arrow_down, size: 14, color: JuiceTheme.parchmentDark60),
                 ),
               ),
           ],

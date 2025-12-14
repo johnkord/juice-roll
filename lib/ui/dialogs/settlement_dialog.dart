@@ -142,14 +142,14 @@ class SettlementDialog extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             margin: const EdgeInsets.only(bottom: 6),
             decoration: BoxDecoration(
-              color: JuiceTheme.mystic.withOpacity(0.08),
+              color: JuiceTheme.mystic08,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: JuiceTheme.mystic.withOpacity(0.2)),
+              border: Border.all(color: JuiceTheme.mystic20),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.palette, size: 12, color: JuiceTheme.mystic.withOpacity(0.7)),
+                Icon(Icons.palette, size: 12, color: JuiceTheme.mystic70),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -208,14 +208,14 @@ class SettlementDialog extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             margin: const EdgeInsets.only(bottom: 6),
             decoration: BoxDecoration(
-              color: JuiceTheme.juiceOrange.withOpacity(0.08),
+              color: JuiceTheme.juiceOrange08,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.2)),
+              border: Border.all(color: JuiceTheme.juiceOrange20),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, size: 12, color: JuiceTheme.juiceOrange.withOpacity(0.7)),
+                Icon(Icons.info_outline, size: 12, color: JuiceTheme.juiceOrange70),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(

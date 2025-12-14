@@ -28,9 +28,9 @@ class ChallengeDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: JuiceTheme.categoryCombat.withOpacity(0.12),
+              color: JuiceTheme.categoryCombat12,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: JuiceTheme.categoryCombat.withOpacity(0.3)),
+              border: Border.all(color: JuiceTheme.categoryCombat30),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +58,7 @@ class ChallengeDialog extends StatelessWidget {
                   '4. Fail = Pay The Price (may lock out other option)',
                   style: TextStyle(
                     fontSize: 10,
-                    color: JuiceTheme.parchment.withOpacity(0.85),
+                    color: JuiceTheme.parchment85,
                     height: 1.4,
                   ),
                 ),
@@ -266,7 +266,7 @@ class ChallengeDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: JuiceTheme.sepia.withOpacity(0.1),
+              color: JuiceTheme.sepia10,
               borderRadius: BorderRadius.circular(6),
             ),
             child: const Column(
@@ -413,7 +413,7 @@ class _ChallengeDcOption extends StatelessWidget {
                 range,
                 style: TextStyle(
                   fontSize: 7,
-                  color: JuiceTheme.parchmentDark.withOpacity(0.7),
+                  color: JuiceTheme.parchmentDark70,
                 ),
               ),
             ],
@@ -509,7 +509,7 @@ class _ChallengeExample extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
           decoration: BoxDecoration(
-            color: JuiceTheme.categoryCombat.withOpacity(0.2),
+            color: JuiceTheme.categoryCombat20,
             borderRadius: BorderRadius.circular(3),
           ),
           child: Text(

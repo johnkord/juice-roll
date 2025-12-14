@@ -65,7 +65,7 @@ class LocationDialog extends StatelessWidget {
             description,
             style: TextStyle(
               fontSize: 11,
-              color: JuiceTheme.parchment.withOpacity(0.9),
+              color: JuiceTheme.parchment90,
               height: 1.4,
             ),
           ),
@@ -104,7 +104,7 @@ class LocationDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: JuiceTheme.inkDark.withOpacity(0.5),
+        color: JuiceTheme.inkDark50,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _locationColor.withOpacity(0.3)),
       ),
@@ -245,7 +245,7 @@ class LocationDialog extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: JuiceTheme.parchment.withOpacity(0.7),
+            color: JuiceTheme.parchment70,
           ),
         ),
       ],

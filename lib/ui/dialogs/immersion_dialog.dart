@@ -28,7 +28,7 @@ class ImmersionDialog extends StatelessWidget {
       subtitle: 'Be your character',
       icon: Icons.self_improvement,
       accentColor: JuiceTheme.juiceOrange,
-      secondaryColor: JuiceTheme.mystic.withOpacity(0.2),
+      secondaryColor: JuiceTheme.mystic20,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +99,7 @@ class ImmersionDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: JuiceTheme.inkDark.withOpacity(0.3),
+                    color: JuiceTheme.inkDark30,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Column(
@@ -184,7 +184,7 @@ class ImmersionDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: JuiceTheme.inkDark.withOpacity(0.3),
+                    color: JuiceTheme.inkDark30,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Column(

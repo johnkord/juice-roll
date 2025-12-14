@@ -363,7 +363,7 @@ class OracleDialogSection extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontStyle: FontStyle.italic,
-                  color: JuiceTheme.parchmentDark.withOpacity(0.8),
+                  color: JuiceTheme.parchmentDark80,
                 ),
               ),
             ),
@@ -541,7 +541,7 @@ class OracleRollButton extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           fontSize: 9,
-                          color: JuiceTheme.parchmentDark.withOpacity(0.7),
+                          color: JuiceTheme.parchmentDark70,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -640,7 +640,7 @@ class OracleDialogQuote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: JuiceTheme.inkDark.withOpacity(0.4),
+        color: JuiceTheme.inkDark40,
         borderRadius: BorderRadius.circular(6),
         border: Border(
           left: BorderSide(
@@ -688,9 +688,9 @@ class OracleDialogExample extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: JuiceTheme.parchmentDark.withOpacity(0.08),
+        color: JuiceTheme.parchmentDark08,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.15)),
+        border: Border.all(color: JuiceTheme.parchmentDark15),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

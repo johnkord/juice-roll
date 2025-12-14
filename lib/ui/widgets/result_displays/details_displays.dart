@@ -75,7 +75,7 @@ Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: JuiceTheme.rust.withOpacity(0.2),
+              color: JuiceTheme.rust20,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -94,7 +94,7 @@ Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: JuiceTheme.rust.withOpacity(0.3),
+                    color: JuiceTheme.rust30,
                     borderRadius: BorderRadius.circular(3),
                   ),
                   child: Text(
@@ -114,7 +114,7 @@ Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: JuiceTheme.info.withOpacity(0.2),
+              color: JuiceTheme.info20,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -133,7 +133,7 @@ Widget _buildPropertyResultDisplay(PropertyResult result, ThemeData theme) {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: JuiceTheme.info.withOpacity(0.3),
+                    color: JuiceTheme.info30,
                     borderRadius: BorderRadius.circular(3),
                   ),
                   child: Text(
@@ -297,9 +297,9 @@ Widget _buildDetailWithFollowUpDisplay(DetailWithFollowUpResult result, ThemeDat
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: JuiceTheme.gold.withOpacity(0.1),
+          color: JuiceTheme.gold10,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: JuiceTheme.gold.withOpacity(0.3)),
+          border: Border.all(color: JuiceTheme.gold30),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -561,7 +561,7 @@ Widget _buildColorResultDisplay(DetailResult result, ThemeData theme) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     decoration: BoxDecoration(
-      color: JuiceTheme.inkDark.withOpacity(0.4),
+      color: JuiceTheme.inkDark40,
       borderRadius: BorderRadius.circular(8),
       border: Border.all(color: displayColor.withOpacity(0.6)),
     ),
@@ -614,7 +614,7 @@ Widget _buildPropertyDicePair(int d10Value, int d6Value) {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
-          color: JuiceTheme.rust.withOpacity(0.15),
+          color: JuiceTheme.rust15,
           borderRadius: BorderRadius.circular(3),
         ),
         child: Row(
@@ -632,7 +632,7 @@ Widget _buildPropertyDicePair(int d10Value, int d6Value) {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
               decoration: BoxDecoration(
-                color: JuiceTheme.rust.withOpacity(0.25),
+                color: JuiceTheme.rust25,
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Text(
@@ -652,7 +652,7 @@ Widget _buildPropertyDicePair(int d10Value, int d6Value) {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
-          color: JuiceTheme.info.withOpacity(0.15),
+          color: JuiceTheme.info15,
           borderRadius: BorderRadius.circular(3),
         ),
         child: Row(
@@ -670,7 +670,7 @@ Widget _buildPropertyDicePair(int d10Value, int d6Value) {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
               decoration: BoxDecoration(
-                color: JuiceTheme.info.withOpacity(0.25),
+                color: JuiceTheme.info25,
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Text(

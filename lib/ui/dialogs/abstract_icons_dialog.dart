@@ -34,7 +34,7 @@ class AbstractIconsDialog extends StatelessWidget {
               text,
               style: TextStyle(
                 fontSize: 11,
-                color: JuiceTheme.parchment.withOpacity(0.9),
+                color: JuiceTheme.parchment90,
               ),
             ),
           ),
@@ -51,12 +51,12 @@ class AbstractIconsDialog extends StatelessWidget {
       decoration: BoxDecoration(
         color: isHighlighted 
             ? _iconColor.withOpacity(0.4)
-            : JuiceTheme.inkDark.withOpacity(0.6),
+            : JuiceTheme.inkDark60,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
           color: isHighlighted 
               ? _iconColor 
-              : JuiceTheme.parchmentDark.withOpacity(0.3),
+              : JuiceTheme.parchmentDark30,
           width: isHighlighted ? 1.5 : 0.5,
         ),
       ),
@@ -117,7 +117,7 @@ class AbstractIconsDialog extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10,
                         fontStyle: FontStyle.italic,
-                        color: JuiceTheme.parchment.withOpacity(0.85),
+                        color: JuiceTheme.parchment85,
                       ),
                     ),
                   ],
@@ -129,7 +129,7 @@ class AbstractIconsDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.inkDark.withOpacity(0.5),
+                  color: JuiceTheme.inkDark50,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: _gridColor.withOpacity(0.2)),
                 ),
@@ -198,7 +198,7 @@ class AbstractIconsDialog extends StatelessWidget {
                                 '⋮',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                                  color: JuiceTheme.parchmentDark60,
                                 ),
                               ),
                             ),
@@ -234,7 +234,7 @@ class AbstractIconsDialog extends StatelessWidget {
                                     '⋯',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                                      color: JuiceTheme.parchmentDark60,
                                     ),
                                   ),
                                 ),
@@ -260,7 +260,7 @@ class AbstractIconsDialog extends StatelessWidget {
                                         '⋯',
                                         style: TextStyle(
                                           fontSize: 10,
-                                          color: JuiceTheme.parchmentDark.withOpacity(0.4),
+                                          color: JuiceTheme.parchmentDark40,
                                         ),
                                       ),
                                     ),
@@ -280,7 +280,7 @@ class AbstractIconsDialog extends StatelessWidget {
                                       '⋮',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: JuiceTheme.parchmentDark.withOpacity(0.4),
+                                        color: JuiceTheme.parchmentDark40,
                                       ),
                                     ),
                                   ),
@@ -298,9 +298,9 @@ class AbstractIconsDialog extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: JuiceTheme.rust.withOpacity(0.15),
+                            color: JuiceTheme.rust15,
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: JuiceTheme.rust.withOpacity(0.4)),
+                            border: Border.all(color: JuiceTheme.rust40),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -323,9 +323,9 @@ class AbstractIconsDialog extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: JuiceTheme.info.withOpacity(0.15),
+                            color: JuiceTheme.info15,
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: JuiceTheme.info.withOpacity(0.4)),
+                            border: Border.all(color: JuiceTheme.info40),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -355,7 +355,7 @@ class AbstractIconsDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.inkDark.withOpacity(0.4),
+                  color: JuiceTheme.inkDark40,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -442,7 +442,7 @@ class AbstractIconsDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontFamily: JuiceTheme.fontFamilyMono,
-                    color: JuiceTheme.parchmentDark.withOpacity(0.7),
+                    color: JuiceTheme.parchmentDark70,
                   ),
                 ),
               ),

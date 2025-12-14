@@ -39,7 +39,7 @@ Widget _buildDungeonEncounterDisplay(DungeonEncounterResult result, ThemeData th
   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: JuiceTheme.rust.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: JuiceTheme.rust10, borderRadius: BorderRadius.circular(8)),
       child: Text('Encounter: ${result.encounterRoll.result}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: JuiceTheme.rust)),
     ),
     if (result.monster != null) ...[
@@ -61,7 +61,7 @@ Widget _buildDungeonNameDisplay(DungeonNameResult result, ThemeData theme) {
   return Row(children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: JuiceTheme.rust.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: JuiceTheme.rust10, borderRadius: BorderRadius.circular(8)),
       child: Text('3d10: [${result.typeRoll}, ${result.descriptionRoll}, ${result.subjectRoll}]', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: JuiceTheme.rust)),
     ),
     const SizedBox(width: 8),
@@ -120,7 +120,7 @@ Widget _buildTwoPassAreaDisplay(TwoPassAreaResult result, ThemeData theme) {
   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: JuiceTheme.rust.withOpacity(0.15), borderRadius: BorderRadius.circular(4), border: Border.all(color: JuiceTheme.rust.withOpacity(0.5))),
+      decoration: BoxDecoration(color: JuiceTheme.rust15, borderRadius: BorderRadius.circular(4), border: Border.all(color: JuiceTheme.rust50)),
       child: Text('${result.roll1},${result.roll2} → ${result.chosenRoll}', style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.rust, fontFamily: JuiceTheme.fontFamilyMono, fontSize: 11)),
     ),
     const SizedBox(height: 4),
@@ -131,7 +131,7 @@ Widget _buildTwoPassAreaDisplay(TwoPassAreaResult result, ThemeData theme) {
     if (result.isSecondDoubles) Container(
       margin: const EdgeInsets.only(top: 4),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: JuiceTheme.gold.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(color: JuiceTheme.gold20, borderRadius: BorderRadius.circular(4)),
       child: Text('⚡ Secret/Treasure!', style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.gold, fontSize: 11)),
     ),
   ]);
@@ -145,7 +145,7 @@ Widget _buildDungeonMonsterDisplay(DungeonMonsterResult result, ThemeData theme)
   return Row(children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: JuiceTheme.danger.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: JuiceTheme.danger10, borderRadius: BorderRadius.circular(8)),
       child: Text('2d10: [${result.descriptorRoll}, ${result.abilityRoll}]', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.danger)),
     ),
     const SizedBox(width: 8),
@@ -189,7 +189,7 @@ Widget _buildDungeonDetailDisplay(DungeonDetailResult result, ThemeData theme) {
   return Row(children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: JuiceTheme.rust.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: JuiceTheme.rust10, borderRadius: BorderRadius.circular(8)),
       child: Text('d10: ${result.roll}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.rust)),
     ),
     const SizedBox(width: 8),

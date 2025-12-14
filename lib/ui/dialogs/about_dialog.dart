@@ -55,10 +55,10 @@ class AboutJuiceDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.ink.withOpacity(0.3),
+                  color: JuiceTheme.ink30,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: JuiceTheme.parchmentDark.withOpacity(0.2),
+                    color: JuiceTheme.parchmentDark20,
                   ),
                 ),
                 child: Text(
@@ -68,7 +68,7 @@ class AboutJuiceDialog extends StatelessWidget {
                   'If you are familiar with the Mythic system, this oracle will feel intuitive. It provides alternative variations of major Mythic components such as Fate Checks, Meaning Tables, Random Events, and Scene Transitions.',
                   style: TextStyle(
                     fontSize: 13,
-                    color: JuiceTheme.parchment.withOpacity(0.9),
+                    color: JuiceTheme.parchment90,
                     height: 1.4,
                   ),
                 ),
@@ -85,10 +85,10 @@ class AboutJuiceDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.juiceOrange.withOpacity(0.08),
+                  color: JuiceTheme.juiceOrange08,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: JuiceTheme.juiceOrange.withOpacity(0.25),
+                    color: JuiceTheme.juiceOrange25,
                   ),
                 ),
                 child: Column(
@@ -117,7 +117,7 @@ class AboutJuiceDialog extends StatelessWidget {
                       'The Juice Oracle was created by thunder9861, who has been iterating on this oracle for a long time to bring together the best concepts from various solo roleplaying systems.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: JuiceTheme.parchment.withOpacity(0.85),
+                        color: JuiceTheme.parchment85,
                         height: 1.3,
                       ),
                     ),
@@ -131,7 +131,7 @@ class AboutJuiceDialog extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: JuiceTheme.juiceOrange,
                           side: BorderSide(
-                            color: JuiceTheme.juiceOrange.withOpacity(0.5),
+                            color: JuiceTheme.juiceOrange50,
                           ),
                         ),
                       ),
@@ -151,10 +151,10 @@ class AboutJuiceDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.info.withOpacity(0.08),
+                  color: JuiceTheme.info08,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: JuiceTheme.info.withOpacity(0.25),
+                    color: JuiceTheme.info25,
                   ),
                 ),
                 child: Column(
@@ -183,7 +183,7 @@ class AboutJuiceDialog extends StatelessWidget {
                       'This app was independently created by John Kordich, an artist and software engineer who loves all types of games. Built just for fun to make the Juice Oracle more accessible!',
                       style: TextStyle(
                         fontSize: 12,
-                        color: JuiceTheme.parchment.withOpacity(0.85),
+                        color: JuiceTheme.parchment85,
                         height: 1.3,
                       ),
                     ),
@@ -198,7 +198,7 @@ class AboutJuiceDialog extends StatelessWidget {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: JuiceTheme.info,
                               side: BorderSide(
-                                color: JuiceTheme.info.withOpacity(0.5),
+                                color: JuiceTheme.info50,
                               ),
                             ),
                           ),
@@ -212,7 +212,7 @@ class AboutJuiceDialog extends StatelessWidget {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: JuiceTheme.info,
                               side: BorderSide(
-                                color: JuiceTheme.info.withOpacity(0.5),
+                                color: JuiceTheme.info50,
                               ),
                             ),
                           ),
@@ -232,7 +232,7 @@ class AboutJuiceDialog extends StatelessWidget {
                     fontFamily: JuiceTheme.fontFamilySerif,
                     fontStyle: FontStyle.italic,
                     fontSize: 13,
-                    color: JuiceTheme.gold.withOpacity(0.8),
+                    color: JuiceTheme.gold80,
                   ),
                 ),
               ),

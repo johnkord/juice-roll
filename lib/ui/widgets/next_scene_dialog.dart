@@ -47,7 +47,7 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: JuiceTheme.info.withOpacity(0.1),
+                color: JuiceTheme.info10,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -141,9 +141,9 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: JuiceTheme.gold.withOpacity(0.05),
+        color: JuiceTheme.gold05,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JuiceTheme.gold.withOpacity(0.2)),
+        border: Border.all(color: JuiceTheme.gold20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +210,7 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.parchmentDark.withOpacity(0.15),
+                  color: JuiceTheme.parchmentDark15,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -245,13 +245,13 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             color: _useSimpleMode
-                ? JuiceTheme.juiceOrange.withOpacity(0.1)
+                ? JuiceTheme.juiceOrange10
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: _useSimpleMode
-                  ? JuiceTheme.juiceOrange.withOpacity(0.4)
-                  : JuiceTheme.parchmentDark.withOpacity(0.2),
+                  ? JuiceTheme.juiceOrange40
+                  : JuiceTheme.parchmentDark20,
             ),
           ),
           child: Row(
@@ -323,9 +323,9 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: JuiceTheme.parchmentDark.withOpacity(0.06),
+        color: JuiceTheme.parchmentDark06,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JuiceTheme.parchmentDark.withOpacity(0.15)),
+        border: Border.all(color: JuiceTheme.parchmentDark15),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,13 +545,13 @@ class _DialogOption extends StatelessWidget {
               border: Border.all(
                 color: highlighted
                     ? iconColor.withOpacity(0.5)
-                    : JuiceTheme.gold.withOpacity(0.3),
+                    : JuiceTheme.gold30,
                 width: highlighted ? 2 : 1,
               ),
               borderRadius: BorderRadius.circular(8),
               color: highlighted
                   ? iconColor.withOpacity(0.1)
-                  : JuiceTheme.gold.withOpacity(0.08),
+                  : JuiceTheme.gold08,
             ),
             child: Row(
               children: [

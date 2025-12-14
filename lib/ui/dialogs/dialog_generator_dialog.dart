@@ -61,15 +61,15 @@ class _DialogGeneratorDialogState extends State<DialogGeneratorDialog> {
         margin: const EdgeInsets.all(1),
         decoration: BoxDecoration(
           color: isCurrentPos 
-              ? JuiceTheme.mystic.withOpacity(0.35)
+              ? JuiceTheme.mystic35
               : isPastRow 
-                  ? JuiceTheme.sepia.withOpacity(0.15)
-                  : JuiceTheme.parchment.withOpacity(0.08),
+                  ? JuiceTheme.sepia15
+                  : JuiceTheme.parchment10,
           border: Border.all(
             color: isCurrentPos 
                 ? JuiceTheme.mystic 
                 : isPastRow 
-                    ? JuiceTheme.sepia.withOpacity(0.4)
+                    ? JuiceTheme.sepia40
                     : Colors.grey.withOpacity(0.3),
             width: isCurrentPos ? 2 : 1,
           ),
@@ -229,8 +229,8 @@ class _DialogGeneratorDialogState extends State<DialogGeneratorDialog> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isActive 
-                      ? JuiceTheme.success.withOpacity(0.1)
-                      : JuiceTheme.juiceOrange.withOpacity(0.1),
+                      ? JuiceTheme.success10
+                      : JuiceTheme.juiceOrange10,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isActive ? JuiceTheme.success : JuiceTheme.juiceOrange,
@@ -286,7 +286,7 @@ class _DialogGeneratorDialogState extends State<DialogGeneratorDialog> {
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: isPast 
-                                ? JuiceTheme.sepia.withOpacity(0.2)
+                                ? JuiceTheme.sepia20
                                 : Colors.grey.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -338,7 +338,7 @@ class _DialogGeneratorDialogState extends State<DialogGeneratorDialog> {
                     icon: const Icon(Icons.refresh),
                     tooltip: 'Reset to Fact (center)',
                     style: IconButton.styleFrom(
-                      backgroundColor: JuiceTheme.success.withOpacity(0.2),
+                      backgroundColor: JuiceTheme.success20,
                       foregroundColor: JuiceTheme.success,
                     ),
                   ),

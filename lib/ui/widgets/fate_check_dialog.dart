@@ -42,7 +42,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: JuiceTheme.mystic.withOpacity(0.1),
+                color: JuiceTheme.mystic10,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -97,9 +97,9 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: JuiceTheme.gold.withOpacity(0.05),
+                color: JuiceTheme.gold05,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: JuiceTheme.gold.withOpacity(0.2)),
+                border: Border.all(color: JuiceTheme.gold20),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +198,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: JuiceTheme.surface,
-            side: BorderSide(color: JuiceTheme.gold.withOpacity(0.5)),
+            side: BorderSide(color: JuiceTheme.gold50),
           ),
         ),
       ],
@@ -243,13 +243,13 @@ class _LikelihoodTile extends StatelessWidget {
             border: Border.all(
               color: isSelected 
                   ? iconColor.withOpacity(0.6) 
-                  : JuiceTheme.gold.withOpacity(0.2),
+                  : JuiceTheme.gold20,
               width: isSelected ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
             color: isSelected 
                 ? iconColor.withOpacity(0.1) 
-                : JuiceTheme.gold.withOpacity(0.03),
+                : JuiceTheme.gold03,
           ),
           child: Row(
             children: [
@@ -346,7 +346,7 @@ class _ReferenceRow extends StatelessWidget {
             ),
           ),
           if (tooltip != null)
-            Icon(Icons.help_outline, size: 10, color: JuiceTheme.gold.withOpacity(0.6)),
+            Icon(Icons.help_outline, size: 10, color: JuiceTheme.gold60),
         ],
       ),
     );
@@ -359,7 +359,7 @@ class _ReferenceRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: JuiceTheme.surface,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: JuiceTheme.gold.withOpacity(0.5)),
+          border: Border.all(color: JuiceTheme.gold50),
         ),
         child: row,
       );

@@ -46,9 +46,9 @@ Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: JuiceTheme.juiceOrange.withOpacity(0.15),
+            color: JuiceTheme.juiceOrange15,
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.4)),
+            border: Border.all(color: JuiceTheme.juiceOrange40),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -159,7 +159,7 @@ Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: JuiceTheme.info.withOpacity(0.1),
+              color: JuiceTheme.info10,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
@@ -192,7 +192,7 @@ Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: JuiceTheme.sepia.withOpacity(0.1),
+                color: JuiceTheme.sepia10,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -373,7 +373,7 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: JuiceTheme.parchment.withOpacity(0.5),
+              color: JuiceTheme.parchment50,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -389,9 +389,9 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.juiceOrange.withOpacity(0.2),
+                color: JuiceTheme.juiceOrange20,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.5)),
+                border: Border.all(color: JuiceTheme.juiceOrange50),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -438,9 +438,9 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: JuiceTheme.juiceOrange.withOpacity(0.2),
+                color: JuiceTheme.juiceOrange20,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.5)),
+                border: Border.all(color: JuiceTheme.juiceOrange50),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -460,9 +460,9 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: JuiceTheme.success.withOpacity(0.2),
+                color: JuiceTheme.success20,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: JuiceTheme.success.withOpacity(0.5)),
+                border: Border.all(color: JuiceTheme.success50),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -503,7 +503,7 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: JuiceTheme.parchment.withOpacity(0.5),
+                            color: JuiceTheme.parchment50,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -531,7 +531,7 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: JuiceTheme.categoryCombat.withOpacity(0.2),
+                          color: JuiceTheme.categoryCombat20,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
@@ -561,12 +561,12 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
         const SizedBox(height: 4),
         Row(
           children: [
-            Icon(Icons.subdirectory_arrow_right, size: 14, color: JuiceTheme.sepia.withOpacity(0.5)),
+            Icon(Icons.subdirectory_arrow_right, size: 14, color: JuiceTheme.sepia50),
             const SizedBox(width: 4),
             Text(
               _getFollowUpHint(result.encounter),
               style: TextStyle(
-                color: JuiceTheme.sepia.withOpacity(0.7),
+                color: JuiceTheme.sepia70,
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
               ),
@@ -698,7 +698,7 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: JuiceTheme.categoryExplore.withOpacity(0.15),
+                color: JuiceTheme.categoryExplore15,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -764,7 +764,7 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: JuiceTheme.categoryExplore.withOpacity(0.1),
+              color: JuiceTheme.categoryExplore10,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
@@ -786,7 +786,7 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: JuiceTheme.info.withOpacity(0.1),
+              color: JuiceTheme.info10,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -807,9 +807,9 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.categoryExplore.withOpacity(0.2),
+                color: JuiceTheme.categoryExplore20,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: JuiceTheme.categoryExplore.withOpacity(0.4)),
+                border: Border.all(color: JuiceTheme.categoryExplore40),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -859,9 +859,9 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.mystic.withOpacity(0.2),
+                color: JuiceTheme.mystic20,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: JuiceTheme.mystic.withOpacity(0.4)),
+                border: Border.all(color: JuiceTheme.mystic40),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -898,9 +898,9 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.mystic.withOpacity(0.15),
+                  color: JuiceTheme.mystic15,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: JuiceTheme.mystic.withOpacity(0.4)),
+                  border: Border.all(color: JuiceTheme.mystic40),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1005,7 +1005,7 @@ Widget _buildMonsterEncounterDisplay(MonsterEncounterResult result, ThemeData th
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: JuiceTheme.parchment.withOpacity(0.5),
+                color: JuiceTheme.parchment50,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -1054,9 +1054,9 @@ Widget _buildMonsterEncounterDisplay(MonsterEncounterResult result, ThemeData th
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.mystic.withOpacity(0.2),
+                color: JuiceTheme.mystic20,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: JuiceTheme.mystic.withOpacity(0.4)),
+                border: Border.all(color: JuiceTheme.mystic40),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1080,9 +1080,9 @@ Widget _buildMonsterEncounterDisplay(MonsterEncounterResult result, ThemeData th
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.danger.withOpacity(0.2),
+                color: JuiceTheme.danger20,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: JuiceTheme.danger.withOpacity(0.4)),
+                border: Border.all(color: JuiceTheme.danger40),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1176,7 +1176,7 @@ Widget _buildMonsterTracksDisplay(MonsterTracksResult result, ThemeData theme) {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: JuiceTheme.parchment.withOpacity(0.5),
+                color: JuiceTheme.parchment50,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -1198,7 +1198,7 @@ Widget _buildMonsterTracksDisplay(MonsterTracksResult result, ThemeData theme) {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: JuiceTheme.info.withOpacity(0.1),
+              color: JuiceTheme.info10,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
@@ -1306,7 +1306,7 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: JuiceTheme.surface.withOpacity(0.5),
+            color: JuiceTheme.surface50,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: compassColor.withOpacity(0.2)),
           ),
@@ -1396,7 +1396,7 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
           style: TextStyle(
             fontSize: 10,
             fontFamily: JuiceTheme.fontFamilyMono,
-            color: JuiceTheme.parchment.withOpacity(0.6),
+            color: JuiceTheme.parchment60,
           ),
         ),
       ),

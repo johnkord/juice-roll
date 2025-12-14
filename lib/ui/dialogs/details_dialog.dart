@@ -28,7 +28,7 @@ class DetailsDialog extends StatelessWidget {
       subtitle: 'Front Page',
       icon: Icons.auto_fix_high,
       accentColor: JuiceTheme.gold,
-      secondaryColor: JuiceTheme.juiceOrange.withOpacity(0.2),
+      secondaryColor: JuiceTheme.juiceOrange20,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,7 +54,7 @@ class DetailsDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
-                    color: JuiceTheme.inkDark.withOpacity(0.5),
+                    color: JuiceTheme.inkDark50,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -124,7 +124,7 @@ class DetailsDialog extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: JuiceTheme.inkDark.withOpacity(0.3),
+                          color: JuiceTheme.inkDark30,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Column(
@@ -135,7 +135,7 @@ class DetailsDialog extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                   decoration: BoxDecoration(
-                                    color: JuiceTheme.rust.withOpacity(0.3),
+                                    color: JuiceTheme.rust30,
                                     borderRadius: BorderRadius.circular(3),
                                   ),
                                   child: const Text('d10', 
@@ -166,7 +166,7 @@ class DetailsDialog extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: JuiceTheme.inkDark.withOpacity(0.3),
+                          color: JuiceTheme.inkDark30,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Column(
@@ -177,7 +177,7 @@ class DetailsDialog extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                   decoration: BoxDecoration(
-                                    color: JuiceTheme.info.withOpacity(0.3),
+                                    color: JuiceTheme.info30,
                                     borderRadius: BorderRadius.circular(3),
                                   ),
                                   child: const Text('d6', 
@@ -365,7 +365,7 @@ class DetailsDialog extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
-          color: JuiceTheme.parchmentDark.withOpacity(0.3),
+          color: JuiceTheme.parchmentDark30,
           width: 0.5,
         ),
       ),

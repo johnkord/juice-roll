@@ -151,9 +151,9 @@ class _NameDialogOption extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            border: Border.all(color: JuiceTheme.gold.withOpacity(0.3)),
+            border: Border.all(color: JuiceTheme.gold30),
             borderRadius: BorderRadius.circular(8),
-            color: JuiceTheme.gold.withOpacity(0.05),
+            color: JuiceTheme.gold05,
           ),
           child: Row(
             children: [
@@ -184,7 +184,7 @@ class _NameDialogOption extends StatelessWidget {
               Icon(
                 Icons.chevron_right,
                 size: 18,
-                color: JuiceTheme.gold.withOpacity(0.5),
+                color: JuiceTheme.gold50,
               ),
             ],
           ),

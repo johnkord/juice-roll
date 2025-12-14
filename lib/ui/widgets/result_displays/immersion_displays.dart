@@ -231,7 +231,7 @@ Widget _buildEmotionalAtmosphereDisplay(EmotionalAtmosphereResult result, ThemeD
                       ? '(vs ${result.negativeEmotion})'
                       : '(vs ${result.positiveEmotion})',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                    color: JuiceTheme.parchmentDark60,
                     fontStyle: FontStyle.italic,
                     fontSize: 11,
                   ),
@@ -318,7 +318,7 @@ Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
-                color: JuiceTheme.mystic.withOpacity(0.15),
+                color: JuiceTheme.mystic15,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -496,7 +496,7 @@ Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
                   RichText(
                     text: TextSpan(
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: JuiceTheme.parchmentDark.withOpacity(0.8),
+                        color: JuiceTheme.parchmentDark80,
                       ),
                       children: [
                         const TextSpan(text: 'because '),
@@ -602,7 +602,7 @@ Widget _buildLocationDiceBadge(int roll, ThemeData theme) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
     decoration: BoxDecoration(
-      color: JuiceTheme.info.withOpacity(0.2),
+      color: JuiceTheme.info20,
       borderRadius: BorderRadius.circular(4),
     ),
     child: Row(
@@ -613,7 +613,7 @@ Widget _buildLocationDiceBadge(int roll, ThemeData theme) {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            color: JuiceTheme.info.withOpacity(0.3),
+            color: JuiceTheme.info30,
             borderRadius: BorderRadius.circular(3),
           ),
           child: Text(
@@ -635,7 +635,7 @@ Widget _buildEmotionDiceBadge(int roll, ThemeData theme) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
     decoration: BoxDecoration(
-      color: JuiceTheme.mystic.withOpacity(0.2),
+      color: JuiceTheme.mystic20,
       borderRadius: BorderRadius.circular(4),
     ),
     child: Row(
@@ -646,7 +646,7 @@ Widget _buildEmotionDiceBadge(int roll, ThemeData theme) {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            color: JuiceTheme.mystic.withOpacity(0.3),
+            color: JuiceTheme.mystic30,
             borderRadius: BorderRadius.circular(3),
           ),
           child: Text(

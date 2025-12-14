@@ -79,7 +79,7 @@ class _ExtendedNpcConversationDialogState extends State<ExtendedNpcConversationD
         style: TextStyle(
           fontSize: 10,
           fontStyle: FontStyle.italic,
-          color: JuiceTheme.parchment.withOpacity(0.85),
+          color: JuiceTheme.parchment85,
         ),
       ),
     );
@@ -216,7 +216,7 @@ class _ExtendedNpcConversationDialogState extends State<ExtendedNpcConversationD
             label,
             style: TextStyle(
               fontSize: 10,
-              color: JuiceTheme.parchment.withOpacity(0.9),
+              color: JuiceTheme.parchment90,
             ),
           ),
         ],
@@ -285,7 +285,7 @@ class _ExtendedNpcConversationDialogState extends State<ExtendedNpcConversationD
                       style: TextStyle(
                         fontSize: 10,
                         fontStyle: FontStyle.italic,
-                        color: JuiceTheme.parchment.withOpacity(0.8),
+                        color: JuiceTheme.parchment80,
                       ),
                     ),
                   ],
@@ -330,7 +330,7 @@ class _ExtendedNpcConversationDialogState extends State<ExtendedNpcConversationD
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.inkDark.withOpacity(0.5),
+                  color: JuiceTheme.inkDark50,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -406,7 +406,7 @@ class _ExtendedNpcConversationDialogState extends State<ExtendedNpcConversationD
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.inkDark.withOpacity(0.5),
+                  color: JuiceTheme.inkDark50,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: _companionColor.withOpacity(0.2)),
                 ),
@@ -446,9 +446,9 @@ class _ExtendedNpcConversationDialogState extends State<ExtendedNpcConversationD
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.mystic.withOpacity(0.08),
+                  color: JuiceTheme.mystic08,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: JuiceTheme.mystic.withOpacity(0.25)),
+                  border: Border.all(color: JuiceTheme.mystic25),
                 ),
                 child: Row(
                   children: [
@@ -461,7 +461,7 @@ class _ExtendedNpcConversationDialogState extends State<ExtendedNpcConversationD
                         style: TextStyle(
                           fontSize: 10,
                           fontStyle: FontStyle.italic,
-                          color: JuiceTheme.parchment.withOpacity(0.85),
+                          color: JuiceTheme.parchment85,
                         ),
                       ),
                     ),

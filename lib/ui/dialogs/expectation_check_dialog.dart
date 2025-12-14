@@ -27,7 +27,7 @@ class ExpectationCheckDialog extends StatelessWidget {
           OracleDialogIntro(
             icon: Icons.help_outline,
             iconColor: JuiceTheme.info,
-            backgroundColor: JuiceTheme.info.withOpacity(0.1),
+            backgroundColor: JuiceTheme.info10,
             text: 'Instead of asking "Is X true?", you assume X is true and test '
                 'whether your expectation holds.',
           ),
@@ -81,7 +81,7 @@ class ExpectationCheckDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: JuiceTheme.parchmentDark.withOpacity(0.08),
+              color: JuiceTheme.parchmentDark08,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
@@ -111,9 +111,9 @@ class ExpectationCheckDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: JuiceTheme.gold.withOpacity(0.05),
+        color: JuiceTheme.gold05,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JuiceTheme.gold.withOpacity(0.2)),
+        border: Border.all(color: JuiceTheme.gold20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,13 +377,13 @@ class _ExpectDialogOption extends StatelessWidget {
             border: Border.all(
               color: highlighted
                   ? iconColor.withOpacity(0.5)
-                  : JuiceTheme.gold.withOpacity(0.3),
+                  : JuiceTheme.gold30,
               width: highlighted ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
             color: highlighted
                 ? iconColor.withOpacity(0.1)
-                : JuiceTheme.gold.withOpacity(0.08),
+                : JuiceTheme.gold08,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -1388,7 +1388,7 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: JuiceTheme.parchmentDark.withOpacity(0.7),
+              color: JuiceTheme.parchmentDark70,
               fontStyle: FontStyle.italic,
               fontSize: 10,
               height: 1.2,
@@ -1402,9 +1402,9 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
-          color: JuiceTheme.juiceOrange.withOpacity(0.1),
+          color: JuiceTheme.juiceOrange10,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.3)),
+          border: Border.all(color: JuiceTheme.juiceOrange30),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1520,7 +1520,7 @@ Widget buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData the
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: JuiceTheme.parchmentDark.withOpacity(0.7),
+              color: JuiceTheme.parchmentDark70,
               fontStyle: FontStyle.italic,
               fontSize: 10,
               height: 1.2,
@@ -1613,7 +1613,7 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: JuiceTheme.juiceOrange.withOpacity(0.1),
+              color: JuiceTheme.juiceOrange10,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -1665,9 +1665,9 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: JuiceTheme.juiceOrange.withOpacity(0.1),
+          color: JuiceTheme.juiceOrange10,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.3)),
+          border: Border.all(color: JuiceTheme.juiceOrange30),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1718,9 +1718,9 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: JuiceTheme.gold.withOpacity(0.08),
+          color: JuiceTheme.gold08,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: JuiceTheme.gold.withOpacity(0.2)),
+          border: Border.all(color: JuiceTheme.gold20),
         ),
         child: Row(
           children: [

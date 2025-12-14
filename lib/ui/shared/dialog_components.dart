@@ -61,7 +61,7 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
                       end: Alignment.bottomCenter,
                       colors: [
                         JuiceTheme.surface,
-                        JuiceTheme.surface.withOpacity(0),
+                        JuiceTheme.surface00,
                       ],
                     ),
                   ),
@@ -69,7 +69,7 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
                     child: Icon(
                       Icons.keyboard_arrow_up,
                       size: 14,
-                      color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                      color: JuiceTheme.parchmentDark60,
                     ),
                   ),
                 )
@@ -98,7 +98,7 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
                       end: Alignment.topCenter,
                       colors: [
                         JuiceTheme.surface,
-                        JuiceTheme.surface.withOpacity(0),
+                        JuiceTheme.surface00,
                       ],
                     ),
                   ),
@@ -106,7 +106,7 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
                     child: Icon(
                       Icons.keyboard_arrow_down,
                       size: 14,
-                      color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                      color: JuiceTheme.parchmentDark60,
                     ),
                   ),
                 )

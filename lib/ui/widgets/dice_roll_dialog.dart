@@ -256,7 +256,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   Widget _buildDiceTypeToggle(Color themeColor) {
     return Container(
       decoration: BoxDecoration(
-        color: JuiceTheme.ink.withOpacity(0.3),
+        color: JuiceTheme.ink30,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: themeColor.withOpacity(0.2)),
       ),
@@ -429,10 +429,10 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                         ],
                       )
                     : null,
-                color: isSelected ? null : JuiceTheme.ink.withOpacity(0.3),
+                color: isSelected ? null : JuiceTheme.ink30,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isSelected ? _ironswornColor : JuiceTheme.parchmentDark.withOpacity(0.3),
+                  color: isSelected ? _ironswornColor : JuiceTheme.parchmentDark30,
                   width: isSelected ? 1.5 : 1,
                 ),
                 boxShadow: isSelected
@@ -493,10 +493,10 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                     ],
                   )
                 : null,
-            color: isSelected ? null : JuiceTheme.ink.withOpacity(0.3),
+            color: isSelected ? null : JuiceTheme.ink30,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected ? color : JuiceTheme.parchmentDark.withOpacity(0.3),
+              color: isSelected ? color : JuiceTheme.parchmentDark30,
               width: isSelected ? 1.5 : 1,
             ),
             boxShadow: isSelected
@@ -527,7 +527,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: JuiceTheme.ink.withOpacity(0.2),
+        color: JuiceTheme.ink20,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: themeColor.withOpacity(0.15)),
       ),
@@ -668,8 +668,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: _useMomentumBurn 
-            ? JuiceTheme.gold.withOpacity(0.1) 
-            : JuiceTheme.ink.withOpacity(0.2),
+            ? JuiceTheme.gold10 
+            : JuiceTheme.ink20,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: momentumColor.withOpacity(0.3),
@@ -740,7 +740,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               style: TextStyle(
                 fontSize: 10,
                 fontStyle: FontStyle.italic,
-                color: JuiceTheme.parchmentDark.withOpacity(0.8),
+                color: JuiceTheme.parchmentDark80,
               ),
             ),
           ],
@@ -817,12 +817,12 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                   decoration: BoxDecoration(
                     color: isSelected 
                         ? themeColor.withOpacity(0.2) 
-                        : JuiceTheme.ink.withOpacity(0.3),
+                        : JuiceTheme.ink30,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected 
                           ? themeColor 
-                          : JuiceTheme.parchmentDark.withOpacity(0.3),
+                          : JuiceTheme.parchmentDark30,
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
@@ -886,10 +886,10 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 decoration: BoxDecoration(
                   color: isSelected 
                       ? color.withOpacity(0.2) 
-                      : JuiceTheme.ink.withOpacity(0.2),
+                      : JuiceTheme.ink20,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSelected ? color : JuiceTheme.parchmentDark.withOpacity(0.3),
+                    color: isSelected ? color : JuiceTheme.parchmentDark30,
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
@@ -1024,7 +1024,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
         const SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
-            color: JuiceTheme.ink.withOpacity(0.3),
+            color: JuiceTheme.ink30,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: color.withOpacity(0.3)),
           ),
@@ -1072,7 +1072,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           child: Icon(
             icon,
             size: 20,
-            color: onPressed != null ? color : JuiceTheme.parchmentDark.withOpacity(0.3),
+            color: onPressed != null ? color : JuiceTheme.parchmentDark30,
           ),
         ),
       ),
@@ -1106,7 +1106,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: JuiceTheme.ink.withOpacity(0.3),
+            color: JuiceTheme.ink30,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: themeColor.withOpacity(0.3)),
           ),
@@ -1247,7 +1247,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           style: TextStyle(
             fontSize: 10,
             fontStyle: FontStyle.italic,
-            color: JuiceTheme.parchmentDark.withOpacity(0.7),
+            color: JuiceTheme.parchmentDark70,
           ),
         ),
       ],
@@ -1299,10 +1299,10 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : JuiceTheme.ink.withOpacity(0.3),
+          color: isSelected ? color.withOpacity(0.2) : JuiceTheme.ink30,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? color : JuiceTheme.parchmentDark.withOpacity(0.3),
+            color: isSelected ? color : JuiceTheme.parchmentDark30,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -1350,7 +1350,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
         const Spacer(),
         Container(
           decoration: BoxDecoration(
-            color: JuiceTheme.ink.withOpacity(0.3),
+            color: JuiceTheme.ink30,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: modColor.withOpacity(0.3)),
           ),
@@ -1412,7 +1412,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               content,
               style: TextStyle(
                 fontSize: 11,
-                color: JuiceTheme.parchment.withOpacity(0.9),
+                color: JuiceTheme.parchment90,
                 height: 1.3,
               ),
             ),
@@ -1527,7 +1527,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: JuiceTheme.ink.withOpacity(0.2),
+        color: JuiceTheme.ink20,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       child: Row(

@@ -78,13 +78,19 @@ class JuiceTheme {
   // InkDark variants (card backgrounds)
   static final Color inkDark60 = inkDark.withOpacity(0.6);
   static final Color inkDark50 = inkDark.withOpacity(0.5);
+  static final Color inkDark40 = inkDark.withOpacity(0.4);
   static final Color inkDark30 = inkDark.withOpacity(0.3);
   
   // Parchment variants (primary text/accent)
   static final Color parchment90 = parchment.withOpacity(0.9);
   static final Color parchment85 = parchment.withOpacity(0.85);
+  static final Color parchment80 = parchment.withOpacity(0.8);
   static final Color parchment70 = parchment.withOpacity(0.7);
+  static final Color parchment60 = parchment.withOpacity(0.6);
   static final Color parchment50 = parchment.withOpacity(0.5);
+  static final Color parchment15 = parchment.withOpacity(0.15);
+  static final Color parchment10 = parchment.withOpacity(0.1);
+  static final Color parchment03 = parchment.withOpacity(0.03);
   
   // ParchmentDark variants (secondary text/subtle elements)
   static final Color parchmentDark80 = parchmentDark.withOpacity(0.8);
@@ -96,58 +102,109 @@ class JuiceTheme {
   static final Color parchmentDark30 = parchmentDark.withOpacity(0.3);
   static final Color parchmentDark20 = parchmentDark.withOpacity(0.2);
   static final Color parchmentDark15 = parchmentDark.withOpacity(0.15);
+  static final Color parchmentDark08 = parchmentDark.withOpacity(0.08);
+  static final Color parchmentDark06 = parchmentDark.withOpacity(0.06);
   
   // Gold variants (highlights)
+  static final Color gold90 = gold.withOpacity(0.9);
+  static final Color gold80 = gold.withOpacity(0.8);
+  static final Color gold60 = gold.withOpacity(0.6);
+  static final Color gold50 = gold.withOpacity(0.5);
+  static final Color gold40 = gold.withOpacity(0.4);
   static final Color gold30 = gold.withOpacity(0.3);
   static final Color gold20 = gold.withOpacity(0.2);
   static final Color gold15 = gold.withOpacity(0.15);
   static final Color gold10 = gold.withOpacity(0.1);
+  static final Color gold08 = gold.withOpacity(0.08);
   static final Color gold05 = gold.withOpacity(0.05);
+  static final Color gold03 = gold.withOpacity(0.03);
   
   // Sepia variants (secondary accents)
+  static final Color sepia70 = sepia.withOpacity(0.7);
+  static final Color sepia50 = sepia.withOpacity(0.5);
+  static final Color sepia40 = sepia.withOpacity(0.4);
   static final Color sepia30 = sepia.withOpacity(0.3);
+  static final Color sepia25 = sepia.withOpacity(0.25);
   static final Color sepia20 = sepia.withOpacity(0.2);
+  static final Color sepia15 = sepia.withOpacity(0.15);
+  static final Color sepia12 = sepia.withOpacity(0.12);
   static final Color sepia10 = sepia.withOpacity(0.1);
   static final Color sepia08 = sepia.withOpacity(0.08);
   
   // JuiceOrange variants (brand color)
+  static final Color juiceOrange70 = juiceOrange.withOpacity(0.7);
   static final Color juiceOrange50 = juiceOrange.withOpacity(0.5);
   static final Color juiceOrange40 = juiceOrange.withOpacity(0.4);
   static final Color juiceOrange30 = juiceOrange.withOpacity(0.3);
+  static final Color juiceOrange25 = juiceOrange.withOpacity(0.25);
   static final Color juiceOrange20 = juiceOrange.withOpacity(0.2);
   static final Color juiceOrange15 = juiceOrange.withOpacity(0.15);
   static final Color juiceOrange10 = juiceOrange.withOpacity(0.1);
   static final Color juiceOrange08 = juiceOrange.withOpacity(0.08);
   
   // Rust variants (accent)
+  static final Color rust50 = rust.withOpacity(0.5);
+  static final Color rust40 = rust.withOpacity(0.4);
+  static final Color rust30 = rust.withOpacity(0.3);
+  static final Color rust25 = rust.withOpacity(0.25);
+  static final Color rust20 = rust.withOpacity(0.2);
   static final Color rust15 = rust.withOpacity(0.15);
   static final Color rust10 = rust.withOpacity(0.1);
+  static final Color rust08 = rust.withOpacity(0.08);
   
   // Info variants (informational)
+  static final Color info50 = info.withOpacity(0.5);
+  static final Color info40 = info.withOpacity(0.4);
   static final Color info30 = info.withOpacity(0.3);
+  static final Color info25 = info.withOpacity(0.25);
+  static final Color info20 = info.withOpacity(0.2);
+  static final Color info15 = info.withOpacity(0.15);
   static final Color info10 = info.withOpacity(0.1);
+  static final Color info08 = info.withOpacity(0.08);
   
   // Mystic variants (mystical elements)
+  static final Color mystic70 = mystic.withOpacity(0.7);
+  static final Color mystic60 = mystic.withOpacity(0.6);
   static final Color mystic40 = mystic.withOpacity(0.4);
+  static final Color mystic35 = mystic.withOpacity(0.35);
+  static final Color mystic30 = mystic.withOpacity(0.3);
+  static final Color mystic25 = mystic.withOpacity(0.25);
   static final Color mystic20 = mystic.withOpacity(0.2);
+  static final Color mystic15 = mystic.withOpacity(0.15);
+  static final Color mystic10 = mystic.withOpacity(0.1);
   static final Color mystic08 = mystic.withOpacity(0.08);
   
   // Danger variants (warnings)
+  static final Color danger80 = danger.withOpacity(0.8);
+  static final Color danger50 = danger.withOpacity(0.5);
+  static final Color danger40 = danger.withOpacity(0.4);
   static final Color danger30 = danger.withOpacity(0.3);
+  static final Color danger20 = danger.withOpacity(0.2);
+  static final Color danger15 = danger.withOpacity(0.15);
   static final Color danger10 = danger.withOpacity(0.1);
+  static final Color danger08 = danger.withOpacity(0.08);
+  static final Color danger05 = danger.withOpacity(0.05);
   
   // Success variants (positive)
   static final Color success50 = success.withOpacity(0.5);
   static final Color success20 = success.withOpacity(0.2);
+  static final Color success10 = success.withOpacity(0.1);
   
   // Category color variants (for UI components)
   static final Color categoryExplore40 = categoryExplore.withOpacity(0.4);
+  static final Color categoryExplore30 = categoryExplore.withOpacity(0.3);
+  static final Color categoryExplore20 = categoryExplore.withOpacity(0.2);
   static final Color categoryExplore15 = categoryExplore.withOpacity(0.15);
   static final Color categoryExplore12 = categoryExplore.withOpacity(0.12);
+  static final Color categoryExplore10 = categoryExplore.withOpacity(0.1);
+  static final Color categoryCombat30 = categoryCombat.withOpacity(0.3);
   static final Color categoryCombat20 = categoryCombat.withOpacity(0.2);
   static final Color categoryCombat15 = categoryCombat.withOpacity(0.15);
+  static final Color categoryCombat12 = categoryCombat.withOpacity(0.12);
+  static final Color categoryCharacter10 = categoryCharacter.withOpacity(0.1);
   
   // Surface variants (for gradients)
+  static final Color surface50 = surface.withOpacity(0.5);
   static final Color surface00 = surface.withOpacity(0);
 
   // ═══════════════════════════════════════════════════════════════════════════

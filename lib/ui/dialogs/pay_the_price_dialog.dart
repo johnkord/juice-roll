@@ -49,7 +49,7 @@ class PayThePriceDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: JuiceTheme.sepia.withOpacity(0.08),
+              color: JuiceTheme.sepia08,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Column(
@@ -89,9 +89,9 @@ class PayThePriceDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: JuiceTheme.danger.withOpacity(0.08),
+              color: JuiceTheme.danger08,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: JuiceTheme.danger.withOpacity(0.2)),
+              border: Border.all(color: JuiceTheme.danger20),
             ),
             child: Row(
               children: [
@@ -129,7 +129,7 @@ class PayThePriceDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: JuiceTheme.danger.withOpacity(0.05),
+              color: JuiceTheme.danger05,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Column(
@@ -140,7 +140,7 @@ class PayThePriceDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
-                    color: JuiceTheme.danger.withOpacity(0.8),
+                    color: JuiceTheme.danger80,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -184,7 +184,7 @@ class _PriceOutcomeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: JuiceTheme.rust.withOpacity(0.15),
+        color: JuiceTheme.rust15,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -208,7 +208,7 @@ class _PriceTwistChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: JuiceTheme.danger.withOpacity(0.15),
+        color: JuiceTheme.danger15,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

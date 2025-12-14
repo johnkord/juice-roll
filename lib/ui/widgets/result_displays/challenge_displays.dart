@@ -59,7 +59,7 @@ Widget _buildChallengeOptionChip(String skill, int dc, int roll, Color color, Th
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: JuiceTheme.gold.withOpacity(0.2),
+              color: JuiceTheme.gold20,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text('DC $dc', style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.gold, fontSize: 11)),
@@ -101,7 +101,7 @@ Widget _buildDcDisplay(DcResult result, ThemeData theme) {
   return Row(children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: JuiceTheme.gold.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(color: JuiceTheme.gold15, borderRadius: BorderRadius.circular(6)),
       child: Text(result.diceResults.join(", "), style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 11, color: JuiceTheme.gold)),
     ),
     const SizedBox(width: 8),
@@ -119,7 +119,7 @@ Widget _buildQuickDcDisplay(QuickDcResult result, ThemeData theme) {
   return Row(children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: JuiceTheme.gold.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(color: JuiceTheme.gold15, borderRadius: BorderRadius.circular(6)),
       child: Text('2d6: [${result.dice.join(", ")}]', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 11, color: JuiceTheme.gold)),
     ),
     const SizedBox(width: 8),

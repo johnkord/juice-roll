@@ -221,20 +221,20 @@ class ResultDisplayBuilder {
               Icon(
                 Icons.cancel_outlined,
                 size: 14,
-                color: JuiceTheme.parchmentDark.withOpacity(0.5),
+                color: JuiceTheme.parchmentDark50,
               ),
               const SizedBox(width: 6),
               Text(
                 'Discarded: ',
                 style: TextStyle(
                   fontSize: 11,
-                  color: JuiceTheme.parchmentDark.withOpacity(0.7),
+                  color: JuiceTheme.parchmentDark70,
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.ink.withOpacity(0.3),
+                  color: JuiceTheme.ink30,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -242,9 +242,9 @@ class ResultDisplayBuilder {
                   style: TextStyle(
                     fontSize: 11,
                     fontFamily: JuiceTheme.fontFamilyMono,
-                    color: JuiceTheme.parchmentDark.withOpacity(0.6),
+                    color: JuiceTheme.parchmentDark60,
                     decoration: TextDecoration.lineThrough,
-                    decorationColor: JuiceTheme.parchmentDark.withOpacity(0.4),
+                    decorationColor: JuiceTheme.parchmentDark40,
                   ),
                 ),
               ),
@@ -284,7 +284,7 @@ class ResultDisplayBuilder {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: JuiceTheme.ink.withOpacity(0.3),
+            color: JuiceTheme.ink30,
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(

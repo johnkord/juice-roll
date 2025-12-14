@@ -83,7 +83,7 @@ Widget buildPayThePriceDisplay(RollResult r, ThemeData theme) {
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(color: JuiceTheme.sepia.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+            decoration: BoxDecoration(color: JuiceTheme.sepia10, borderRadius: BorderRadius.circular(4)),
             child: Text('1d10: ${result.roll}', style: TextStyle(fontSize: 9, fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.parchmentDark)),
           ),
         ],
@@ -129,9 +129,9 @@ Widget buildQuestDisplay(RollResult r, ThemeData theme) {
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: JuiceTheme.rust.withOpacity(0.08),
+          color: JuiceTheme.rust08,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: JuiceTheme.rust.withOpacity(0.25)),
+          border: Border.all(color: JuiceTheme.rust25),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,7 +268,7 @@ Widget buildSimpleNpcDisplay(RollResult r, ThemeData theme) {
     children: [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: JuiceTheme.categoryCharacter.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: JuiceTheme.categoryCharacter10, borderRadius: BorderRadius.circular(8)),
         child: Text('Name: ${result.name.rolls.length}d10, Profile: 3d10', style: theme.textTheme.bodySmall?.copyWith(fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.categoryCharacter)),
       ),
       const SizedBox(height: 6),
@@ -347,9 +347,9 @@ Widget buildItemCreationDisplay(RollResult r, ThemeData theme) {
       Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: JuiceTheme.mystic.withOpacity(0.08),
+          color: JuiceTheme.mystic08,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: JuiceTheme.mystic.withOpacity(0.2)),
+          border: Border.all(color: JuiceTheme.mystic20),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +369,7 @@ Widget buildItemCreationDisplay(RollResult r, ThemeData theme) {
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: JuiceTheme.juiceOrange.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+          decoration: BoxDecoration(color: JuiceTheme.juiceOrange10, borderRadius: BorderRadius.circular(6)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -557,7 +557,7 @@ Widget buildFateRollDisplay(RollResult r, ThemeData theme) {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: JuiceTheme.parchment.withOpacity(0.15),
+                  color: JuiceTheme.parchment15,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: resultColor.withOpacity(0.5), width: 2),
                 ),
@@ -622,7 +622,7 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: JuiceTheme.gold.withOpacity(0.2), borderRadius: BorderRadius.circular(6), border: Border.all(color: JuiceTheme.gold)),
+              decoration: BoxDecoration(color: JuiceTheme.gold20, borderRadius: BorderRadius.circular(6), border: Border.all(color: JuiceTheme.gold)),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.star, size: 12, color: JuiceTheme.gold),
                 const SizedBox(width: 4),
@@ -641,9 +641,9 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: JuiceTheme.gold.withOpacity(0.1),
+            color: JuiceTheme.gold10,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: JuiceTheme.gold.withOpacity(0.4)),
+            border: Border.all(color: JuiceTheme.gold40),
           ),
           child: Column(
             children: [
@@ -680,7 +680,7 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
                 children: [
                   Text(
                     result.oldFragment,
-                    style: TextStyle(fontSize: 14, color: JuiceTheme.parchmentDark.withOpacity(0.6)),
+                    style: TextStyle(fontSize: 14, color: JuiceTheme.parchmentDark60),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -805,7 +805,7 @@ Widget buildAbstractIconDisplay(RollResult r, ThemeData theme) {
       // Grid coordinates
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(color: JuiceTheme.juiceOrange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: JuiceTheme.juiceOrange10, borderRadius: BorderRadius.circular(8)),
         child: Text('Grid: (${result.rowLabel}, ${result.colLabel})', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 14, color: JuiceTheme.juiceOrange)),
       ),
       const SizedBox(height: 12),
@@ -813,10 +813,10 @@ Widget buildAbstractIconDisplay(RollResult r, ThemeData theme) {
       Container(
         width: 120,
         height: 120,
-        decoration: BoxDecoration(color: JuiceTheme.parchment.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.4))),
+        decoration: BoxDecoration(color: JuiceTheme.parchment10, borderRadius: BorderRadius.circular(12), border: Border.all(color: JuiceTheme.juiceOrange40)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(11),
-          child: Image.asset(result.imagePath ?? '', fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, size: 48, color: JuiceTheme.parchment.withOpacity(0.5))),
+          child: Image.asset(result.imagePath ?? '', fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, size: 48, color: JuiceTheme.parchment50)),
         ),
       ),
     ],
@@ -835,13 +835,13 @@ Widget buildInformationDisplay(RollResult r, ThemeData theme) {
     children: [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: JuiceTheme.info.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: JuiceTheme.info10, borderRadius: BorderRadius.circular(8)),
         child: Text('2d100: [${result.typeRoll}, ${result.topicRoll}]', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.info)),
       ),
       const SizedBox(height: 6),
       Row(
         children: [
-          Chip(label: Text(result.informationType), backgroundColor: JuiceTheme.info.withOpacity(0.15), side: BorderSide(color: JuiceTheme.info), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+          Chip(label: Text(result.informationType), backgroundColor: JuiceTheme.info15, side: BorderSide(color: JuiceTheme.info), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
           const SizedBox(width: 8),
           Expanded(child: Text(result.topic, style: theme.textTheme.bodyMedium)),
         ],
@@ -900,7 +900,7 @@ Widget buildDialogTopicDisplay(RollResult r, ThemeData theme) {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: JuiceTheme.juiceOrange.withOpacity(0.15), borderRadius: BorderRadius.circular(6), border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.4))),
+            decoration: BoxDecoration(color: JuiceTheme.juiceOrange15, borderRadius: BorderRadius.circular(6), border: Border.all(color: JuiceTheme.juiceOrange40)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -913,7 +913,7 @@ Widget buildDialogTopicDisplay(RollResult r, ThemeData theme) {
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(color: JuiceTheme.juiceOrange.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+            decoration: BoxDecoration(color: JuiceTheme.juiceOrange10, borderRadius: BorderRadius.circular(4)),
             child: Text('1d100: ${result.roll}', style: TextStyle(fontSize: 10, fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: JuiceTheme.juiceOrange)),
           ),
         ],
@@ -921,11 +921,11 @@ Widget buildDialogTopicDisplay(RollResult r, ThemeData theme) {
       const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: JuiceTheme.juiceOrange.withOpacity(0.08), borderRadius: BorderRadius.circular(8), border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.2))),
+        decoration: BoxDecoration(color: JuiceTheme.juiceOrange08, borderRadius: BorderRadius.circular(8), border: Border.all(color: JuiceTheme.juiceOrange20)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.chat_bubble_outline, size: 16, color: JuiceTheme.juiceOrange.withOpacity(0.7)),
+            Icon(Icons.chat_bubble_outline, size: 16, color: JuiceTheme.juiceOrange70),
             const SizedBox(width: 8),
             Expanded(child: Text(result.topic, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilySerif, color: JuiceTheme.parchment, height: 1.3))),
           ],
@@ -1015,9 +1015,9 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: JuiceTheme.juiceOrange.withOpacity(0.1),
+            color: JuiceTheme.juiceOrange10,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: JuiceTheme.juiceOrange.withOpacity(0.3)),
+            border: Border.all(color: JuiceTheme.juiceOrange30),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1026,11 +1026,11 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
               const SizedBox(width: 6),
               Text('d20: ${result.rolls.isNotEmpty ? result.rolls[0] : "?"}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 10, fontWeight: FontWeight.bold, color: JuiceTheme.juiceOrange)),
               const SizedBox(width: 8),
-              Text('→', style: TextStyle(color: JuiceTheme.parchment.withOpacity(0.5), fontSize: 10)),
+              Text('→', style: TextStyle(color: JuiceTheme.parchment50, fontSize: 10)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: JuiceTheme.juiceOrange.withOpacity(0.15), borderRadius: BorderRadius.circular(4)),
+                decoration: BoxDecoration(color: JuiceTheme.juiceOrange15, borderRadius: BorderRadius.circular(4)),
                 child: Text('Pattern: ${result.pattern}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 11, fontWeight: FontWeight.bold, color: JuiceTheme.juiceOrange)),
               ),
             ],
@@ -1105,7 +1105,7 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
         const SizedBox(height: 4),
         Text(
           result.method == NameMethod.simple ? 'Method: 3d20 across columns 1-2-3' : 'Method: 3d20 on column 1 only',
-          style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: JuiceTheme.parchment.withOpacity(0.5), fontSize: 10),
+          style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: JuiceTheme.parchment50, fontSize: 10),
         ),
       ],
     ],

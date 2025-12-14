@@ -53,9 +53,9 @@ class _MonsterEncounterDialogState extends State<MonsterEncounterDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.categoryExplore.withOpacity(0.12),
+                  color: JuiceTheme.categoryExplore12,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: JuiceTheme.categoryExplore.withOpacity(0.4)),
+                  border: Border.all(color: JuiceTheme.categoryExplore40),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,7 +81,7 @@ class _MonsterEncounterDialogState extends State<MonsterEncounterDialog> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: JuiceTheme.categoryExplore.withOpacity(0.15),
+                          color: JuiceTheme.categoryExplore15,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
@@ -112,11 +112,11 @@ class _MonsterEncounterDialogState extends State<MonsterEncounterDialog> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: JuiceTheme.categoryExplore.withOpacity(0.3)),
+                          borderSide: BorderSide(color: JuiceTheme.categoryExplore30),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: JuiceTheme.categoryExplore.withOpacity(0.3)),
+                          borderSide: BorderSide(color: JuiceTheme.categoryExplore30),
                         ),
                       ),
                       dropdownColor: JuiceTheme.surface,
@@ -155,7 +155,7 @@ class _MonsterEncounterDialogState extends State<MonsterEncounterDialog> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: JuiceTheme.gold.withOpacity(0.15),
+                                  color: JuiceTheme.gold15,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -198,7 +198,7 @@ class _MonsterEncounterDialogState extends State<MonsterEncounterDialog> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: JuiceTheme.sepia.withOpacity(0.08),
+                  color: JuiceTheme.sepia08,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(

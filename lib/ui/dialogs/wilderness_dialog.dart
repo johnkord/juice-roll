@@ -92,14 +92,14 @@ class _WildernessDialogState extends State<WildernessDialog> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: JuiceTheme.sepia.withOpacity(0.1),
+                      color: JuiceTheme.sepia10,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: JuiceTheme.sepia.withOpacity(0.3)),
+                      border: Border.all(color: JuiceTheme.sepia30),
                     ),
                     child: Icon(
                       Icons.refresh,
                       size: 18,
-                      color: JuiceTheme.sepia.withOpacity(0.7),
+                      color: JuiceTheme.sepia70,
                     ),
                   ),
                 ),
@@ -228,9 +228,9 @@ class _WildernessDialogState extends State<WildernessDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: JuiceTheme.danger.withOpacity(0.1),
+                color: JuiceTheme.danger10,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: JuiceTheme.danger.withOpacity(0.3)),
+                border: Border.all(color: JuiceTheme.danger30),
               ),
               child: Row(
                 children: [
@@ -477,9 +477,9 @@ class _WildernessStateCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: JuiceTheme.categoryExplore.withOpacity(0.12),
+        color: JuiceTheme.categoryExplore12,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JuiceTheme.categoryExplore.withOpacity(0.4)),
+        border: Border.all(color: JuiceTheme.categoryExplore40),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,9 +514,9 @@ class _WildernessStateCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: JuiceTheme.danger.withOpacity(0.2),
+                    color: JuiceTheme.danger20,
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: JuiceTheme.danger.withOpacity(0.5)),
+                    border: Border.all(color: JuiceTheme.danger50),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -554,7 +554,7 @@ class _StateInfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: JuiceTheme.sepia.withOpacity(0.1),
+        color: JuiceTheme.sepia10,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
@@ -706,7 +706,7 @@ class _WildernessModifierChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: isSelected ? color.withOpacity(0.2) : JuiceTheme.sepia.withOpacity(0.08),
+        color: isSelected ? color.withOpacity(0.2) : JuiceTheme.sepia08,
         borderRadius: BorderRadius.circular(6),
         child: InkWell(
           onTap: onTap,
@@ -716,7 +716,7 @@ class _WildernessModifierChip extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: isSelected ? color.withOpacity(0.5) : JuiceTheme.sepia.withOpacity(0.2),
+                color: isSelected ? color.withOpacity(0.5) : JuiceTheme.sepia20,
               ),
             ),
             child: Row(
@@ -776,9 +776,9 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: JuiceTheme.sepia.withOpacity(0.08),
+        color: JuiceTheme.sepia08,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JuiceTheme.sepia.withOpacity(0.25)),
+        border: Border.all(color: JuiceTheme.sepia25),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -793,11 +793,11 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: JuiceTheme.sepia.withOpacity(0.3)),
+                borderSide: BorderSide(color: JuiceTheme.sepia30),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: JuiceTheme.sepia.withOpacity(0.3)),
+                borderSide: BorderSide(color: JuiceTheme.sepia30),
               ),
             ),
             dropdownColor: JuiceTheme.surface,
@@ -839,7 +839,7 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: JuiceTheme.gold.withOpacity(0.15),
+                          color: JuiceTheme.gold15,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -869,11 +869,11 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: JuiceTheme.sepia.withOpacity(0.3)),
+                borderSide: BorderSide(color: JuiceTheme.sepia30),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: JuiceTheme.sepia.withOpacity(0.3)),
+                borderSide: BorderSide(color: JuiceTheme.sepia30),
               ),
             ),
             dropdownColor: JuiceTheme.surface,
@@ -919,9 +919,9 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: JuiceTheme.categoryExplore.withOpacity(0.15),
+              color: JuiceTheme.categoryExplore15,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: JuiceTheme.categoryExplore.withOpacity(0.4)),
+              border: Border.all(color: JuiceTheme.categoryExplore40),
             ),
             child: Row(
               children: [
