@@ -389,11 +389,6 @@ class HomeStateNotifier extends ChangeNotifier {
     // Get the max rolls limit from session settings (null = unlimited)
     final maxRolls = _state.currentSession?.maxRollsPerSession;
     
-    // Keep only last 100 results in memory for performance
-    if (newHistory.length > 100) {
-      newHistory.removeLast();
-    }
-    
     _updateState(_state.copyWith(history: newHistory));
     
     // Save to session

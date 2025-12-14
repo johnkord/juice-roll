@@ -4,16 +4,24 @@ import 'result_display_builder.dart';
 import '../../presets/wilderness.dart';
 import '../theme/juice_theme.dart';
 
-/// Scrollable roll history widget.
+/// Scrollable roll history widget with pagination for performance.
 /// 
 /// ## Performance Optimizations
 /// 
-/// This widget uses several techniques to minimize rebuilds:
+/// This widget uses several techniques to minimize rebuilds and handle large lists:
+/// - **Pagination**: Only loads [_pageSize] items at a time, loading more on scroll
 /// - `cacheExtent`: Pre-renders items beyond the viewport for smoother scrolling
 /// - `RepaintBoundary`: Isolates each card's repaint region (important for InkWell)
 /// - Memoized `now`: DateTime.now() is computed once per list build, not per card
 /// - See `_RollHistoryCard` for additional per-card optimizations
-class RollHistory extends StatelessWidget {
+/// 
+/// ## Pagination Strategy
+/// 
+/// - Initial load: First [_pageSize] items (50)
+/// - On scroll near bottom: Load next page
+/// - Maximum in view: Unlimited (loads progressively)
+/// - New items added at top are always visible immediately
+class RollHistory extends StatefulWidget {
   final List<RollResult> history;
   final void Function(int environmentRow, int typeRow)? onSetWildernessPosition;
 
@@ -24,17 +32,111 @@ class RollHistory extends StatelessWidget {
   });
 
   @override
+  State<RollHistory> createState() => _RollHistoryState();
+}
+
+class _RollHistoryState extends State<RollHistory> {
+  /// Number of items to load per page
+  static const int _pageSize = 50;
+  
+  /// Scroll threshold to trigger loading more (pixels from bottom)
+  static const double _loadMoreThreshold = 200.0;
+  
+  final ScrollController _scrollController = ScrollController();
+  
+  /// Number of items currently loaded/visible
+  int _loadedCount = _pageSize;
+  
+  /// Whether we're currently loading more items
+  bool _isLoadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    // Initialize loaded count based on history size
+    _loadedCount = widget.history.length.clamp(0, _pageSize);
+  }
+
+  @override
+  void didUpdateWidget(RollHistory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // When new items are added (history grows), keep them visible
+    // New items are added at index 0, so we need to increase loaded count
+    if (widget.history.length > oldWidget.history.length) {
+      final newItemCount = widget.history.length - oldWidget.history.length;
+      setState(() {
+        _loadedCount = (_loadedCount + newItemCount).clamp(0, widget.history.length);
+      });
+    }
+    // When history shrinks (cleared), reset pagination
+    else if (widget.history.length < oldWidget.history.length) {
+      setState(() {
+        _loadedCount = widget.history.length.clamp(0, _pageSize);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_isLoadingMore) return;
+    if (_loadedCount >= widget.history.length) return;
+    
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    
+    // Load more when near the bottom
+    if (maxScroll - currentScroll <= _loadMoreThreshold) {
+      _loadMoreItems();
+    }
+  }
+
+  void _loadMoreItems() {
+    if (_loadedCount >= widget.history.length) return;
+    
+    setState(() {
+      _isLoadingMore = true;
+    });
+    
+    // Use a microtask to allow the UI to show loading indicator
+    Future.microtask(() {
+      if (mounted) {
+        setState(() {
+          _loadedCount = (_loadedCount + _pageSize).clamp(0, widget.history.length);
+          _isLoadingMore = false;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Compute 'now' once for the entire list to avoid DateTime.now() per card
     final now = DateTime.now();
+    final displayCount = _loadedCount.clamp(0, widget.history.length);
+    final hasMore = displayCount < widget.history.length;
     
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       // Pre-render 500 logical pixels beyond viewport for smoother scrolling
       cacheExtent: 500,
-      itemCount: history.length,
+      // +1 for loading indicator if there are more items
+      itemCount: displayCount + (hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-        final result = history[index];
+        // Show loading indicator at the bottom
+        if (index >= displayCount) {
+          return _buildLoadingIndicator();
+        }
+        
+        final result = widget.history[index];
         // RepaintBoundary isolates each card's repaint region,
         // preventing InkWell ripples from triggering neighbor repaints
         return RepaintBoundary(
@@ -43,10 +145,38 @@ class RollHistory extends StatelessWidget {
             result: result,
             index: index,
             now: now,
-            onSetWildernessPosition: onSetWildernessPosition,
+            onSetWildernessPosition: widget.onSetWildernessPosition,
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: JuiceTheme.parchmentDark50,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Loading more... (${widget.history.length - _loadedCount} remaining)',
+            style: TextStyle(
+              fontSize: 12,
+              color: JuiceTheme.parchmentDark50,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
