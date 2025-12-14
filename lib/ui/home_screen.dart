@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/session.dart';
 import 'home_state.dart';
+import 'home_screen_components.dart';
 import 'theme/juice_theme.dart';
-import 'widgets/roll_button.dart';
-import 'widgets/roll_history.dart';
 import 'widgets/dice_roll_dialog.dart';
 import 'widgets/fate_check_dialog.dart';
 import 'widgets/next_scene_dialog.dart';
@@ -11,7 +10,23 @@ import 'dialogs/dialogs.dart';
 
 /// Home screen with roll buttons and history.
 /// 
-/// This widget is now focused purely on UI concerns.
+/// ## Performance Architecture
+/// 
+/// This widget uses **targeted rebuilds** to avoid unnecessary work:
+/// 
+/// - **OracleButtonGrid**: Static, never rebuilds (24 buttons)
+/// - **SessionAppBarTitle**: Only rebuilds when session name changes
+/// - **ClearHistoryButton**: Only rebuilds when history empty state changes
+/// - **HistorySection**: Only rebuilds when history changes (most frequent)
+/// 
+/// See [home_screen_components.dart] for the extracted widgets and
+/// documentation on how to add new stateful components.
+/// 
+/// ## Why Not Just setState?
+/// 
+/// Before: `setState(() {})` rebuilt ALL widgets on ANY state change.
+/// After: Each component uses `ListenableBuilder` to rebuild only itself.
+/// 
 /// All business logic is delegated to [HomeStateNotifier].
 class HomeScreen extends StatefulWidget {
   /// Optional state notifier for testing.
@@ -30,6 +45,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final HomeStateNotifier _notifier;
   late final bool _ownsNotifier;
+  
+  /// Cached callbacks for the button grid - created once, never changes.
+  /// This prevents recreating callback objects on every build.
+  late final OracleButtonCallbacks _buttonCallbacks;
 
   @override
   void initState() {
@@ -45,23 +64,45 @@ class _HomeScreenState extends State<HomeScreen> {
       _notifier.init();
     }
     
-    // Listen for state changes
-    _notifier.addListener(_onStateChange);
+    // Create button callbacks once - these never change
+    _buttonCallbacks = OracleButtonCallbacks(
+      showDetailsDialog: _showDetailsDialog,
+      showImmersionDialog: _showImmersionDialog,
+      showFateCheckDialog: _showFateCheckDialog,
+      showNextSceneDialog: _showNextSceneDialog,
+      showExpectationCheckDialog: _showExpectationCheckDialog,
+      showNameGeneratorDialog: _showNameGeneratorDialog,
+      showRandomTablesDialog: _showRandomTablesDialog,
+      showChallengeDialog: _showChallengeDialog,
+      showPayThePriceDialog: _showPayThePriceDialog,
+      showWildernessDialog: _showWildernessDialog,
+      showMonsterDialog: _showMonsterDialog,
+      showNpcActionDialog: _showNpcActionDialog,
+      showDialogGeneratorDialog: _showDialogGeneratorDialog,
+      showSettlementDialog: _showSettlementDialog,
+      showTreasureDialog: _showTreasureDialog,
+      showDungeonDialog: _showDungeonDialog,
+      showLocationDialog: _showLocationDialog,
+      showExtendedNpcDialog: _showExtendedNpcDialog,
+      showAbstractIconsDialog: _showAbstractIconsDialog,
+      showDiceRollDialog: _showDiceRollDialog,
+      rollScale: _notifier.rollScale,
+      rollInterruptPlotPoint: _notifier.rollInterruptPlotPoint,
+      rollDiscoverMeaning: _notifier.rollDiscoverMeaning,
+      rollQuest: _notifier.rollQuest,
+    );
+    
+    // NOTE: We no longer call _notifier.addListener(_onStateChange) here!
+    // Each component now uses ListenableBuilder for targeted rebuilds.
+    // The only exception is the loading state, which we handle specially.
   }
 
   @override
   void dispose() {
-    _notifier.removeListener(_onStateChange);
     if (_ownsNotifier) {
       _notifier.dispose();
     }
     super.dispose();
-  }
-
-  void _onStateChange() {
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   // ========== Session Dialogs ==========
@@ -482,27 +523,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = _notifier.state;
-    
-    if (state.isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('JuiceRoll'),
-          centerTitle: true,
-        ),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Loading session...'),
-            ],
-          ),
-        ),
-      );
-    }
-    
+    // PERFORMANCE: Only the loading state check uses direct state access.
+    // All other state-dependent UI uses ListenableBuilder for targeted rebuilds.
+    // See home_screen_components.dart for details.
+    return ListenableBuilder(
+      listenable: _notifier,
+      builder: (context, _) {
+        if (_notifier.state.isLoading) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('JuiceRoll'),
+              centerTitle: true,
+            ),
+            body: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading session...'),
+                ],
+              ),
+            ),
+          );
+        }
+        
+        // Once loaded, return the main UI which uses targeted rebuilds
+        return _buildMainScreen();
+      },
+    );
+  }
+  
+  /// Builds the main screen layout.
+  /// 
+  /// This method builds ONCE after loading completes. Individual components
+  /// handle their own rebuilds via ListenableBuilder:
+  /// 
+  /// - [SessionAppBarTitle] - rebuilds on session name change
+  /// - [ClearHistoryButton] - rebuilds on history empty state change
+  /// - [OracleButtonGrid] - NEVER rebuilds (static)
+  /// - [HistorySection] - rebuilds on history change
+  Widget _buildMainScreen() {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 36,
@@ -534,330 +595,63 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         leadingWidth: 74,
         titleSpacing: 0,
-        title: GestureDetector(
+        // TARGETED REBUILD: Only rebuilds when session name changes
+        title: SessionAppBarTitle(
+          notifier: _notifier,
           onTap: _showSessionSelector,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  state.currentSession?.name ?? 'JuiceRoll',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
-              const SizedBox(width: 2),
-              const Icon(Icons.arrow_drop_down, size: 16),
-            ],
-          ),
         ),
         centerTitle: true,
         actions: [
-          if (state.history.isNotEmpty)
-            Semantics(
-              label: 'Clear roll history',
-              button: true,
-              child: IconButton(
-                icon: const Icon(Icons.delete_sweep, size: 18),
-                tooltip: 'Clear History',
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Clear History?'),
-                      content: const Text('This will remove all roll history for this session.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            _notifier.clearHistory();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Clear'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+          // TARGETED REBUILD: Only rebuilds when history empty state changes
+          ClearHistoryButton(
+            notifier: _notifier,
+            onPressed: _showClearHistoryDialog,
+          ),
           const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // Roll Buttons Section - Scrollable
+          // STATIC: Oracle button grid - never rebuilds (24 buttons)
           Expanded(
             flex: 2,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(left: 12, right: 12, top: 4, bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Row 1: Front Page (Details, Immersion) + Left Page (Fate, Scene)
-                  _buildButtonRow([
-                    RollButton(
-                      label: 'Details',
-                      icon: Icons.palette,
-                      onPressed: _showDetailsDialog,
-                      color: JuiceTheme.parchmentDark,
-                    ),
-                    RollButton(
-                      label: 'Immerse',
-                      icon: Icons.visibility,
-                      onPressed: _showImmersionDialog,
-                      color: JuiceTheme.juiceOrange,
-                    ),
-                    RollButton(
-                      label: 'Fate',
-                      icon: Icons.help_outline,
-                      onPressed: _showFateCheckDialog,
-                      color: JuiceTheme.mystic,
-                    ),
-                    RollButton(
-                      label: 'Scene',
-                      icon: Icons.theaters,
-                      onPressed: _showNextSceneDialog,
-                      color: JuiceTheme.info,
-                    ),
-                  ]),
-                  const SizedBox(height: 4),
-                  // Row 2: Left Page (Expect, Scale, Interrupt) + Right Page (Meaning)
-                  _buildButtonRow([
-                    RollButton(
-                      label: 'Expect',
-                      icon: Icons.psychology,
-                      onPressed: _showExpectationCheckDialog,
-                      color: JuiceTheme.mystic,
-                    ),
-                    RollButton(
-                      label: 'Scale',
-                      icon: Icons.swap_vert,
-                      onPressed: _notifier.rollScale,
-                      color: JuiceTheme.categoryCharacter,
-                    ),
-                    RollButton(
-                      label: 'Interrupt',
-                      icon: Icons.bolt,
-                      onPressed: _notifier.rollInterruptPlotPoint,
-                      color: JuiceTheme.juiceOrange,
-                    ),
-                    RollButton(
-                      label: 'Meaning',
-                      icon: Icons.lightbulb_outline,
-                      onPressed: _notifier.rollDiscoverMeaning,
-                      color: JuiceTheme.gold,
-                    ),
-                  ]),
-                  const SizedBox(height: 4),
-                  // Row 3: Second Inside Folded (Name, Random) + Back Page (Quest, Challenge)
-                  _buildButtonRow([
-                    RollButton(
-                      label: 'Name',
-                      icon: Icons.badge,
-                      onPressed: _showNameGeneratorDialog,
-                      color: JuiceTheme.categoryCharacter,
-                    ),
-                    RollButton(
-                      label: 'Random',
-                      icon: Icons.casino,
-                      onPressed: _showRandomTablesDialog,
-                      color: JuiceTheme.gold,
-                    ),
-                    RollButton(
-                      label: 'Quest',
-                      icon: Icons.map,
-                      onPressed: _notifier.rollQuest,
-                      color: JuiceTheme.rust,
-                    ),
-                    RollButton(
-                      label: 'Challenge',
-                      icon: Icons.fitness_center,
-                      onPressed: _showChallengeDialog,
-                      color: JuiceTheme.categoryCombat,
-                    ),
-                  ]),
-                  const SizedBox(height: 4),
-                  // Row 4: Back Page (Price) + First Inside Unfolded (Wilderness, Monster) + Second Inside Unfolded (NPC)
-                  _buildButtonRow([
-                    RollButton(
-                      label: 'Price',
-                      icon: Icons.warning,
-                      onPressed: _showPayThePriceDialog,
-                      color: JuiceTheme.danger,
-                    ),
-                    RollButton(
-                      label: 'Wilderness',
-                      icon: Icons.forest,
-                      onPressed: _showWildernessDialog,
-                      color: JuiceTheme.categoryExplore,
-                    ),
-                    RollButton(
-                      label: 'Monster',
-                      icon: Icons.pest_control,
-                      onPressed: _showMonsterDialog,
-                      color: JuiceTheme.danger,
-                    ),
-                    RollButton(
-                      label: 'NPC',
-                      icon: Icons.person,
-                      onPressed: _showNpcActionDialog,
-                      color: JuiceTheme.categoryCharacter,
-                    ),
-                  ]),
-                  const SizedBox(height: 4),
-                  // Row 5: Second Inside Unfolded (Dialog, Settlement) + Third Inside Unfolded (Treasure) + Fourth Inside Unfolded (Dungeon)
-                  _buildButtonRow([
-                    RollButton(
-                      label: 'Dialog',
-                      icon: Icons.chat,
-                      onPressed: _showDialogGeneratorDialog,
-                      color: JuiceTheme.categoryCharacter,
-                    ),
-                    RollButton(
-                      label: 'Settlement',
-                      icon: Icons.location_city,
-                      onPressed: _showSettlementDialog,
-                      color: JuiceTheme.categoryWorld,
-                    ),
-                    RollButton(
-                      label: 'Treasure',
-                      icon: Icons.diamond,
-                      onPressed: _showTreasureDialog,
-                      color: JuiceTheme.gold,
-                    ),
-                    RollButton(
-                      label: 'Dungeon',
-                      icon: Icons.castle,
-                      onPressed: _showDungeonDialog,
-                      color: JuiceTheme.categoryUtility,
-                    ),
-                  ]),
-                  const SizedBox(height: 4),
-                  // Row 6: Fourth Inside Unfolded (Location) + Left Extension (NPC Talk) + Right Extension (Abstract) + Dice Utility
-                  _buildButtonRow([
-                    RollButton(
-                      label: 'Location',
-                      icon: Icons.grid_on,
-                      onPressed: _showLocationDialog,
-                      color: JuiceTheme.rust,
-                    ),
-                    RollButton(
-                      label: 'NPC Talk',
-                      icon: Icons.record_voice_over,
-                      onPressed: _showExtendedNpcDialog,
-                      color: JuiceTheme.mystic,
-                    ),
-                    RollButton(
-                      label: 'Abstract',
-                      icon: Icons.image,
-                      onPressed: _showAbstractIconsDialog,
-                      color: JuiceTheme.success,
-                    ),
-                    RollButton(
-                      label: 'Dice',
-                      icon: Icons.casino,
-                      onPressed: _showDiceRollDialog,
-                      color: JuiceTheme.categoryUtility,
-                    ),
-                  ]),
-                ],
-              ),
-            ),
+            child: OracleButtonGrid(callbacks: _buttonCallbacks),
           ),
 
-          // Compact History Section Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
-            decoration: BoxDecoration(
-              color: JuiceTheme.ink.withOpacity(0.3),
-              border: Border(
-                top: BorderSide(
-                  color: JuiceTheme.parchmentDark.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.history,
-                  size: 12,
-                  color: JuiceTheme.parchmentDark.withOpacity(0.6),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Roll History',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: JuiceTheme.parchmentDark.withOpacity(0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // STATIC: History section header - never rebuilds
+          const HistorySectionHeader(),
 
-          // History Section
+          // TARGETED REBUILD: History section - rebuilds when history changes
           Expanded(
             flex: 1,
-            child: state.history.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.auto_stories,
-                          size: 48,
-                          color: JuiceTheme.parchmentDark.withOpacity(0.3),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No rolls yet',
-                          style: TextStyle(
-                            fontFamily: JuiceTheme.fontFamilySerif,
-                            color: JuiceTheme.parchmentDark.withOpacity(0.5),
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Tap an oracle button to begin',
-                          style: TextStyle(
-                            color: JuiceTheme.parchmentDark.withOpacity(0.35),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : RollHistory(
-                    history: state.history,
-                    onSetWildernessPosition: _notifier.setWildernessPosition,
-                  ),
+            child: HistorySection(notifier: _notifier),
           ),
         ],
       ),
     );
   }
-
-  Widget _buildButtonRow(List<Widget> buttons) {
-    return Row(
-      children: buttons.map((btn) {
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            child: AspectRatio(
-              aspectRatio: 1.03,
-              child: btn,
-            ),
+  
+  /// Shows the clear history confirmation dialog.
+  void _showClearHistoryDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear History?'),
+        content: const Text('This will remove all roll history for this session.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-        );
-      }).toList(),
+          TextButton(
+            onPressed: () {
+              _notifier.clearHistory();
+              Navigator.pop(context);
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
     );
   }
 }
