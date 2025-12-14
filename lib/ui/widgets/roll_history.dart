@@ -5,6 +5,14 @@ import '../../presets/wilderness.dart';
 import '../theme/juice_theme.dart';
 
 /// Scrollable roll history widget.
+/// 
+/// ## Performance Optimizations
+/// 
+/// This widget uses several techniques to minimize rebuilds:
+/// - `cacheExtent`: Pre-renders items beyond the viewport for smoother scrolling
+/// - `RepaintBoundary`: Isolates each card's repaint region (important for InkWell)
+/// - Memoized `now`: DateTime.now() is computed once per list build, not per card
+/// - See `_RollHistoryCard` for additional per-card optimizations
 class RollHistory extends StatelessWidget {
   final List<RollResult> history;
   final void Function(int environmentRow, int typeRow)? onSetWildernessPosition;
@@ -17,16 +25,26 @@ class RollHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Compute 'now' once for the entire list to avoid DateTime.now() per card
+    final now = DateTime.now();
+    
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 8),
+      // Pre-render 500 logical pixels beyond viewport for smoother scrolling
+      cacheExtent: 500,
       itemCount: history.length,
       itemBuilder: (context, index) {
         final result = history[index];
-        return _RollHistoryCard(
-          key: ValueKey('${result.timestamp.millisecondsSinceEpoch}_$index'),
-          result: result,
-          index: index,
-          onSetWildernessPosition: onSetWildernessPosition,
+        // RepaintBoundary isolates each card's repaint region,
+        // preventing InkWell ripples from triggering neighbor repaints
+        return RepaintBoundary(
+          child: _RollHistoryCard(
+            key: ValueKey('${result.timestamp.millisecondsSinceEpoch}_$index'),
+            result: result,
+            index: index,
+            now: now,
+            onSetWildernessPosition: onSetWildernessPosition,
+          ),
         );
       },
     );
@@ -36,12 +54,14 @@ class RollHistory extends StatelessWidget {
 class _RollHistoryCard extends StatelessWidget {
   final RollResult result;
   final int index;
+  final DateTime now;
   final void Function(int environmentRow, int typeRow)? onSetWildernessPosition;
 
   const _RollHistoryCard({
     super.key, 
     required this.result, 
     required this.index,
+    required this.now,
     this.onSetWildernessPosition,
   });
 
@@ -73,7 +93,13 @@ class _RollHistoryCard extends StatelessWidget {
     }
   }
 
-  // Cached shadow list to avoid recreating on every build
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CACHED STATIC VALUES
+  // These are computed once and reused across all card instances to avoid
+  // creating new objects on every build.
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  /// Cached shadow list - avoids recreating BoxShadow on every build
   static final _cardShadows = [
     BoxShadow(
       color: Colors.black.withOpacity(0.2),
@@ -81,6 +107,27 @@ class _RollHistoryCard extends StatelessWidget {
       offset: const Offset(0, 2),
     ),
   ];
+  
+  /// Cached border radius - avoids recreating BorderRadius on every build
+  static final _cardBorderRadius = BorderRadius.circular(8);
+  
+  /// Cached text styles - populated on first use from theme
+  /// These avoid calling copyWith() on every build
+  static TextStyle? _titleStyle;
+  static TextStyle? _timestampStyle;
+  
+  TextStyle _getTitleStyle(ThemeData theme) {
+    return _titleStyle ??= theme.textTheme.titleSmall!.copyWith(
+      fontWeight: FontWeight.bold,
+      color: JuiceTheme.parchment,
+    );
+  }
+  
+  TextStyle _getTimestampStyle(ThemeData theme) {
+    return _timestampStyle ??= theme.textTheme.bodySmall!.copyWith(
+      color: JuiceTheme.parchmentDark,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +138,7 @@ class _RollHistoryCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         color: JuiceTheme.inkDark60,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: _cardBorderRadius,
         border: Border(
           left: BorderSide(color: categoryColor, width: 4),
         ),
@@ -100,7 +147,7 @@ class _RollHistoryCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: _cardBorderRadius,
           onTap: () => _showDetails(context),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -114,17 +161,12 @@ class _RollHistoryCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         result.description,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: JuiceTheme.parchment,
-                        ),
+                        style: _getTitleStyle(theme),
                       ),
                     ),
                     Text(
                       _formatTime(result.timestamp),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: JuiceTheme.parchmentDark,
-                      ),
+                      style: _getTimestampStyle(theme),
                     ),
                   ],
                 ),
@@ -232,8 +274,8 @@ class _RollHistoryCard extends StatelessWidget {
     return ResultDisplayBuilder(theme).buildDisplay(result);
   }
 
+  /// Formats timestamp relative to [now] (passed from parent to avoid DateTime.now() per card)
   String _formatTime(DateTime time) {
-    final now = DateTime.now();
     final diff = now.difference(time);
 
     if (diff.inSeconds < 60) {
