@@ -52,7 +52,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             // Likelihood selection
             Text(
               'How likely is it?',
@@ -62,7 +62,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             // Likelihood options as styled tiles
             _LikelihoodTile(
               title: 'Unlikely',
@@ -90,9 +90,9 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               isSelected: _selectedLikelihood == 'Likely',
               onTap: () => setState(() => _selectedLikelihood = 'Likely'),
             ),
-            
+
             const Divider(height: 20),
-            
+
             // Quick reference
             Container(
               padding: const EdgeInsets.all(8),
@@ -117,13 +117,13 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
                           children: [
                             _ReferenceRow(symbol: '++', result: 'Yes And'),
                             _ReferenceRow(
-                              symbol: '+0', 
+                              symbol: '+0',
                               result: 'Yes Because*',
                               tooltip: 'Use Intensity to scale the reason WHY',
                             ),
                             _ReferenceRow(symbol: '+-', result: 'Yes But'),
                             _ReferenceRow(
-                              symbol: '0+', 
+                              symbol: '0+',
                               result: 'Favorable*',
                               tooltip: 'Answer = what HELPS your character',
                             ),
@@ -137,18 +137,18 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _ReferenceRow(
-                              symbol: '>0', 
+                              symbol: '>0',
                               result: 'Invalid*',
                               tooltip: 'Your question has a false assumption',
                             ),
                             _ReferenceRow(
-                              symbol: '0-', 
+                              symbol: '0-',
                               result: 'Unfavorable*',
                               tooltip: 'Answer = what HURTS your character',
                             ),
                             _ReferenceRow(symbol: '-+', result: 'No But'),
                             _ReferenceRow(
-                              symbol: '-0', 
+                              symbol: '-0',
                               result: 'No Because*',
                               tooltip: 'Use Intensity to scale the reason WHY',
                             ),
@@ -162,7 +162,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             // Dice info
             Row(
               children: [
@@ -241,15 +241,12 @@ class _LikelihoodTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             border: Border.all(
-              color: isSelected 
-                  ? iconColor.withOpacity(0.6) 
-                  : JuiceTheme.gold20,
+              color:
+                  isSelected ? iconColor.withOpacity(0.6) : JuiceTheme.gold20,
               width: isSelected ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: isSelected 
-                ? iconColor.withOpacity(0.1) 
-                : JuiceTheme.gold03,
+            color: isSelected ? iconColor.withOpacity(0.1) : JuiceTheme.gold03,
           ),
           child: Row(
             children: [
@@ -315,7 +312,8 @@ class _ReferenceRow extends StatelessWidget {
   final String result;
   final String? tooltip;
 
-  const _ReferenceRow({required this.symbol, required this.result, this.tooltip});
+  const _ReferenceRow(
+      {required this.symbol, required this.result, this.tooltip});
 
   @override
   Widget build(BuildContext context) {
@@ -350,7 +348,7 @@ class _ReferenceRow extends StatelessWidget {
         ],
       ),
     );
-    
+
     if (tooltip != null) {
       return Tooltip(
         message: tooltip!,
@@ -372,7 +370,9 @@ class _ReferenceRow extends StatelessWidget {
     if (symbol.startsWith('-')) return JuiceTheme.danger;
     // Use gold for contextual outcomes (0+, 0-)
     if (symbol == '0+' || symbol == '0-') return JuiceTheme.gold;
-    if (symbol.startsWith('0') || symbol.startsWith('<') || symbol.startsWith('>')) {
+    if (symbol.startsWith('0') ||
+        symbol.startsWith('<') ||
+        symbol.startsWith('>')) {
       return JuiceTheme.info;
     }
     return JuiceTheme.parchmentDark;

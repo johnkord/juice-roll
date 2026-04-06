@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../theme/juice_theme.dart';
-import '../shared/oracle_dialog.dart';
-import '../../presets/location.dart';
+
 import '../../models/roll_result.dart';
+import '../../presets/location.dart';
+import '../shared/oracle_dialog.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for Location Grid options.
 /// A 5x5 bullseye grid for determining direction and distance.
@@ -79,7 +80,8 @@ class LocationDialog extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.lightbulb_outline, size: 12, color: color.withOpacity(0.8)),
+                Icon(Icons.lightbulb_outline,
+                    size: 12, color: color.withOpacity(0.8)),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
@@ -146,10 +148,12 @@ class LocationDialog extends StatelessWidget {
                     children: List.generate(5, (col) {
                       // Determine ring: 0=center, 1=close, 2=far
                       final isCenter = row == 2 && col == 2;
-                      final isClose = !isCenter && 
-                          row >= 1 && row <= 3 && 
-                          col >= 1 && col <= 3;
-                      
+                      final isClose = !isCenter &&
+                          row >= 1 &&
+                          row <= 3 &&
+                          col >= 1 &&
+                          col <= 3;
+
                       Color cellColor;
                       String symbol;
                       if (isCenter) {
@@ -162,7 +166,7 @@ class LocationDialog extends StatelessWidget {
                         cellColor = JuiceTheme.parchmentDark;
                         symbol = '·';
                       }
-                      
+
                       return Container(
                         width: 24,
                         height: 24,
@@ -238,7 +242,8 @@ class LocationDialog extends StatelessWidget {
       children: [
         Text(
           symbol,
-          style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: 12, color: color, fontWeight: FontWeight.bold),
         ),
         const SizedBox(width: 4),
         Text(
@@ -269,10 +274,11 @@ class LocationDialog extends StatelessWidget {
             iconColor: _locationColor,
             backgroundColor: _locationColor.withOpacity(0.08),
             borderColor: _locationColor.withOpacity(0.2),
-            text: 'A 5×5 bullseye grid. Roll 1d100 to get both a direction and a distance.',
+            text:
+                'A 5×5 bullseye grid. Roll 1d100 to get both a direction and a distance.',
           ),
           const SizedBox(height: 12),
-          
+
           // Compass Method
           _buildMethodCard(
             title: 'Compass Method',
@@ -283,7 +289,7 @@ class LocationDialog extends StatelessWidget {
                 '• Distance (Close or Far based on ring)',
             useFor: 'Next town, hex population, travel days, roads',
           ),
-          
+
           // Zoom Method
           _buildMethodCard(
             title: 'Zoom Method',
@@ -296,9 +302,9 @@ class LocationDialog extends StatelessWidget {
                 '4. Keep zooming until you have your answer',
             useFor: 'Remote Events, hidden treasure locations',
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Roll button
           Container(
             width: double.infinity,
@@ -331,12 +337,12 @@ class LocationDialog extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.casino, color: Colors.white, size: 20),
+                      Icon(Icons.casino, color: Colors.black, size: 20),
                       const SizedBox(width: 10),
                       Text(
                         'Roll 1d100',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           fontFamily: JuiceTheme.fontFamilyMono,
@@ -348,9 +354,9 @@ class LocationDialog extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Visual Grid
           _buildGridVisual(),
         ],

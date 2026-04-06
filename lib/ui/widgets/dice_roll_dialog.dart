@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../../core/roll_engine.dart';
-import '../../models/roll_result.dart';
 import '../../models/results/ironsworn_result.dart';
+import '../../models/roll_result.dart';
 import '../theme/juice_theme.dart';
 
 /// Dialog for rolling custom dice (NdX, Fate, advantage/disadvantage, skewed).
-/// 
+///
 /// Supports dice types commonly used in Juice Oracle:
 /// - Fate Dice (2dF for Fate Check)
 /// - d100 (table lookups)
@@ -15,18 +16,21 @@ import '../theme/juice_theme.dart';
 class DiceRollDialog extends StatefulWidget {
   final RollEngine rollEngine;
   final void Function(RollResult) onRoll;
-  
+
   /// Initial dice mode: 0 = Standard, 1 = Fate, 2 = Ironsworn
   final int initialDiceMode;
-  
+
   /// Initial Ironsworn roll type: 'action', 'progress', 'oracle', 'yesno', 'cursed'
   final String initialIronswornRollType;
-  
+
   /// Initial oracle die type: 6, 20, or 100
   final int initialOracleDieType;
-  
+
   /// Callback when dice mode or roll type changes (for persistence)
-  final void Function({int? mode, String? ironswornRollType, int? oracleDieType})? onStateChanged;
+  final void Function(
+      {int? mode,
+      String? ironswornRollType,
+      int? oracleDieType})? onStateChanged;
 
   const DiceRollDialog({
     super.key,
@@ -47,7 +51,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   static const _primaryColor = JuiceTheme.gold;
   static const _fateColor = JuiceTheme.mystic;
   static const _standardColor = JuiceTheme.rust;
-  static const _ironswornColor = Color(0xFF5C6BC0); // Indigo for Ironsworn
+  static const _ironswornColor = Color(0xFF8595D8); // Indigo for Ironsworn
   static const _successColor = JuiceTheme.success;
   static const _dangerColor = JuiceTheme.danger;
 
@@ -57,24 +61,25 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   int _skew = 0;
   bool _advantage = false;
   bool _disadvantage = false;
-  
+
   // Dice mode: 0 = Standard, 1 = Fate, 2 = Ironsworn
   late int _diceMode;
-  
+
   // Ironsworn-specific state
   int _ironswornStat = 0;
   int _ironswornAdds = 0;
   int _ironswornProgress = 5;
-  late String _ironswornRollType; // 'action', 'progress', 'oracle', 'yesno', 'cursed'
-  
+  late String
+      _ironswornRollType; // 'action', 'progress', 'oracle', 'yesno', 'cursed'
+
   // Oracle type selection
   late int _oracleDieType; // 6, 20, or 100 for table oracles
   IronswornOdds _yesNoOdds = IronswornOdds.likely;
-  
+
   // Momentum burn for action rolls
   int _momentum = 0;
   bool _useMomentumBurn = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -83,7 +88,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
     _ironswornRollType = widget.initialIronswornRollType;
     _oracleDieType = widget.initialOracleDieType;
   }
-  
+
   /// Notify parent of state changes for persistence
   void _notifyStateChanged() {
     widget.onStateChanged?.call(
@@ -115,10 +120,10 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = _useIronsworn 
-        ? _ironswornColor 
+    final themeColor = _useIronsworn
+        ? _ironswornColor
         : (_useFateDice ? _fateColor : _standardColor);
-    
+
     return Dialog(
       backgroundColor: JuiceTheme.surface,
       shape: RoundedRectangleBorder(
@@ -128,7 +133,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 400, 
+          maxWidth: 400,
           maxHeight: MediaQuery.of(context).size.height * 0.85,
         ),
         child: Column(
@@ -136,11 +141,12 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           children: [
             // Header
             _buildHeader(themeColor),
-            
+
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -148,7 +154,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                     // Dice Type Toggle
                     _buildDiceTypeToggle(themeColor),
                     const SizedBox(height: 16),
-                    
+
                     // Quick Presets
                     _buildSectionHeader(
                       'Quick Roll',
@@ -158,7 +164,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                     const SizedBox(height: 8),
                     _buildQuickPresets(),
                     const SizedBox(height: 16),
-                    
+
                     // Custom Configuration
                     _buildSectionHeader(
                       'Custom Configuration',
@@ -168,14 +174,14 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                     const SizedBox(height: 8),
                     _buildCustomConfiguration(themeColor),
                     const SizedBox(height: 16),
-                    
+
                     // Roll Preview
                     _buildRollPreview(themeColor),
                   ],
                 ),
               ),
             ),
-            
+
             // Actions
             _buildActions(themeColor),
           ],
@@ -206,12 +212,12 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: themeColor.withOpacity(0.2),
+              color: themeColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              _useIronsworn 
-                  ? Icons.shield_outlined 
+              _useIronsworn
+                  ? Icons.shield_outlined
                   : (_useFateDice ? Icons.auto_awesome : Icons.casino),
               color: themeColor,
               size: 24,
@@ -232,9 +238,11 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                   ),
                 ),
                 Text(
-                  _useIronsworn 
-                      ? 'Ironsworn/Starforged dice' 
-                      : (_useFateDice ? 'Fate dice for oracle checks' : 'Standard polyhedral dice'),
+                  _useIronsworn
+                      ? 'Ironsworn/Starforged dice'
+                      : (_useFateDice
+                          ? 'Fate dice for oracle checks'
+                          : 'Standard polyhedral dice'),
                   style: TextStyle(
                     fontSize: 12,
                     color: JuiceTheme.parchmentDark,
@@ -326,9 +334,9 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
         decoration: BoxDecoration(
           color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          border: isSelected 
-            ? Border.all(color: color.withOpacity(0.5), width: 1.5)
-            : null,
+          border: isSelected
+              ? Border.all(color: color.withOpacity(0.5), width: 1.5)
+              : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -384,9 +392,9 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
     if (_useIronsworn) {
       return _buildIronswornRollTypeSelector();
     }
-    
+
     final presets = _useFateDice ? _fatePresets : _standardPresets;
-    
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -402,14 +410,14 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       ('yesno', 'Yes/No', 'Ask the Oracle'),
       ('cursed', 'Cursed', 'Sundered Isles d10'),
     ];
-    
+
     return Wrap(
       spacing: 6,
       runSpacing: 6,
       children: rollTypes.map((type) {
         final (value, label, desc) = type;
         final isSelected = _ironswornRollType == value;
-        
+
         return Tooltip(
           message: desc,
           child: InkWell(
@@ -432,7 +440,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 color: isSelected ? null : JuiceTheme.ink30,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isSelected ? _ironswornColor : JuiceTheme.parchmentDark30,
+                  color:
+                      isSelected ? _ironswornColor : JuiceTheme.parchmentDark30,
                   width: isSelected ? 1.5 : 1,
                 ),
                 boxShadow: isSelected
@@ -462,11 +471,11 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   }
 
   Widget _buildPresetChip(_DicePreset preset) {
-    final isSelected = _useFateDice 
+    final isSelected = _useFateDice
         ? _diceCount == preset.count
         : (_diceCount == preset.count && _diceSides == preset.sides);
     final color = _useFateDice ? _fateColor : _standardColor;
-    
+
     return Tooltip(
       message: preset.description,
       child: InkWell(
@@ -488,8 +497,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             gradient: isSelected
                 ? LinearGradient(
                     colors: [
-                      color.withOpacity(0.3),
-                      color.withOpacity(0.15),
+                      color.withOpacity(0.2),
+                      color.withOpacity(0.1),
                     ],
                   )
                 : null,
@@ -558,17 +567,17 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 ),
               ],
             ),
-            
+
             // Skew slider (only for d6)
             if (_diceSides == 6) ...[
               const SizedBox(height: 12),
               _buildSkewControl(themeColor),
             ],
-            
+
             // Advantage/Disadvantage
             const SizedBox(height: 12),
             _buildAdvantageControl(),
-            
+
             // Modifier (standard mode)
             const SizedBox(height: 12),
             _buildModifierControl(themeColor),
@@ -589,7 +598,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               'Juice uses 2dF for Fate Checks.',
               color: _fateColor,
             ),
-            
+
             // Modifier (fate mode)
             const SizedBox(height: 12),
             _buildModifierControl(themeColor),
@@ -662,14 +671,13 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   }
 
   Widget _buildMomentumBurnControl(Color themeColor) {
-    final momentumColor = _useMomentumBurn ? JuiceTheme.gold : JuiceTheme.parchmentDark;
-    
+    final momentumColor =
+        _useMomentumBurn ? JuiceTheme.gold : JuiceTheme.parchmentDark;
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: _useMomentumBurn 
-            ? JuiceTheme.gold10 
-            : JuiceTheme.ink20,
+        color: _useMomentumBurn ? JuiceTheme.gold10 : JuiceTheme.ink20,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: momentumColor.withOpacity(0.3),
@@ -681,13 +689,14 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           Row(
             children: [
               InkWell(
-                onTap: () => setState(() => _useMomentumBurn = !_useMomentumBurn),
+                onTap: () =>
+                    setState(() => _useMomentumBurn = !_useMomentumBurn),
                 borderRadius: BorderRadius.circular(4),
                 child: Row(
                   children: [
                     Icon(
-                      _useMomentumBurn 
-                          ? Icons.check_box 
+                      _useMomentumBurn
+                          ? Icons.check_box
                           : Icons.check_box_outline_blank,
                       size: 20,
                       color: momentumColor,
@@ -740,7 +749,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               style: TextStyle(
                 fontSize: 10,
                 fontStyle: FontStyle.italic,
-                color: JuiceTheme.parchmentDark80,
+                color: JuiceTheme.parchmentDark,
               ),
             ),
           ],
@@ -779,7 +788,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       (20, 'd20', 'Character oracles'),
       (100, 'd100', 'Standard oracles'),
     ];
-    
+
     return Column(
       children: [
         // Die type selector
@@ -803,7 +812,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           children: dieOptions.map((option) {
             final (sides, label, desc) = option;
             final isSelected = _oracleDieType == sides;
-            
+
             return Tooltip(
               message: desc,
               child: InkWell(
@@ -813,16 +822,16 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected 
-                        ? themeColor.withOpacity(0.2) 
+                    color: isSelected
+                        ? themeColor.withOpacity(0.15)
                         : JuiceTheme.ink30,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSelected 
-                          ? themeColor 
-                          : JuiceTheme.parchmentDark30,
+                      color:
+                          isSelected ? themeColor : JuiceTheme.parchmentDark30,
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
@@ -830,7 +839,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                     label,
                     style: TextStyle(
                       fontFamily: JuiceTheme.fontFamilyMono,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w500,
                       fontSize: 14,
                       color: isSelected ? themeColor : JuiceTheme.parchment,
                     ),
@@ -854,13 +864,18 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
 
   Widget _buildIronswornYesNoConfig(Color themeColor) {
     final oddsOptions = [
-      (IronswornOdds.almostCertain, 'Almost Certain', '11+', JuiceTheme.success),
+      (
+        IronswornOdds.almostCertain,
+        'Almost Certain',
+        '11+',
+        JuiceTheme.success
+      ),
       (IronswornOdds.likely, 'Likely', '26+', Color(0xFF8BC34A)),
       (IronswornOdds.fiftyFifty, '50/50', '51+', JuiceTheme.gold),
       (IronswornOdds.unlikely, 'Unlikely', '76+', JuiceTheme.juiceOrange),
       (IronswornOdds.smallChance, 'Small Chance', '91+', JuiceTheme.danger),
     ];
-    
+
     return Column(
       children: [
         Text(
@@ -875,18 +890,18 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
         ...oddsOptions.map((option) {
           final (value, label, threshold, color) = option;
           final isSelected = _yesNoOdds == value;
-          
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: InkWell(
               onTap: () => setState(() => _yesNoOdds = value),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected 
-                      ? color.withOpacity(0.2) 
-                      : JuiceTheme.ink20,
+                  color:
+                      isSelected ? color.withOpacity(0.15) : JuiceTheme.ink20,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected ? color : JuiceTheme.parchmentDark30,
@@ -896,7 +911,9 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 child: Row(
                   children: [
                     Icon(
-                      isSelected ? Icons.radio_button_on : Icons.radio_button_off,
+                      isSelected
+                          ? Icons.radio_button_on
+                          : Icons.radio_button_off,
                       size: 18,
                       color: isSelected ? color : JuiceTheme.parchmentDark,
                     ),
@@ -905,14 +922,16 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                       child: Text(
                         label,
                         style: TextStyle(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.w500,
                           fontSize: 13,
                           color: isSelected ? color : JuiceTheme.parchment,
                         ),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(4),
@@ -944,8 +963,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   }
 
   Widget _buildIronswornCursedConfig(Color themeColor) {
-    final cursedColor = const Color(0xFF9C27B0); // Purple for cursed
-    
+    final cursedColor = const Color(0xFFca5cff); // Purple for cursed
+
     return Column(
       children: [
         Container(
@@ -1061,7 +1080,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
     );
   }
 
-  Widget _buildControlButton(IconData icon, VoidCallback? onPressed, Color color) {
+  Widget _buildControlButton(
+      IconData icon, VoidCallback? onPressed, Color color) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1090,7 +1110,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       (20, 'd20', JuiceTheme.gold),
       (100, 'd%', JuiceTheme.juiceOrange),
     ];
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1180,13 +1200,14 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       skewLabel = 'Low ($_skew)';
       skewColor = _dangerColor;
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.trending_flat, size: 14, color: JuiceTheme.parchmentDark),
+            Icon(Icons.trending_flat,
+                size: 14, color: JuiceTheme.parchmentDark),
             const SizedBox(width: 4),
             Text(
               'Skew',
@@ -1218,14 +1239,18 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
         const SizedBox(height: 4),
         Row(
           children: [
-            Icon(Icons.arrow_downward, size: 14, color: _dangerColor.withOpacity(0.6)),
+            Icon(Icons.arrow_downward,
+                size: 14, color: _dangerColor.withOpacity(0.6)),
             Expanded(
               child: SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: _skew >= 0 ? _successColor : _dangerColor,
                   inactiveTrackColor: JuiceTheme.ink,
-                  thumbColor: _skew == 0 ? JuiceTheme.parchmentDark : (_skew > 0 ? _successColor : _dangerColor),
-                  overlayColor: (_skew >= 0 ? _successColor : _dangerColor).withOpacity(0.2),
+                  thumbColor: _skew == 0
+                      ? JuiceTheme.parchmentDark
+                      : (_skew > 0 ? _successColor : _dangerColor),
+                  overlayColor: (_skew >= 0 ? _successColor : _dangerColor)
+                      .withOpacity(0.2),
                   trackHeight: 4,
                 ),
                 child: Slider(
@@ -1239,7 +1264,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 ),
               ),
             ),
-            Icon(Icons.arrow_upward, size: 14, color: _successColor.withOpacity(0.6)),
+            Icon(Icons.arrow_upward,
+                size: 14, color: _successColor.withOpacity(0.6)),
           ],
         ),
         Text(
@@ -1333,11 +1359,14 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   }
 
   Widget _buildModifierControl(Color themeColor) {
-    final modColor = _modifier > 0 ? _successColor : (_modifier < 0 ? _dangerColor : JuiceTheme.parchmentDark);
-    
+    final modColor = _modifier > 0
+        ? _successColor
+        : (_modifier < 0 ? _dangerColor : JuiceTheme.parchmentDark);
+
     return Row(
       children: [
-        Icon(Icons.add_circle_outline, size: 14, color: JuiceTheme.parchmentDark),
+        Icon(Icons.add_circle_outline,
+            size: 14, color: JuiceTheme.parchmentDark),
         const SizedBox(width: 4),
         Text(
           'Modifier',
@@ -1459,8 +1488,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                _useIronsworn 
-                    ? Icons.shield_outlined 
+                _useIronsworn
+                    ? Icons.shield_outlined
                     : (_useFateDice ? Icons.auto_awesome : Icons.casino),
                 color: themeColor,
                 size: 28,
@@ -1478,17 +1507,18 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
               ),
             ],
           ),
-          if (!_useIronsworn && (_advantage || _disadvantage || (_skew != 0 && _diceSides == 6))) ...[
+          if (!_useIronsworn &&
+              (_advantage ||
+                  _disadvantage ||
+                  (_skew != 0 && _diceSides == 6))) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
               runSpacing: 4,
               alignment: WrapAlignment.center,
               children: [
-                if (_advantage)
-                  _buildPreviewTag('ADV', _successColor),
-                if (_disadvantage)
-                  _buildPreviewTag('DIS', _dangerColor),
+                if (_advantage) _buildPreviewTag('ADV', _successColor),
+                if (_disadvantage) _buildPreviewTag('DIS', _dangerColor),
                 if (_skew != 0 && _diceSides == 6)
                   _buildPreviewTag(
                     'SKEW ${_skew > 0 ? '+$_skew' : '$_skew'}',
@@ -1563,7 +1593,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 onTap: _performRoll,
                 borderRadius: BorderRadius.circular(10),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1653,31 +1684,36 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       final sum = dice.reduce((a, b) => a + b) + _modifier;
 
       result = FateRollResult(
-        description: '${_diceCount}dF${_modifier != 0 ? (_modifier >= 0 ? '+$_modifier' : '$_modifier') : ''}',
+        description:
+            '${_diceCount}dF${_modifier != 0 ? (_modifier >= 0 ? '+$_modifier' : '$_modifier') : ''}',
         diceResults: dice,
         total: sum,
       );
     } else if (_advantage) {
-      final advResult = widget.rollEngine.rollWithAdvantage(_diceCount, _diceSides);
+      final advResult =
+          widget.rollEngine.rollWithAdvantage(_diceCount, _diceSides);
       result = RollResult(
         type: RollType.advantage,
         description: '${_diceCount}d$_diceSides (advantage)',
         diceResults: advResult.chosenRoll,
         total: advResult.chosenSum + _modifier,
-        interpretation: 'Chose ${advResult.chosenSum} over ${advResult.discardedSum}',
+        interpretation:
+            'Chose ${advResult.chosenSum} over ${advResult.discardedSum}',
         metadata: {
           'discarded': advResult.discardedRoll,
           'discardedSum': advResult.discardedSum,
         },
       );
     } else if (_disadvantage) {
-      final disResult = widget.rollEngine.rollWithDisadvantage(_diceCount, _diceSides);
+      final disResult =
+          widget.rollEngine.rollWithDisadvantage(_diceCount, _diceSides);
       result = RollResult(
         type: RollType.disadvantage,
         description: '${_diceCount}d$_diceSides (disadvantage)',
         diceResults: disResult.chosenRoll,
         total: disResult.chosenSum + _modifier,
-        interpretation: 'Chose ${disResult.chosenSum} over ${disResult.discardedSum}',
+        interpretation:
+            'Chose ${disResult.chosenSum} over ${disResult.discardedSum}',
         metadata: {
           'discarded': disResult.discardedRoll,
           'discardedSum': disResult.discardedSum,
@@ -1685,11 +1721,13 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       );
     } else if (_skew != 0 && _diceSides == 6) {
       // Skewed d6 - roll each die with skew
-      final dice = List.generate(_diceCount, (_) => widget.rollEngine.rollSkewedD6(_skew));
+      final dice = List.generate(
+          _diceCount, (_) => widget.rollEngine.rollSkewedD6(_skew));
       final sum = dice.reduce((a, b) => a + b) + _modifier;
       result = RollResult(
         type: RollType.skewed,
-        description: '${_diceCount}d6 (skew ${_skew > 0 ? '+$_skew' : '$_skew'})',
+        description:
+            '${_diceCount}d6 (skew ${_skew > 0 ? '+$_skew' : '$_skew'})',
         diceResults: dice,
         total: sum,
         metadata: {'skew': _skew},
@@ -1700,7 +1738,8 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
       final sum = dice.reduce((a, b) => a + b) + _modifier;
       result = RollResult(
         type: RollType.standard,
-        description: '${_diceCount}d$_diceSides${_modifier != 0 ? (_modifier >= 0 ? '+$_modifier' : '$_modifier') : ''}',
+        description:
+            '${_diceCount}d$_diceSides${_modifier != 0 ? (_modifier >= 0 ? '+$_modifier' : '$_modifier') : ''}',
         diceResults: dice,
         total: sum,
       );
@@ -1716,7 +1755,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
         // Roll 1d6 action die + 2d10 challenge dice
         final actionDie = widget.rollEngine.rollDie(6);
         final challengeDice = widget.rollEngine.rollDice(2, 10);
-        
+
         // Check if momentum burn is being used
         if (_useMomentumBurn) {
           return IronswornMomentumBurnResult(
@@ -1727,14 +1766,14 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
             momentumValue: _momentum,
           );
         }
-        
+
         return IronswornActionResult(
           actionDie: actionDie,
           challengeDice: challengeDice,
           statBonus: _ironswornStat,
           adds: _ironswornAdds,
         );
-      
+
       case 'progress':
         // Roll 2d10 challenge dice vs progress score
         final challengeDice = widget.rollEngine.rollDice(2, 10);
@@ -1742,7 +1781,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           progressScore: _ironswornProgress,
           challengeDice: challengeDice,
         );
-      
+
       case 'oracle':
         // Roll specified die type for oracle lookup
         final oracleRoll = widget.rollEngine.rollDie(_oracleDieType);
@@ -1750,7 +1789,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           oracleRoll: oracleRoll,
           dieType: _oracleDieType,
         );
-      
+
       case 'yesno':
         // Roll d100 for yes/no oracle
         final yesNoRoll = widget.rollEngine.rollDie(100);
@@ -1758,7 +1797,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           roll: yesNoRoll,
           odds: _yesNoOdds,
         );
-      
+
       case 'cursed':
         // Roll d100 + cursed d10 for Sundered Isles
         final oracleRoll = widget.rollEngine.rollDie(100);
@@ -1767,7 +1806,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
           oracleRoll: oracleRoll,
           cursedDie: cursedDie,
         );
-      
+
       default:
         // Fallback to action roll
         final actionDie = widget.rollEngine.rollDie(6);

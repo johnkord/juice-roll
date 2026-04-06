@@ -9,24 +9,24 @@ import 'widgets/next_scene_dialog.dart';
 import 'dialogs/dialogs.dart';
 
 /// Home screen with roll buttons and history.
-/// 
+///
 /// ## Performance Architecture
-/// 
+///
 /// This widget uses **targeted rebuilds** to avoid unnecessary work:
-/// 
+///
 /// - **OracleButtonGrid**: Static, never rebuilds (24 buttons)
 /// - **SessionAppBarTitle**: Only rebuilds when session name changes
 /// - **ClearHistoryButton**: Only rebuilds when history empty state changes
 /// - **HistorySection**: Only rebuilds when history changes (most frequent)
-/// 
+///
 /// See [home_screen_components.dart] for the extracted widgets and
 /// documentation on how to add new stateful components.
-/// 
+///
 /// ## Why Not Just setState?
-/// 
+///
 /// Before: `setState(() {})` rebuilt ALL widgets on ANY state change.
 /// After: Each component uses `ListenableBuilder` to rebuild only itself.
-/// 
+///
 /// All business logic is delegated to [HomeStateNotifier].
 class HomeScreen extends StatefulWidget {
   /// Optional state notifier for testing.
@@ -45,7 +45,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final HomeStateNotifier _notifier;
   late final bool _ownsNotifier;
-  
+
   /// Cached callbacks for the button grid - created once, never changes.
   /// This prevents recreating callback objects on every build.
   late final OracleButtonCallbacks _buttonCallbacks;
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Use provided notifier or create a new one
     if (widget.stateNotifier != null) {
       _notifier = widget.stateNotifier!;
@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _ownsNotifier = true;
       _notifier.init();
     }
-    
+
     // Create button callbacks once - these never change
     _buttonCallbacks = OracleButtonCallbacks(
       showDetailsDialog: _showDetailsDialog,
@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
       rollDiscoverMeaning: _notifier.rollDiscoverMeaning,
       rollQuest: _notifier.rollQuest,
     );
-    
+
     // NOTE: We no longer call _notifier.addListener(_onStateChange) here!
     // Each component now uses ListenableBuilder for targeted rebuilds.
     // The only exception is the loading state, which we handle specially.
@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         onDeleteSession: (session) async {
           await _notifier.deleteSession(session);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(content: Text('Deleted session: ${session.name}')),
@@ -145,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showNewSessionDialog() {
     final nameController = TextEditingController();
     final notesController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -181,16 +181,16 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
-              
+
               Navigator.pop(context);
-              
+
               await _notifier.createSession(
                 name,
-                notes: notesController.text.trim().isEmpty 
-                    ? null 
+                notes: notesController.text.trim().isEmpty
+                    ? null
                     : notesController.text.trim(),
               );
-              
+
               if (mounted) {
                 ScaffoldMessenger.of(this.context).showSnackBar(
                   SnackBar(content: Text('Created session: $name')),
@@ -207,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showSessionDetailsDialog(Session session) async {
     final fullSession = await _notifier.getSession(session.id);
     if (fullSession == null || !mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => SessionDetailsDialog(
@@ -215,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
         isCurrentSession: _notifier.state.currentSession?.id == session.id,
         onDelete: () async {
           await _notifier.deleteSession(session);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(content: Text('Deleted session: ${session.name}')),
@@ -227,7 +227,8 @@ class _HomeScreenState extends State<HomeScreen> {
           if (mounted) {
             ScaffoldMessenger.of(this.context).showSnackBar(
               const SnackBar(
-                content: Text('Session copied to clipboard! Paste it somewhere safe to back up.'),
+                content: Text(
+                    'Session copied to clipboard! Paste it somewhere safe to back up.'),
                 duration: Duration(seconds: 3),
               ),
             );
@@ -250,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showSessionSettingsDialog(Session session) async {
     final fullSession = await _notifier.getSession(session.id);
     if (fullSession == null || !mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => SessionSettingsDialog(
@@ -268,11 +269,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _importSession() async {
     final session = await _notifier.importSession();
-    
+
     if (!mounted) return;
-    
+
     final messenger = ScaffoldMessenger.of(context);
-    
+
     if (session != null) {
       messenger.showSnackBar(
         SnackBar(
@@ -547,18 +548,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         }
-        
+
         // Once loaded, return the main UI which uses targeted rebuilds
         return _buildMainScreen();
       },
     );
   }
-  
+
   /// Builds the main screen layout.
-  /// 
+  ///
   /// This method builds ONCE after loading completes. Individual components
   /// handle their own rebuilds via ListenableBuilder:
-  /// 
+  ///
   /// - [SessionAppBarTitle] - rebuilds on session name change
   /// - [ClearHistoryButton] - rebuilds on history empty state change
   /// - [OracleButtonGrid] - NEVER rebuilds (static)
@@ -630,14 +631,15 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   /// Shows the clear history confirmation dialog.
   void _showClearHistoryDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear History?'),
-        content: const Text('This will remove all roll history for this session.'),
+        content:
+            const Text('This will remove all roll history for this session.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

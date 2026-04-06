@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+
 import '../theme/juice_theme.dart';
 
 /// A consistent base dialog widget for all Oracle dialogs.
-/// 
+///
 /// Provides a unified structure with:
 /// - Icon + title header with optional subtitle and page label
 /// - Consistent padding and constraints
 /// - Scrollable content with max height
 /// - Standard Cancel action button
-/// 
+///
 /// Example usage:
 /// ```dart
 /// OracleDialog(
@@ -22,41 +23,41 @@ import '../theme/juice_theme.dart';
 class OracleDialog extends StatelessWidget {
   /// The main title text.
   final String title;
-  
+
   /// Optional subtitle displayed below the title.
   final String? subtitle;
-  
+
   /// The icon displayed in the header.
   final IconData icon;
-  
+
   /// The accent color for the icon container and gradient.
   final Color accentColor;
-  
+
   /// Optional secondary color for gradient (defaults to accentColor with lower alpha).
   final Color? secondaryColor;
-  
+
   /// The main content of the dialog.
   final Widget content;
-  
+
   /// Additional action buttons (Cancel is always included).
   final List<Widget>? extraActions;
-  
+
   /// Whether to show the icon in a decorated container.
   /// If false, shows just the icon without container.
   final bool showIconContainer;
-  
+
   /// Maximum height fraction of screen (0.0 to 1.0).
   final double maxHeightFraction;
-  
+
   /// Custom inset padding for the dialog.
   final EdgeInsetsGeometry? insetPadding;
-  
+
   /// Custom content padding.
   final EdgeInsetsGeometry? contentPadding;
-  
+
   /// Text for the close/cancel button.
   final String closeButtonText;
-  
+
   /// Optional icon color override (defaults to accentColor).
   final Color? iconColor;
 
@@ -81,9 +82,9 @@ class OracleDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: _buildTitle(),
-      insetPadding: (insetPadding as EdgeInsets?) ?? 
+      insetPadding: (insetPadding as EdgeInsets?) ??
           const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      contentPadding: (contentPadding as EdgeInsets?) ?? 
+      contentPadding: (contentPadding as EdgeInsets?) ??
           const EdgeInsets.fromLTRB(12, 12, 12, 0),
       content: ConstrainedBox(
         constraints: BoxConstraints(
@@ -106,7 +107,7 @@ class OracleDialog extends StatelessWidget {
 
   Widget _buildTitle() {
     final displayIconColor = iconColor ?? accentColor;
-    
+
     if (!showIconContainer && subtitle == null) {
       // Simple title style (like Challenge, PayThePrice)
       return Row(
@@ -128,7 +129,7 @@ class OracleDialog extends StatelessWidget {
 
     // Rich title style with icon container (like Details, Immersion)
     final secondary = secondaryColor ?? accentColor.withOpacity(0.2);
-    
+
     return Row(
       children: [
         if (showIconContainer)
@@ -179,7 +180,7 @@ class OracleDialog extends StatelessWidget {
 }
 
 /// A simple oracle dialog for dialogs that just need a text title.
-/// 
+///
 /// This is a convenience constructor for the simpler dialog style
 /// used by Challenge, PayThePrice, etc.
 class SimpleOracleDialog extends StatelessWidget {
@@ -252,7 +253,7 @@ class OracleDialogIntro extends StatelessWidget {
     final color = iconColor ?? JuiceTheme.gold;
     final bgColor = backgroundColor ?? color.withOpacity(0.12);
     final border = borderColor ?? color.withOpacity(0.2);
-    
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -317,7 +318,7 @@ class OracleDialogSection extends StatelessWidget {
         ],
       );
     }
-    
+
     if (isHighlighted) {
       return _buildHighlightedSection();
     }
@@ -403,7 +404,8 @@ class OracleDialogSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: color.withOpacity(0.15),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(10)),
             ),
             child: Row(
               children: [
@@ -450,8 +452,8 @@ class OracleDialogBadge extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withOpacity(0.4),
-            color.withOpacity(0.25),
+            color.withOpacity(0.3),
+            color.withOpacity(0.2),
           ],
         ),
         borderRadius: BorderRadius.circular(4),
@@ -508,8 +510,8 @@ class OracleRollButton extends StatelessWidget {
             gradient: isPrimary
                 ? LinearGradient(
                     colors: [
-                      color.withOpacity(0.25),
-                      color.withOpacity(0.15),
+                      color.withOpacity(0.22),
+                      color.withOpacity(0.14),
                     ],
                   )
                 : null,
@@ -541,7 +543,7 @@ class OracleRollButton extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           fontSize: 9,
-                          color: JuiceTheme.parchmentDark70,
+                          color: JuiceTheme.parchment.withOpacity(0.88),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -549,7 +551,8 @@ class OracleRollButton extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, size: 16, color: color.withOpacity(0.6)),
+              Icon(Icons.chevron_right,
+                  size: 16, color: color.withOpacity(0.6)),
             ],
           ),
         ),
@@ -611,7 +614,7 @@ class OracleSkewButton extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 9,
-                      color: color.withOpacity(0.7),
+                      color: color.withOpacity(0.9),
                     ),
                   ),
                 ],
@@ -684,7 +687,7 @@ class OracleDialogExample extends StatelessWidget {
     final displayLabel = title ?? label;
     final displayIcon = icon ?? Icons.format_quote;
     final displayColor = iconColor ?? JuiceTheme.parchmentDark;
-    
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(

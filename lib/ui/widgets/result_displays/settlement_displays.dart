@@ -16,18 +16,24 @@ import '../result_display_registry.dart';
 
 /// Register all Settlement display builders with the registry.
 void registerSettlementDisplays() {
-  ResultDisplayRegistry.register<SettlementNameResult>(_buildSettlementNameDisplay);
-  ResultDisplayRegistry.register<EstablishmentNameResult>(_buildEstablishmentNameDisplay);
-  ResultDisplayRegistry.register<SettlementPropertiesResult>(_buildSettlementPropertiesDisplay);
-  ResultDisplayRegistry.register<CompleteSettlementResult>(_buildCompleteSettlementDisplay);
-  ResultDisplayRegistry.register<FullSettlementResult>(_buildFullSettlementDisplay);
+  ResultDisplayRegistry.register<SettlementNameResult>(
+      _buildSettlementNameDisplay);
+  ResultDisplayRegistry.register<EstablishmentNameResult>(
+      _buildEstablishmentNameDisplay);
+  ResultDisplayRegistry.register<SettlementPropertiesResult>(
+      _buildSettlementPropertiesDisplay);
+  ResultDisplayRegistry.register<CompleteSettlementResult>(
+      _buildCompleteSettlementDisplay);
+  ResultDisplayRegistry.register<FullSettlementResult>(
+      _buildFullSettlementDisplay);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SETTLEMENT NAME DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildSettlementNameDisplay(SettlementNameResult result, ThemeData theme) {
+Widget _buildSettlementNameDisplay(
+    SettlementNameResult result, ThemeData theme) {
   return Row(
     children: [
       Container(
@@ -73,7 +79,8 @@ Widget _buildSettlementNameDisplay(SettlementNameResult result, ThemeData theme)
 // ESTABLISHMENT NAME DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildEstablishmentNameDisplay(EstablishmentNameResult result, ThemeData theme) {
+Widget _buildEstablishmentNameDisplay(
+    EstablishmentNameResult result, ThemeData theme) {
   return Row(
     children: [
       Container(
@@ -106,7 +113,8 @@ Widget _buildEstablishmentNameDisplay(EstablishmentNameResult result, ThemeData 
 // SETTLEMENT PROPERTIES DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildSettlementPropertiesDisplay(SettlementPropertiesResult result, ThemeData theme) {
+Widget _buildSettlementPropertiesDisplay(
+    SettlementPropertiesResult result, ThemeData theme) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -131,7 +139,8 @@ Widget _buildSettlementPropertiesDisplay(SettlementPropertiesResult result, Them
         runSpacing: 4,
         children: [
           Chip(
-            label: Text('${result.property1.intensityDescription} ${result.property1.property}'),
+            label: Text(
+                '${result.property1.intensityDescription} ${result.property1.property}'),
             backgroundColor: Colors.teal.withOpacity(0.2),
             side: const BorderSide(color: Colors.teal),
             padding: EdgeInsets.zero,
@@ -139,7 +148,8 @@ Widget _buildSettlementPropertiesDisplay(SettlementPropertiesResult result, Them
           ),
           const Text('+'),
           Chip(
-            label: Text('${result.property2.intensityDescription} ${result.property2.property}'),
+            label: Text(
+                '${result.property2.intensityDescription} ${result.property2.property}'),
             backgroundColor: Colors.teal.withOpacity(0.2),
             side: const BorderSide(color: Colors.teal),
             padding: EdgeInsets.zero,
@@ -155,12 +165,14 @@ Widget _buildSettlementPropertiesDisplay(SettlementPropertiesResult result, Them
 // COMPLETE SETTLEMENT DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildCompleteSettlementDisplay(CompleteSettlementResult result, ThemeData theme) {
-  final typeLabel = result.settlementType == SettlementType.village ? 'Village' : 'City';
-  final typeColor = result.settlementType == SettlementType.village 
-      ? Colors.brown 
-      : Colors.blueGrey;
-  
+Widget _buildCompleteSettlementDisplay(
+    CompleteSettlementResult result, ThemeData theme) {
+  final typeLabel =
+      result.settlementType == SettlementType.village ? 'Village' : 'City';
+  final typeColor = result.settlementType == SettlementType.village
+      ? const Color.fromARGB(255, 182, 142, 128)
+      : const Color.fromARGB(255, 115, 156, 177);
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -169,9 +181,9 @@ Widget _buildCompleteSettlementDisplay(CompleteSettlementResult result, ThemeDat
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.2),
+              color: typeColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: typeColor),
+              border: Border.all(color: typeColor.withOpacity(0.5)),
             ),
             child: Text(
               typeLabel,
@@ -202,12 +214,12 @@ Widget _buildCompleteSettlementDisplay(CompleteSettlementResult result, ThemeDat
       ),
       const SizedBox(height: 2),
       ...result.establishments.establishments.map((est) => Padding(
-        padding: const EdgeInsets.only(left: 8),
-        child: Text(
-          '• ${est.result}',
-          style: theme.textTheme.bodySmall,
-        ),
-      )),
+            padding: const EdgeInsets.only(left: 8),
+            child: Text(
+              '• ${est.result}',
+              style: theme.textTheme.bodySmall,
+            ),
+          )),
       const SizedBox(height: 4),
       Text(
         'News: ${result.news.result}',
@@ -221,7 +233,8 @@ Widget _buildCompleteSettlementDisplay(CompleteSettlementResult result, ThemeDat
 // FULL SETTLEMENT DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildFullSettlementDisplay(FullSettlementResult result, ThemeData theme) {
+Widget _buildFullSettlementDisplay(
+    FullSettlementResult result, ThemeData theme) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [

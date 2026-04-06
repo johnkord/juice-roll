@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../theme/juice_theme.dart';
-import '../shared/oracle_dialog.dart';
-import '../shared/dialog_components.dart';
-import '../../presets/random_event.dart';
-import '../../models/roll_result.dart';
+
 import '../../data/random_event_data.dart' as random_event_data;
+import '../../models/roll_result.dart';
+import '../../presets/random_event.dart';
+import '../shared/dialog_components.dart';
+import '../shared/oracle_dialog.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for Random Tables options.
 /// Provides access to modifier, idea, event, person, and object tables.
@@ -39,7 +40,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
             icon: Icons.auto_awesome,
             iconColor: JuiceTheme.gold,
             backgroundColor: JuiceTheme.sepia12,
-            text: '"Discover Meaning" provides abstract concepts. These tables provide something more concrete for nouns.',
+            text:
+                '"Discover Meaning" provides abstract concepts. These tables provide something more concrete for nouns.',
           ),
           const SizedBox(height: 14),
 
@@ -70,7 +72,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           const SizedBox(height: 6),
           _RandomIndividualTable(
             label: 'Modifier',
-            examples: 'Change, Continue, Decrease, Extra, Increase, Stop, Strange...',
+            examples:
+                'Change, Continue, Decrease, Extra, Increase, Stop, Strange...',
             color: JuiceTheme.rust,
             onTap: () {
               widget.onRoll(widget.randomEvent.rollModifier());
@@ -80,7 +83,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           const SizedBox(height: 4),
           _RandomIndividualTable(
             label: 'Idea',
-            examples: 'Attention, Communication, Danger, Element, Food, Home...',
+            examples:
+                'Attention, Communication, Danger, Element, Food, Home...',
             color: JuiceTheme.mystic,
             onTap: () {
               widget.onRoll(widget.randomEvent.rollIdea());
@@ -100,7 +104,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           const SizedBox(height: 4),
           _RandomIndividualTable(
             label: 'Person',
-            examples: 'Criminal, Entertainer, Expert, Mage, Mercenary, Noble...',
+            examples:
+                'Criminal, Entertainer, Expert, Mage, Mercenary, Noble...',
             color: JuiceTheme.info,
             onTap: () {
               widget.onRoll(widget.randomEvent.rollPerson());
@@ -110,7 +115,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           const SizedBox(height: 4),
           _RandomIndividualTable(
             label: 'Object',
-            examples: 'Arrow, Candle, Cauldron, Chain, Claw, Hook, Quill, Skull...',
+            examples:
+                'Arrow, Candle, Cauldron, Chain, Claw, Hook, Quill, Skull...',
             color: JuiceTheme.success,
             onTap: () {
               widget.onRoll(widget.randomEvent.rollObject());
@@ -147,7 +153,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
                   hint: 'Scene triggers',
                   color: JuiceTheme.danger,
                   onTap: () {
-                    widget.onRoll(widget.randomEvent.generateIdea(category: IdeaCategory.event));
+                    widget.onRoll(widget.randomEvent
+                        .generateIdea(category: IdeaCategory.event));
                     Navigator.pop(context);
                   },
                 ),
@@ -163,7 +170,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
                   hint: 'NPC generation',
                   color: JuiceTheme.info,
                   onTap: () {
-                    widget.onRoll(widget.randomEvent.generateIdea(category: IdeaCategory.person));
+                    widget.onRoll(widget.randomEvent
+                        .generateIdea(category: IdeaCategory.person));
                     Navigator.pop(context);
                   },
                 ),
@@ -175,7 +183,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
                   hint: 'Items & things',
                   color: JuiceTheme.success,
                   onTap: () {
-                    widget.onRoll(widget.randomEvent.generateIdea(category: IdeaCategory.object));
+                    widget.onRoll(widget.randomEvent
+                        .generateIdea(category: IdeaCategory.object));
                     Navigator.pop(context);
                   },
                 ),
@@ -193,7 +202,10 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           const SizedBox(height: 4),
           Text(
             'For double blanks on Fate Check (primary die left)',
-            style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic, color: JuiceTheme.parchmentDark),
+            style: TextStyle(
+                fontSize: 9,
+                fontStyle: FontStyle.italic,
+                color: JuiceTheme.parchmentDark),
           ),
           const SizedBox(height: 6),
           Row(
@@ -269,7 +281,8 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => setState(() => _showDetailedReference = !_showDetailedReference),
+              onTap: () => setState(
+                  () => _showDetailedReference = !_showDetailedReference),
               borderRadius: BorderRadius.circular(6),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -291,7 +304,9 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
                     ),
                     const Spacer(),
                     Icon(
-                      _showDetailedReference ? Icons.expand_less : Icons.expand_more,
+                      _showDetailedReference
+                          ? Icons.expand_less
+                          : Icons.expand_more,
                       size: 16,
                       color: JuiceTheme.parchmentDark,
                     ),
@@ -300,7 +315,7 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
               ),
             ),
           ),
-          
+
           // Compact reference (shown when collapsed)
           if (!_showDetailedReference)
             Padding(
@@ -316,7 +331,7 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
                 ),
               ),
             ),
-          
+
           // Detailed reference (shown when expanded)
           if (_showDetailedReference)
             Padding(
@@ -325,12 +340,16 @@ class _RandomTablesDialogState extends State<RandomTablesDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Divider(height: 8, thickness: 0.5),
-                  ...random_event_data.eventFocusTypes.asMap().entries.map((entry) {
+                  ...random_event_data.eventFocusTypes
+                      .asMap()
+                      .entries
+                      .map((entry) {
                     final index = entry.key;
                     final focus = entry.value;
                     final roll = index == 9 ? 0 : index + 1;
-                    final description = random_event_data.eventFocusDescriptions[focus] ?? '';
-                    
+                    final description =
+                        random_event_data.eventFocusDescriptions[focus] ?? '';
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 3),
                       child: Row(
@@ -525,7 +544,8 @@ class _RandomIndividualTable extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(Icons.chevron_right, size: 14, color: color.withOpacity(0.5)),
+              Icon(Icons.chevron_right,
+                  size: 14, color: color.withOpacity(0.8)),
             ],
           ),
         ),
@@ -612,7 +632,8 @@ class _RandomFocusButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isPrimary ? JuiceTheme.categoryOracle : JuiceTheme.parchmentDark;
+    final color =
+        isPrimary ? JuiceTheme.categoryOracle : JuiceTheme.parchmentDark;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -640,7 +661,7 @@ class _RandomFocusButton extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Text(

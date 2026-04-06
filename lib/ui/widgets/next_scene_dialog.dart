@@ -5,7 +5,7 @@ import '../../models/roll_result.dart';
 import '../theme/juice_theme.dart';
 
 /// Dialog for determining the next scene.
-/// 
+///
 /// At the end of a scene, you probably have an idea of what the next scene may look like.
 /// This dialog challenges that expectation with random alterations or interruptions.
 class NextSceneDialog extends StatefulWidget {
@@ -57,18 +57,19 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             // Dice outcome reference - compact grid
             _buildOutcomeReference(),
             const SizedBox(height: 8),
-            
+
             // Simple mode toggle - improved styling
             _buildSimpleModeToggle(),
-            
+
             const Divider(height: 16),
-            
+
             // Main Actions Section
-            const _SectionHeader(title: 'Roll Scene Transition', icon: Icons.movie_filter),
+            const _SectionHeader(
+                title: 'Roll Scene Transition', icon: Icons.movie_filter),
             const SizedBox(height: 4),
             _DialogOption(
               title: 'Quick Roll (2dF)',
@@ -83,11 +84,12 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
             ),
             const SizedBox(height: 4),
             _buildFullRollOption(),
-            
+
             const Divider(height: 16),
-            
+
             // Follow-up Tables Section
-            const _SectionHeader(title: 'Follow-up Tables', icon: Icons.table_chart),
+            const _SectionHeader(
+                title: 'Follow-up Tables', icon: Icons.table_chart),
             const SizedBox(height: 4),
             Row(
               children: [
@@ -120,9 +122,9 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Examples section - collapsible style
             _buildExamplesSection(),
           ],
@@ -131,7 +133,8 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Close', style: TextStyle(color: JuiceTheme.parchmentDark)),
+          child:
+              Text('Close', style: TextStyle(color: JuiceTheme.parchmentDark)),
         ),
       ],
     );
@@ -173,13 +176,15 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
                       symbols: '+ +',
                       label: 'Alter (Add)',
                       color: JuiceTheme.success,
-                      tooltip: 'Roll Focus: Introduce or emphasize this element in the scene',
+                      tooltip:
+                          'Roll Focus: Introduce or emphasize this element in the scene',
                     ),
                     _OutcomeRow(
                       symbols: '+ −',
                       label: 'Alter (Remove)',
                       color: JuiceTheme.categoryWorld,
-                      tooltip: 'Roll Focus: Diminish or remove this element\'s influence from the scene',
+                      tooltip:
+                          'Roll Focus: Diminish or remove this element\'s influence from the scene',
                     ),
                   ],
                 ),
@@ -244,9 +249,8 @@ class _NextSceneDialogState extends State<NextSceneDialog> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: _useSimpleMode
-                ? JuiceTheme.juiceOrange10
-                : Colors.transparent,
+            color:
+                _useSimpleMode ? JuiceTheme.juiceOrange10 : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: _useSimpleMode
@@ -457,7 +461,7 @@ class _OutcomeRow extends StatelessWidget {
         ],
       ),
     );
-    
+
     if (tooltip != null) {
       return Tooltip(
         message: tooltip!,
@@ -549,9 +553,8 @@ class _DialogOption extends StatelessWidget {
                 width: highlighted ? 2 : 1,
               ),
               borderRadius: BorderRadius.circular(8),
-              color: highlighted
-                  ? iconColor.withOpacity(0.1)
-                  : JuiceTheme.gold08,
+              color:
+                  highlighted ? iconColor.withOpacity(0.1) : JuiceTheme.gold08,
             ),
             child: Row(
               children: [
@@ -582,7 +585,8 @@ class _DialogOption extends StatelessWidget {
                 Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: (highlighted ? iconColor : JuiceTheme.gold).withOpacity(0.6),
+                  color: (highlighted ? iconColor : JuiceTheme.gold)
+                      .withOpacity(0.6),
                 ),
               ],
             ),

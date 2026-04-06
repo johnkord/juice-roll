@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/session.dart';
 import '../shared/dialog_components.dart';
 
@@ -28,7 +29,7 @@ class SessionSelectorSheet extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    
+
     if (diff.inMinutes < 1) {
       return 'Just now';
     } else if (diff.inHours < 1) {
@@ -105,7 +106,7 @@ class SessionSelectorSheet extends StatelessWidget {
               itemBuilder: (context, index) {
                 final session = sessions[index];
                 final isSelected = session.id == currentSession?.id;
-                
+
                 return Dismissible(
                   key: Key(session.id),
                   direction: DismissDirection.endToStart,
@@ -117,36 +118,39 @@ class SessionSelectorSheet extends StatelessWidget {
                   ),
                   confirmDismiss: (direction) async {
                     return await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete Session?'),
-                        content: Text(
-                          isSelected
-                              ? 'This is your current session. Deleting it will create a new empty session. '
-                                'Are you sure you want to delete "${session.name}" with ${session.history.length} rolls?'
-                              : 'Are you sure you want to delete "${session.name}"? '
-                                'This will permanently remove all ${session.history.length} rolls.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Session?'),
+                            content: Text(
+                              isSelected
+                                  ? 'This is your current session. Deleting it will create a new empty session. '
+                                      'Are you sure you want to delete "${session.name}" with ${session.history.length} rolls?'
+                                  : 'Are you sure you want to delete "${session.name}"? '
+                                      'This will permanently remove all ${session.history.length} rolls.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red),
+                                child: const Text('Delete'),
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    ) ?? false;
+                        ) ??
+                        false;
                   },
                   onDismissed: (direction) {
                     onDeleteSession(session);
                   },
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: isSelected ? Colors.blue : Colors.grey[700],
+                      backgroundColor:
+                          isSelected ? Colors.blue : Colors.grey[700],
                       child: isSelected
                           ? const Icon(Icons.check, color: Colors.white)
                           : Text(
@@ -159,7 +163,8 @@ class SessionSelectorSheet extends StatelessWidget {
                     title: Text(
                       session.name,
                       style: TextStyle(
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     subtitle: Text(
@@ -263,17 +268,30 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
   }
 
   String _formatFullDate(DateTime date) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    final hour =
+        date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
     final amPm = date.hour >= 12 ? 'PM' : 'AM';
     return '${months[date.month - 1]} ${date.day}, ${date.year} at $hour:${date.minute.toString().padLeft(2, '0')} $amPm';
   }
 
   Future<void> _saveChanges() async {
     final updatedSession = widget.session.copyWith(
-      name: _nameController.text.trim().isEmpty 
-          ? widget.session.name 
+      name: _nameController.text.trim().isEmpty
+          ? widget.session.name
           : _nameController.text.trim(),
       notes: _notesController.text.trim(),
     );
@@ -294,9 +312,9 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
         content: Text(
           widget.isCurrentSession
               ? 'This is your current session. Deleting it will create a new empty session. '
-                'Are you sure you want to delete "${widget.session.name}" with ${widget.session.history.length} rolls?'
+                  'Are you sure you want to delete "${widget.session.name}" with ${widget.session.history.length} rolls?'
               : 'Are you sure you want to delete "${widget.session.name}"? '
-                'This will permanently remove all ${widget.session.history.length} rolls.',
+                  'This will permanently remove all ${widget.session.history.length} rolls.',
         ),
         actions: [
           TextButton(
@@ -357,7 +375,8 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Stats
-              const SectionHeader(icon: Icons.analytics, title: 'Session Stats'),
+              const SectionHeader(
+                  icon: Icons.analytics, title: 'Session Stats'),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(

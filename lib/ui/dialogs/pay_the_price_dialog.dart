@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../models/roll_result.dart';
 import '../../presets/pay_the_price.dart';
-import '../theme/juice_theme.dart';
 import '../shared/oracle_dialog.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for Pay the Price options.
 class PayThePriceDialog extends StatelessWidget {
@@ -140,7 +141,7 @@ class PayThePriceDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
-                    color: JuiceTheme.danger80,
+                    color: JuiceTheme.danger,
                   ),
                 ),
                 const SizedBox(height: 4),

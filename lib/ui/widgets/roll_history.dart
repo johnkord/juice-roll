@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+
 import '../../models/roll_result.dart';
-import 'result_display_builder.dart';
 import '../../presets/wilderness.dart';
 import '../theme/juice_theme.dart';
+import 'result_display_builder.dart';
 
 /// Scrollable roll history widget with pagination for performance.
-/// 
+///
 /// ## Performance Optimizations
-/// 
+///
 /// This widget uses several techniques to minimize rebuilds and handle large lists:
 /// - **Pagination**: Only loads [_pageSize] items at a time, loading more on scroll
 /// - `cacheExtent`: Pre-renders items beyond the viewport for smoother scrolling
 /// - `RepaintBoundary`: Isolates each card's repaint region (important for InkWell)
 /// - Memoized `now`: DateTime.now() is computed once per list build, not per card
 /// - See `_RollHistoryCard` for additional per-card optimizations
-/// 
+///
 /// ## Pagination Strategy
-/// 
+///
 /// - Initial load: First [_pageSize] items (50)
 /// - On scroll near bottom: Load next page
 /// - Maximum in view: Unlimited (loads progressively)
@@ -26,7 +27,7 @@ class RollHistory extends StatefulWidget {
   final void Function(int environmentRow, int typeRow)? onSetWildernessPosition;
 
   const RollHistory({
-    super.key, 
+    super.key,
     required this.history,
     this.onSetWildernessPosition,
   });
@@ -38,15 +39,15 @@ class RollHistory extends StatefulWidget {
 class _RollHistoryState extends State<RollHistory> {
   /// Number of items to load per page
   static const int _pageSize = 50;
-  
+
   /// Scroll threshold to trigger loading more (pixels from bottom)
   static const double _loadMoreThreshold = 200.0;
-  
+
   final ScrollController _scrollController = ScrollController();
-  
+
   /// Number of items currently loaded/visible
   int _loadedCount = _pageSize;
-  
+
   /// Whether we're currently loading more items
   bool _isLoadingMore = false;
 
@@ -61,13 +62,14 @@ class _RollHistoryState extends State<RollHistory> {
   @override
   void didUpdateWidget(RollHistory oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // When new items are added (history grows), keep them visible
     // New items are added at index 0, so we need to increase loaded count
     if (widget.history.length > oldWidget.history.length) {
       final newItemCount = widget.history.length - oldWidget.history.length;
       setState(() {
-        _loadedCount = (_loadedCount + newItemCount).clamp(0, widget.history.length);
+        _loadedCount =
+            (_loadedCount + newItemCount).clamp(0, widget.history.length);
       });
     }
     // When history shrinks (cleared), reset pagination
@@ -88,10 +90,10 @@ class _RollHistoryState extends State<RollHistory> {
   void _onScroll() {
     if (_isLoadingMore) return;
     if (_loadedCount >= widget.history.length) return;
-    
+
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.position.pixels;
-    
+
     // Load more when near the bottom
     if (maxScroll - currentScroll <= _loadMoreThreshold) {
       _loadMoreItems();
@@ -100,16 +102,17 @@ class _RollHistoryState extends State<RollHistory> {
 
   void _loadMoreItems() {
     if (_loadedCount >= widget.history.length) return;
-    
+
     setState(() {
       _isLoadingMore = true;
     });
-    
+
     // Use a microtask to allow the UI to show loading indicator
     Future.microtask(() {
       if (mounted) {
         setState(() {
-          _loadedCount = (_loadedCount + _pageSize).clamp(0, widget.history.length);
+          _loadedCount =
+              (_loadedCount + _pageSize).clamp(0, widget.history.length);
           _isLoadingMore = false;
         });
       }
@@ -122,7 +125,7 @@ class _RollHistoryState extends State<RollHistory> {
     final now = DateTime.now();
     final displayCount = _loadedCount.clamp(0, widget.history.length);
     final hasMore = displayCount < widget.history.length;
-    
+
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -135,7 +138,7 @@ class _RollHistoryState extends State<RollHistory> {
         if (index >= displayCount) {
           return _buildLoadingIndicator();
         }
-        
+
         final result = widget.history[index];
         // RepaintBoundary isolates each card's repaint region,
         // preventing InkWell ripples from triggering neighbor repaints
@@ -172,7 +175,7 @@ class _RollHistoryState extends State<RollHistory> {
             'Loading more... (${widget.history.length - _loadedCount} remaining)',
             style: TextStyle(
               fontSize: 12,
-              color: JuiceTheme.parchmentDark50,
+              color: JuiceTheme.parchmentDark60,
             ),
           ),
         ],
@@ -188,8 +191,8 @@ class _RollHistoryCard extends StatelessWidget {
   final void Function(int environmentRow, int typeRow)? onSetWildernessPosition;
 
   const _RollHistoryCard({
-    super.key, 
-    required this.result, 
+    super.key,
+    required this.result,
     required this.index,
     required this.now,
     this.onSetWildernessPosition,
@@ -228,7 +231,7 @@ class _RollHistoryCard extends StatelessWidget {
   // These are computed once and reused across all card instances to avoid
   // creating new objects on every build.
   // ═══════════════════════════════════════════════════════════════════════════
-  
+
   /// Cached shadow list - avoids recreating BoxShadow on every build
   static final _cardShadows = [
     BoxShadow(
@@ -237,22 +240,22 @@ class _RollHistoryCard extends StatelessWidget {
       offset: const Offset(0, 2),
     ),
   ];
-  
+
   /// Cached border radius - avoids recreating BorderRadius on every build
   static final _cardBorderRadius = BorderRadius.circular(8);
-  
+
   /// Cached text styles - populated on first use from theme
   /// These avoid calling copyWith() on every build
   static TextStyle? _titleStyle;
   static TextStyle? _timestampStyle;
-  
+
   TextStyle _getTitleStyle(ThemeData theme) {
     return _titleStyle ??= theme.textTheme.titleSmall!.copyWith(
       fontWeight: FontWeight.bold,
       color: JuiceTheme.parchment,
     );
   }
-  
+
   TextStyle _getTimestampStyle(ThemeData theme) {
     return _timestampStyle ??= theme.textTheme.bodySmall!.copyWith(
       color: JuiceTheme.parchmentDark,
@@ -443,18 +446,21 @@ class _RollHistoryCard extends StatelessWidget {
               style: const TextStyle(color: Colors.grey),
             ),
             // Show "Set as Current Position" for wilderness results
-            if (result is WildernessAreaResult && onSetWildernessPosition != null) ...[
+            if (result is WildernessAreaResult &&
+                onSetWildernessPosition != null) ...[
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
                     final wilderness = result as WildernessAreaResult;
-                    onSetWildernessPosition!(wilderness.envRoll, wilderness.typeRoll);
+                    onSetWildernessPosition!(
+                        wilderness.envRoll, wilderness.typeRoll);
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('📍 Set position: ${wilderness.interpretation}'),
+                        content: Text(
+                            '📍 Set position: ${wilderness.interpretation}'),
                         duration: const Duration(seconds: 2),
                       ),
                     );

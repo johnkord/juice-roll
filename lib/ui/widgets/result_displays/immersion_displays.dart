@@ -15,9 +15,12 @@ import '../result_display_registry.dart';
 
 /// Register all Immersion display builders with the registry.
 void registerImmersionDisplays() {
-  ResultDisplayRegistry.register<SensoryDetailResult>(_buildSensoryDetailDisplay);
-  ResultDisplayRegistry.register<EmotionalAtmosphereResult>(_buildEmotionalAtmosphereDisplay);
-  ResultDisplayRegistry.register<FullImmersionResult>(_buildFullImmersionDisplay);
+  ResultDisplayRegistry.register<SensoryDetailResult>(
+      _buildSensoryDetailDisplay);
+  ResultDisplayRegistry.register<EmotionalAtmosphereResult>(
+      _buildEmotionalAtmosphereDisplay);
+  ResultDisplayRegistry.register<FullImmersionResult>(
+      _buildFullImmersionDisplay);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -27,22 +30,32 @@ void registerImmersionDisplays() {
 /// Get icon for sense type
 IconData _getSenseIcon(String sense) {
   switch (sense.toLowerCase()) {
-    case 'see': return Icons.visibility;
-    case 'hear': return Icons.hearing;
-    case 'smell': return Icons.air;
-    case 'feel': return Icons.touch_app;
-    default: return Icons.sensors;
+    case 'see':
+      return Icons.visibility;
+    case 'hear':
+      return Icons.hearing;
+    case 'smell':
+      return Icons.air;
+    case 'feel':
+      return Icons.touch_app;
+    default:
+      return Icons.sensors;
   }
 }
 
 /// Get color for sense type
 Color _getSenseColor(String sense) {
   switch (sense.toLowerCase()) {
-    case 'see': return JuiceTheme.info;
-    case 'hear': return JuiceTheme.mystic;
-    case 'smell': return JuiceTheme.success;
-    case 'feel': return JuiceTheme.gold;
-    default: return JuiceTheme.rust;
+    case 'see':
+      return JuiceTheme.info;
+    case 'hear':
+      return JuiceTheme.mystic;
+    case 'smell':
+      return JuiceTheme.success;
+    case 'feel':
+      return JuiceTheme.gold;
+    default:
+      return JuiceTheme.rust;
   }
 }
 
@@ -53,7 +66,7 @@ Color _getSenseColor(String sense) {
 Widget _buildSensoryDetailDisplay(SensoryDetailResult result, ThemeData theme) {
   final senseColor = _getSenseColor(result.sense);
   final senseIcon = _getSenseIcon(result.sense);
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -100,7 +113,8 @@ Widget _buildSensoryDetailDisplay(SensoryDetailResult result, ThemeData theme) {
                 Icon(senseIcon, size: 16, color: senseColor),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: senseColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
@@ -128,12 +142,14 @@ Widget _buildSensoryDetailDisplay(SensoryDetailResult result, ThemeData theme) {
                   const TextSpan(text: 'You '),
                   TextSpan(
                     text: result.sense.toLowerCase(),
-                    style: TextStyle(fontWeight: FontWeight.bold, color: senseColor),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: senseColor),
                   ),
                   const TextSpan(text: ' something '),
                   TextSpan(
                     text: result.detail.toLowerCase(),
-                    style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.rust),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: JuiceTheme.rust),
                   ),
                   const TextSpan(text: ' '),
                   TextSpan(
@@ -157,9 +173,11 @@ Widget _buildSensoryDetailDisplay(SensoryDetailResult result, ThemeData theme) {
 // EMOTIONAL ATMOSPHERE DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildEmotionalAtmosphereDisplay(EmotionalAtmosphereResult result, ThemeData theme) {
-  final polarityColor = result.isPositive ? JuiceTheme.success : JuiceTheme.danger;
-  
+Widget _buildEmotionalAtmosphereDisplay(
+    EmotionalAtmosphereResult result, ThemeData theme) {
+  final polarityColor =
+      result.isPositive ? JuiceTheme.success : JuiceTheme.danger;
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -211,7 +229,9 @@ Widget _buildEmotionalAtmosphereDisplay(EmotionalAtmosphereResult result, ThemeD
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Icon(
-                    result.isPositive ? Icons.sentiment_satisfied : Icons.sentiment_dissatisfied,
+                    result.isPositive
+                        ? Icons.sentiment_satisfied
+                        : Icons.sentiment_dissatisfied,
                     size: 16,
                     color: polarityColor,
                   ),
@@ -271,8 +291,9 @@ Widget _buildEmotionalAtmosphereDisplay(EmotionalAtmosphereResult result, ThemeD
 Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
   final senseColor = _getSenseColor(result.sensory.sense);
   final senseIcon = _getSenseIcon(result.sensory.sense);
-  final polarityColor = result.emotional.isPositive ? JuiceTheme.success : JuiceTheme.danger;
-  
+  final polarityColor =
+      result.emotional.isPositive ? JuiceTheme.success : JuiceTheme.danger;
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -342,7 +363,7 @@ Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
-                color: polarityColor.withOpacity(0.2),
+                color: polarityColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: polarityColor.withOpacity(0.4)),
               ),
@@ -414,12 +435,14 @@ Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
                     const TextSpan(text: 'You '),
                     TextSpan(
                       text: result.sensory.sense.toLowerCase(),
-                      style: TextStyle(fontWeight: FontWeight.bold, color: senseColor),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: senseColor),
                     ),
                     const TextSpan(text: ' something '),
                     TextSpan(
                       text: result.sensory.detail.toLowerCase(),
-                      style: TextStyle(fontWeight: FontWeight.bold, color: JuiceTheme.rust),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: JuiceTheme.rust),
                     ),
                     const TextSpan(text: ' '),
                     TextSpan(
@@ -524,7 +547,8 @@ Widget _buildFullImmersionDisplay(FullImmersionResult result, ThemeData theme) {
 // SHARED DICE BADGE HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildSenseDiceBadge(IconData icon, int roll, Color color, ThemeData theme) {
+Widget _buildSenseDiceBadge(
+    IconData icon, int roll, Color color, ThemeData theme) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
     decoration: BoxDecoration(
@@ -664,7 +688,8 @@ Widget _buildEmotionDiceBadge(int roll, ThemeData theme) {
   );
 }
 
-Widget _buildFateDiceBadge(bool isPositive, Color polarityColor, ThemeData theme) {
+Widget _buildFateDiceBadge(
+    bool isPositive, Color polarityColor, ThemeData theme) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
     decoration: BoxDecoration(
@@ -709,11 +734,14 @@ Widget _buildFateDiceBadge(bool isPositive, Color polarityColor, ThemeData theme
   );
 }
 
-Widget _buildSkewIndicator(SkewType skew, {required bool isEmotional, required ThemeData theme}) {
+Widget _buildSkewIndicator(SkewType skew,
+    {required bool isEmotional, required ThemeData theme}) {
   final isAdvantage = skew == SkewType.advantage;
   final color = isAdvantage ? JuiceTheme.success : JuiceTheme.danger;
   final icon = isEmotional
-      ? (isAdvantage ? Icons.sentiment_very_satisfied : Icons.sentiment_very_dissatisfied)
+      ? (isAdvantage
+          ? Icons.sentiment_very_satisfied
+          : Icons.sentiment_very_dissatisfied)
       : (isAdvantage ? Icons.arrow_upward : Icons.arrow_downward);
   final label = isEmotional
       ? (isAdvantage ? 'Positive' : 'Negative')

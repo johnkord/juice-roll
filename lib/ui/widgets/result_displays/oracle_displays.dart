@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/fate_dice_formatter.dart';
+import '../../../data/fate_check_intensity_examples.dart';
 import '../../../data/random_event_data.dart' as random_event_data;
-import '../../../presets/fate_check.dart';
+import '../../../presets/discover_meaning.dart';
 import '../../../presets/expectation_check.dart';
-import '../../../presets/scale.dart';
+import '../../../presets/fate_check.dart';
 import '../../../presets/next_scene.dart';
 import '../../../presets/random_event.dart';
-import '../../../presets/discover_meaning.dart';
+import '../../../presets/scale.dart';
 import '../../theme/juice_theme.dart';
 import '../result_display_registry.dart';
-import '../../../data/fate_check_intensity_examples.dart';
 
 /// Oracle result display builders.
-/// 
+///
 /// This module handles display widgets for all Oracle-related results:
 /// - FateCheckResult - Yes/No with modifiers and special triggers
 /// - ExpectationCheckResult - Testing assumptions
@@ -28,15 +29,19 @@ import '../../../data/fate_check_intensity_examples.dart';
 /// Registers all Oracle display builders with the registry.
 void registerOracleDisplays() {
   ResultDisplayRegistry.register<FateCheckResult>(buildFateCheckDisplay);
-  ResultDisplayRegistry.register<ExpectationCheckResult>(buildExpectationCheckDisplay);
+  ResultDisplayRegistry.register<ExpectationCheckResult>(
+      buildExpectationCheckDisplay);
   ResultDisplayRegistry.register<ScaleResult>(buildScaleDisplay);
   ResultDisplayRegistry.register<NextSceneResult>(buildNextSceneDisplay);
-  ResultDisplayRegistry.register<NextSceneWithFollowUpResult>(buildNextSceneWithFollowUpDisplay);
+  ResultDisplayRegistry.register<NextSceneWithFollowUpResult>(
+      buildNextSceneWithFollowUpDisplay);
   ResultDisplayRegistry.register<RandomEventResult>(buildRandomEventDisplay);
-  ResultDisplayRegistry.register<RandomEventFocusResult>(buildRandomEventFocusDisplay);
+  ResultDisplayRegistry.register<RandomEventFocusResult>(
+      buildRandomEventFocusDisplay);
   ResultDisplayRegistry.register<IdeaResult>(buildIdeaDisplay);
   ResultDisplayRegistry.register<SingleTableResult>(buildSingleTableDisplay);
-  ResultDisplayRegistry.register<DiscoverMeaningResult>(buildDiscoverMeaningDisplay);
+  ResultDisplayRegistry.register<DiscoverMeaningResult>(
+      buildDiscoverMeaningDisplay);
 }
 
 // =============================================================================
@@ -46,7 +51,7 @@ void registerOracleDisplays() {
 Widget buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
   final isPositive = result.outcome.isYes;
   final isContextual = result.outcome.isContextual;
-  
+
   // Determine colors based on outcome type
   // Contextual results (Favorable/Unfavorable) use neutral colors
   // since the Yes/No depends on context, not the dice
@@ -55,13 +60,13 @@ Widget buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
   if (isContextual) {
     // Use gold for contextual results - indicates "you decide based on context"
     outcomeColor = JuiceTheme.gold;
-    outcomeBgColor = JuiceTheme.gold.withValues(alpha: 0.2);
+    outcomeBgColor = JuiceTheme.gold.withValues(alpha: 0.15);
   } else if (isPositive) {
     outcomeColor = JuiceTheme.success;
-    outcomeBgColor = JuiceTheme.success.withValues(alpha: 0.2);
+    outcomeBgColor = JuiceTheme.success.withValues(alpha: 0.15);
   } else {
     outcomeColor = JuiceTheme.danger;
-    outcomeBgColor = JuiceTheme.danger.withValues(alpha: 0.2);
+    outcomeBgColor = JuiceTheme.danger.withValues(alpha: 0.15);
   }
 
   return Column(
@@ -82,7 +87,8 @@ Widget buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
             decoration: BoxDecoration(
               color: JuiceTheme.mystic.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
+              border:
+                  Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
             ),
             child: Text(
               '1d6: ${result.intensity}',
@@ -121,7 +127,8 @@ Widget buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
       // Guidance for "Because" results - use Intensity to craft reason
       if (result.outcome.isBecause) ...[
         const SizedBox(height: 8),
-        _buildBecauseGuidanceWidget(result.outcome, result.intensity, result.intensityDescription, theme),
+        _buildBecauseGuidanceWidget(result.outcome, result.intensity,
+            result.intensityDescription, theme),
       ],
       // Special trigger (Random Event / Invalid Assumption)
       if (result.hasSpecialTrigger) ...[
@@ -177,7 +184,7 @@ Widget buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: JuiceTheme.gold.withValues(alpha: 0.1),
+            color: JuiceTheme.gold.withValues(alpha: 0.09),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.4)),
           ),
@@ -219,15 +226,16 @@ Widget buildFateCheckDisplay(FateCheckResult result, ThemeData theme) {
 }
 
 /// Builds a contextual guidance widget for Favorable/Unfavorable outcomes.
-/// 
+///
 /// These outcomes are unique in Juice because they don't provide a direct Yes/No
 /// answer. Instead, the player must determine what answer would most help or hurt
 /// their character in the current situation.
-Widget _buildContextualGuidanceWidget(FateCheckOutcome outcome, ThemeData theme) {
+Widget _buildContextualGuidanceWidget(
+    FateCheckOutcome outcome, ThemeData theme) {
   final isFavorable = outcome == FateCheckOutcome.favorable;
   final guidance = outcome.contextualGuidance;
   final examples = outcome.exampleInterpretations;
-  
+
   return Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
@@ -249,8 +257,8 @@ Widget _buildContextualGuidanceWidget(FateCheckOutcome outcome, ThemeData theme)
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                isFavorable 
-                    ? 'What helps your character?' 
+                isFavorable
+                    ? 'What helps your character?'
                     : 'What hurts your character?',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: JuiceTheme.gold,
@@ -292,15 +300,15 @@ Widget _buildContextualGuidanceWidget(FateCheckOutcome outcome, ThemeData theme)
                 ),
                 const SizedBox(height: 4),
                 ...examples.map((example) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    '• $example',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: JuiceTheme.parchment.withValues(alpha: 0.9),
-                      fontSize: 11,
-                    ),
-                  ),
-                )),
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '• $example',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                          fontSize: 11,
+                        ),
+                      ),
+                    )),
               ],
             ),
           ),
@@ -311,13 +319,14 @@ Widget _buildContextualGuidanceWidget(FateCheckOutcome outcome, ThemeData theme)
 }
 
 /// Builds a guidance widget for Invalid Assumption results.
-/// 
+///
 /// Invalid Assumption is unique because it means the question itself was based
 /// on a false premise. The player must re-examine what they thought was true.
-Widget _buildInvalidAssumptionGuidanceWidget(SpecialTrigger trigger, ThemeData theme) {
+Widget _buildInvalidAssumptionGuidanceWidget(
+    SpecialTrigger trigger, ThemeData theme) {
   final guidance = trigger.contextualGuidance;
   final examples = trigger.exampleInterpretations;
-  
+
   return Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
@@ -380,15 +389,15 @@ Widget _buildInvalidAssumptionGuidanceWidget(SpecialTrigger trigger, ThemeData t
                 ),
                 const SizedBox(height: 4),
                 ...examples.map((example) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    '• $example',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: JuiceTheme.parchment.withValues(alpha: 0.9),
-                      fontSize: 11,
-                    ),
-                  ),
-                )),
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '• $example',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                          fontSize: 11,
+                        ),
+                      ),
+                    )),
               ],
             ),
           ),
@@ -399,14 +408,15 @@ Widget _buildInvalidAssumptionGuidanceWidget(SpecialTrigger trigger, ThemeData t
 }
 
 /// Builds a guidance widget for "Because" results (Yes, because... / No, because...).
-/// 
+///
 /// These outcomes require the player to use the Intensity roll to craft a reason
 /// WHY the answer is Yes or No. Higher intensity = more significant reason.
-Widget _buildBecauseGuidanceWidget(FateCheckOutcome outcome, int intensity, String intensityDescription, ThemeData theme) {
+Widget _buildBecauseGuidanceWidget(FateCheckOutcome outcome, int intensity,
+    String intensityDescription, ThemeData theme) {
   final isYes = outcome == FateCheckOutcome.yesBecause;
   final guidance = outcome.contextualGuidance;
   final examples = outcome.exampleInterpretations;
-  
+
   // Color based on Yes/No
   final color = isYes ? JuiceTheme.success : JuiceTheme.danger;
 
@@ -499,14 +509,16 @@ Widget _buildIntensityScale(int intensity, Color activeColor, ThemeData theme) {
               width: 20,
               height: 20,
               decoration: BoxDecoration(
-                color: isActive 
-                    ? activeColor 
-                    : isPast 
+                color: isActive
+                    ? activeColor
+                    : isPast
                         ? activeColor.withValues(alpha: 0.3)
                         : JuiceTheme.surface,
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
-                  color: isActive ? activeColor : JuiceTheme.parchmentDark.withValues(alpha: 0.3),
+                  color: isActive
+                      ? activeColor
+                      : JuiceTheme.parchmentDark.withValues(alpha: 0.3),
                   width: isActive ? 2 : 1,
                 ),
               ),
@@ -516,8 +528,8 @@ Widget _buildIntensityScale(int intensity, Color activeColor, ThemeData theme) {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                    color: isActive 
-                        ? JuiceTheme.surface 
+                    color: isActive
+                        ? JuiceTheme.surface
                         : JuiceTheme.parchmentDark,
                   ),
                 ),
@@ -542,12 +554,13 @@ Widget _buildIntensityScale(int intensity, Color activeColor, ThemeData theme) {
 // EXPECTATION CHECK DISPLAY
 // =============================================================================
 
-Widget buildExpectationCheckDisplay(ExpectationCheckResult result, ThemeData theme) {
+Widget buildExpectationCheckDisplay(
+    ExpectationCheckResult result, ThemeData theme) {
   // Determine if outcome is positive based on outcome type
   final isPositive = result.outcome == ExpectationOutcome.expected ||
       result.outcome == ExpectationOutcome.expectedIntensified;
   final isContextual = result.outcome.isContextual;
-  
+
   // Determine colors based on outcome type
   // Contextual results (Favorable/Unfavorable) use neutral colors
   Color outcomeColor;
@@ -599,23 +612,27 @@ Widget buildExpectationCheckDisplay(ExpectationCheckResult result, ThemeData the
         _buildExpectationContextualGuidance(result.outcome, theme),
       ],
       // Show guidance and auto-rolled meaning for Modified Idea outcome
-      if (result.outcome.isModifiedIdea && result.hasMeaning && result.meaningResult != null) ...[
+      if (result.outcome.isModifiedIdea &&
+          result.hasMeaning &&
+          result.meaningResult != null) ...[
         const SizedBox(height: 8),
-        _buildModifiedIdeaGuidanceWidget(result.outcome, result.meaningResult!, theme),
+        _buildModifiedIdeaGuidanceWidget(
+            result.outcome, result.meaningResult!, theme),
       ],
     ],
   );
 }
 
 /// Builds contextual guidance for Expectation Check Favorable/Unfavorable.
-/// 
+///
 /// Unlike Fate Check, these modify your expectation rather than answering
 /// a yes/no question. The player still needs to determine how their
 /// expectation is twisted to help or hurt them.
-Widget _buildExpectationContextualGuidance(ExpectationOutcome outcome, ThemeData theme) {
+Widget _buildExpectationContextualGuidance(
+    ExpectationOutcome outcome, ThemeData theme) {
   final isFavorable = outcome == ExpectationOutcome.favorable;
   final guidance = outcome.contextualGuidance;
-  
+
   return Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
@@ -636,8 +653,8 @@ Widget _buildExpectationContextualGuidance(ExpectationOutcome outcome, ThemeData
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                isFavorable 
-                    ? 'Expectation twisted in your favor' 
+                isFavorable
+                    ? 'Expectation twisted in your favor'
                     : 'Expectation twisted against you',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: JuiceTheme.gold,
@@ -663,13 +680,14 @@ Widget _buildExpectationContextualGuidance(ExpectationOutcome outcome, ThemeData
 }
 
 /// Builds a guidance widget for "Modified Idea" results in Expectation Check.
-/// 
+///
 /// This is triggered by double blanks (00) and provides a Modifier + Idea pair
 /// that the player uses to creatively alter their expectation in an unexpected way.
-Widget _buildModifiedIdeaGuidanceWidget(ExpectationOutcome outcome, DiscoverMeaningResult meaningResult, ThemeData theme) {
+Widget _buildModifiedIdeaGuidanceWidget(ExpectationOutcome outcome,
+    DiscoverMeaningResult meaningResult, ThemeData theme) {
   final guidance = outcome.contextualGuidance;
   final prompts = outcome.modifiedIdeaPrompts;
-  
+
   return Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
@@ -707,7 +725,8 @@ Widget _buildModifiedIdeaGuidanceWidget(ExpectationOutcome outcome, DiscoverMean
           decoration: BoxDecoration(
             color: JuiceTheme.surface.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: JuiceTheme.juiceOrange.withValues(alpha: 0.3)),
+            border: Border.all(
+                color: JuiceTheme.juiceOrange.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -787,15 +806,15 @@ Widget _buildModifiedIdeaGuidanceWidget(ExpectationOutcome outcome, DiscoverMean
                 ),
                 const SizedBox(height: 4),
                 ...prompts.map((prompt) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    '• $prompt',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: JuiceTheme.parchment.withValues(alpha: 0.9),
-                      fontSize: 11,
-                    ),
-                  ),
-                )),
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '• $prompt',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                          fontSize: 11,
+                        ),
+                      ),
+                    )),
               ],
             ),
           ),
@@ -811,11 +830,12 @@ Widget _buildModifiedIdeaGuidanceWidget(ExpectationOutcome outcome, DiscoverMean
 
 /// Builds a guidance widget for Alter (Add/Remove Focus) scene results.
 /// Explains how to interpret "Add" vs "Remove" with examples.
-Widget _buildAlterSceneGuidanceWidget(SceneType sceneType, String focus, ThemeData theme) {
+Widget _buildAlterSceneGuidanceWidget(
+    SceneType sceneType, String focus, ThemeData theme) {
   final guidance = sceneType.alterGuidance;
   final examples = sceneType.alterExamples;
   final isAdd = sceneType == SceneType.alterAdd;
-  
+
   return Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
@@ -837,7 +857,9 @@ Widget _buildAlterSceneGuidanceWidget(SceneType sceneType, String focus, ThemeDa
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                isAdd ? 'Add "$focus" to the scene' : 'Remove "$focus" from the scene',
+                isAdd
+                    ? 'Add "$focus" to the scene'
+                    : 'Remove "$focus" from the scene',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: JuiceTheme.gold,
                   fontWeight: FontWeight.bold,
@@ -878,23 +900,24 @@ Widget _buildAlterSceneGuidanceWidget(SceneType sceneType, String focus, ThemeDa
                 ),
                 const SizedBox(height: 4),
                 ...examples.take(2).map((example) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: RichText(
-                    text: TextSpan(
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: JuiceTheme.parchment.withValues(alpha: 0.9),
-                        fontSize: 11,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: '${example.$1}: ',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                      padding: const EdgeInsets.only(top: 2),
+                      child: RichText(
+                        text: TextSpan(
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                            fontSize: 11,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '${example.$1}: ',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: example.$2),
+                          ],
                         ),
-                        TextSpan(text: example.$2),
-                      ],
-                    ),
-                  ),
-                )),
+                      ),
+                    )),
               ],
             ),
           ),
@@ -932,7 +955,8 @@ Widget buildScaleDisplay(ScaleResult result, ThemeData theme) {
             decoration: BoxDecoration(
               color: JuiceTheme.mystic.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
+              border:
+                  Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
             ),
             child: Text(
               '1d6: ${result.intensity}',
@@ -974,13 +998,15 @@ Widget buildScaleDisplay(ScaleResult result, ThemeData theme) {
 
 /// Builds a widget showing the math breakdown for Scale.
 /// Shows: "(+1) + (+1) + 3 = 5 → +10%"
-Widget _buildScaleMathBreakdown(ScaleResult result, Color color, ThemeData theme) {
+Widget _buildScaleMathBreakdown(
+    ScaleResult result, Color color, ThemeData theme) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
       color: JuiceTheme.surface.withValues(alpha: 0.5),
       borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: JuiceTheme.parchmentDark.withValues(alpha: 0.2)),
+      border:
+          Border.all(color: JuiceTheme.parchmentDark.withValues(alpha: 0.2)),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -1019,9 +1045,10 @@ Widget _buildScaleMathBreakdown(ScaleResult result, Color color, ThemeData theme
 }
 
 /// Builds guidance widget for Scale results with examples.
-Widget _buildScaleGuidanceWidget(ScaleResult result, Color color, ThemeData theme) {
+Widget _buildScaleGuidanceWidget(
+    ScaleResult result, Color color, ThemeData theme) {
   final examples = result.exampleUseCases;
-  
+
   return Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
@@ -1038,7 +1065,9 @@ Widget _buildScaleGuidanceWidget(ScaleResult result, Color color, ThemeData them
             Icon(
               result.isNoChange
                   ? Icons.balance
-                  : (result.isIncrease ? Icons.trending_up : Icons.trending_down),
+                  : (result.isIncrease
+                      ? Icons.trending_up
+                      : Icons.trending_down),
               size: 16,
               color: color,
             ),
@@ -1075,15 +1104,15 @@ Widget _buildScaleGuidanceWidget(ScaleResult result, Color color, ThemeData them
                 ),
                 const SizedBox(height: 4),
                 ...examples.map((example) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    '• $example',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: JuiceTheme.parchment.withValues(alpha: 0.9),
-                      fontSize: 11,
-                    ),
-                  ),
-                )),
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '• $example',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: JuiceTheme.parchment.withValues(alpha: 0.9),
+                          fontSize: 11,
+                        ),
+                      ),
+                    )),
               ],
             ),
           ),
@@ -1156,7 +1185,8 @@ Widget buildNextSceneDisplay(NextSceneResult result, ThemeData theme) {
 // NEXT SCENE WITH FOLLOW-UP DISPLAY
 // =============================================================================
 
-Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, ThemeData theme) {
+Widget buildNextSceneWithFollowUpDisplay(
+    NextSceneWithFollowUpResult result, ThemeData theme) {
   final sceneResult = result.sceneResult;
   Color chipColor;
   switch (sceneResult.sceneType) {
@@ -1202,7 +1232,8 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
         const SizedBox(height: 8),
         Row(
           children: [
-            Icon(Icons.arrow_forward, size: 16, color: JuiceTheme.parchmentDark),
+            Icon(Icons.arrow_forward,
+                size: 16, color: JuiceTheme.parchmentDark),
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1226,7 +1257,8 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
             ),
             Chip(
               label: Text(result.focusResult!.focus),
-              backgroundColor: JuiceTheme.categoryExplore.withValues(alpha: 0.2),
+              backgroundColor:
+                  JuiceTheme.categoryExplore.withValues(alpha: 0.2),
               side: BorderSide(color: JuiceTheme.categoryExplore),
               padding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
@@ -1236,14 +1268,16 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
         // Add guidance for Alter scene types
         if (sceneResult.sceneType.isAlter) ...[
           const SizedBox(height: 8),
-          _buildAlterSceneGuidanceWidget(sceneResult.sceneType, result.focusResult!.focus, theme),
+          _buildAlterSceneGuidanceWidget(
+              sceneResult.sceneType, result.focusResult!.focus, theme),
         ],
       ],
       if (result.ideaResult != null) ...[
         const SizedBox(height: 8),
         Row(
           children: [
-            Icon(Icons.arrow_forward, size: 16, color: JuiceTheme.parchmentDark),
+            Icon(Icons.arrow_forward,
+                size: 16, color: JuiceTheme.parchmentDark),
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1276,7 +1310,8 @@ Widget buildNextSceneWithFollowUpDisplay(NextSceneWithFollowUpResult result, The
         const SizedBox(height: 8),
         Row(
           children: [
-            Icon(Icons.arrow_forward, size: 16, color: JuiceTheme.parchmentDark),
+            Icon(Icons.arrow_forward,
+                size: 16, color: JuiceTheme.parchmentDark),
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1324,7 +1359,7 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
   // Special styling for Plot Armor - it's a gift!
   final isPlotArmor = result.focus == 'Plot Armor';
   final focusColor = isPlotArmor ? JuiceTheme.success : Colors.amber;
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -1332,7 +1367,7 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: focusColor.withOpacity(0.15),
+          color: focusColor.withOpacity(0.13),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -1346,12 +1381,12 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
         ),
       ),
       const SizedBox(height: 6),
-      
+
       // Focus type chip with icon
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
-          color: focusColor.withOpacity(0.2),
+          color: focusColor.withOpacity(0.18),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: focusColor.withOpacity(0.5)),
         ),
@@ -1379,7 +1414,8 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
         ),
       ),
       // One-line focus description (muted, italic)
-      if (random_event_data.eventFocusDescriptions[result.focus]?.isNotEmpty ?? false) ...[
+      if (random_event_data.eventFocusDescriptions[result.focus]?.isNotEmpty ??
+          false) ...[
         const SizedBox(height: 2),
         Padding(
           padding: const EdgeInsets.only(left: 2, right: 2, bottom: 2),
@@ -1397,7 +1433,7 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
         ),
       ],
       const SizedBox(height: 6),
-      
+
       // Modifier + Idea phrase (the "meaning" component)
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -1423,7 +1459,7 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
           ],
         ),
       ),
-      
+
       // Compact prompt question
       if (random_event_data.eventFocusPrompts.containsKey(result.focus)) ...[
         const SizedBox(height: 6),
@@ -1455,10 +1491,11 @@ Widget buildRandomEventDisplay(RandomEventResult result, ThemeData theme) {
 
 /// Compact display for Random Event Focus (focus-only roll).
 /// Shows: dice roll, focus chip with icon, prompt question.
-Widget buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData theme) {
+Widget buildRandomEventFocusDisplay(
+    RandomEventFocusResult result, ThemeData theme) {
   final isPlotArmor = result.focus == 'Plot Armor';
   final focusColor = isPlotArmor ? JuiceTheme.success : Colors.amber;
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -1495,14 +1532,17 @@ Widget buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData the
                 Icon(
                   _getEventFocusIcon(result.focus),
                   size: 12,
-                  color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade700,
+                  color:
+                      isPlotArmor ? JuiceTheme.success : Colors.amber.shade700,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   result.focus,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isPlotArmor ? JuiceTheme.success : Colors.amber.shade800,
+                    color: isPlotArmor
+                        ? JuiceTheme.success
+                        : Colors.amber.shade800,
                   ),
                 ),
               ],
@@ -1511,7 +1551,8 @@ Widget buildRandomEventFocusDisplay(RandomEventFocusResult result, ThemeData the
         ],
       ),
       // One-line focus description (muted, italic)
-      if (random_event_data.eventFocusDescriptions[result.focus]?.isNotEmpty ?? false) ...[
+      if (random_event_data.eventFocusDescriptions[result.focus]?.isNotEmpty ??
+          false) ...[
         const SizedBox(height: 2),
         Padding(
           padding: const EdgeInsets.only(left: 2, right: 2, bottom: 2),
@@ -1580,9 +1621,11 @@ IconData _getEventFocusIcon(String focus) {
 /// In "Simple Mode", this replaces the Random Event Focus table.
 /// Reference: Juice instructions - Pro Tip about Simple Mode.
 Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
-  final categoryDescription = random_event_data.ideaCategoryDescriptions[result.ideaCategory] ?? '';
-  final categoryRange = random_event_data.ideaCategoryRanges[result.ideaCategory] ?? '';
-  
+  final categoryDescription =
+      random_event_data.ideaCategoryDescriptions[result.ideaCategory] ?? '';
+  final categoryRange =
+      random_event_data.ideaCategoryRanges[result.ideaCategory] ?? '';
+
   // Color coding by category
   Color categoryColor;
   IconData categoryIcon;
@@ -1603,7 +1646,7 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
       categoryColor = JuiceTheme.gold;
       categoryIcon = Icons.auto_awesome;
   }
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -1660,7 +1703,7 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
         ],
       ),
       const SizedBox(height: 10),
-      
+
       // The main phrase - prominently displayed
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1686,7 +1729,7 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
           ],
         ),
       ),
-      
+
       // Category guidance
       if (categoryDescription.isNotEmpty) ...[
         const SizedBox(height: 8),
@@ -1712,7 +1755,7 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
           ],
         ),
       ],
-      
+
       // Simple Mode tip
       const SizedBox(height: 8),
       Container(
@@ -1752,7 +1795,7 @@ Widget buildIdeaDisplay(IdeaResult result, ThemeData theme) {
 Widget buildSingleTableDisplay(SingleTableResult result, ThemeData theme) {
   // Get appropriate icon and color based on table name
   final (IconData icon, Color color) = _getTableStyle(result.tableName);
-  
+
   return Row(
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
@@ -1826,7 +1869,8 @@ Widget buildSingleTableDisplay(SingleTableResult result, ThemeData theme) {
 // DISCOVER MEANING DISPLAY
 // =============================================================================
 
-Widget buildDiscoverMeaningDisplay(DiscoverMeaningResult result, ThemeData theme) {
+Widget buildDiscoverMeaningDisplay(
+    DiscoverMeaningResult result, ThemeData theme) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -1835,7 +1879,8 @@ Widget buildDiscoverMeaningDisplay(DiscoverMeaningResult result, ThemeData theme
         decoration: BoxDecoration(
           color: JuiceTheme.juiceOrange.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: JuiceTheme.juiceOrange.withValues(alpha: 0.3)),
+          border:
+              Border.all(color: JuiceTheme.juiceOrange.withValues(alpha: 0.3)),
         ),
         child: Text(
           '2d20: ${result.adjectiveRoll}, ${result.nounRoll}',
@@ -1857,7 +1902,8 @@ Widget buildDiscoverMeaningDisplay(DiscoverMeaningResult result, ThemeData theme
                 topLeft: Radius.circular(8),
                 bottomLeft: Radius.circular(8),
               ),
-              border: Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
+              border:
+                  Border.all(color: JuiceTheme.mystic.withValues(alpha: 0.4)),
             ),
             child: Text(
               result.adjective,
@@ -1879,8 +1925,10 @@ Widget buildDiscoverMeaningDisplay(DiscoverMeaningResult result, ThemeData theme
               ),
               border: Border(
                 top: BorderSide(color: JuiceTheme.gold.withValues(alpha: 0.5)),
-                bottom: BorderSide(color: JuiceTheme.gold.withValues(alpha: 0.5)),
-                right: BorderSide(color: JuiceTheme.gold.withValues(alpha: 0.5)),
+                bottom:
+                    BorderSide(color: JuiceTheme.gold.withValues(alpha: 0.5)),
+                right:
+                    BorderSide(color: JuiceTheme.gold.withValues(alpha: 0.5)),
               ),
             ),
             child: Text(

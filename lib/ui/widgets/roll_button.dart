@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/juice_theme.dart';
 
 /// A styled roll button with Parchment & Ink aesthetic.
-/// 
+///
 /// Features an embossed paper-like appearance with subtle depth effects.
 class RollButton extends StatefulWidget {
   final String label;
@@ -26,19 +26,19 @@ class RollButton extends StatefulWidget {
 
 class _RollButtonState extends State<RollButton> {
   bool _isPressed = false;
-  
+
   // ═══════════════════════════════════════════════════════════════════════════
   // CACHED DECORATION VALUES
   // Pre-computed to avoid creating new objects on every build/animation frame.
   // These are rebuilt only when the widget's color changes.
   // ═══════════════════════════════════════════════════════════════════════════
-  
+
   late BoxDecoration _normalDecoration;
   late BoxDecoration _pressedDecoration;
   late Color _brightIconColor;
   late List<Shadow> _iconShadows;
   late TextStyle _labelStyle;
-  
+
   /// Cached static values shared across all instances
   static const _borderRadius = BorderRadius.all(Radius.circular(12));
   static const _pressedShadows = [
@@ -60,13 +60,13 @@ class _RollButtonState extends State<RollButton> {
       blurRadius: 1,
     ),
   ];
-  
+
   @override
   void initState() {
     super.initState();
     _buildCachedValues();
   }
-  
+
   @override
   void didUpdateWidget(RollButton oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -75,13 +75,14 @@ class _RollButtonState extends State<RollButton> {
       _buildCachedValues();
     }
   }
-  
+
   /// Pre-compute all color-dependent decorations and styles.
   void _buildCachedValues() {
-    final buttonColor = Color.lerp(widget.color, JuiceTheme.parchmentDark, 0.3)!;
+    final buttonColor =
+        Color.lerp(widget.color, JuiceTheme.parchmentDark, 0.3)!;
     final borderColor = Color.lerp(widget.color, JuiceTheme.gold, 0.3)!;
     _brightIconColor = Color.lerp(JuiceTheme.parchment, Colors.white, 0.15)!;
-    
+
     // Pre-compute gradient colors
     final normalGradientColors = [
       buttonColor.withOpacity(0.25),
@@ -91,7 +92,7 @@ class _RollButtonState extends State<RollButton> {
       buttonColor.withOpacity(0.45),
       buttonColor.withOpacity(0.35),
     ];
-    
+
     _normalDecoration = BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
@@ -105,7 +106,7 @@ class _RollButtonState extends State<RollButton> {
       ),
       boxShadow: _normalShadows,
     );
-    
+
     _pressedDecoration = BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
@@ -119,7 +120,7 @@ class _RollButtonState extends State<RollButton> {
       ),
       boxShadow: _pressedShadows,
     );
-    
+
     _iconShadows = [
       Shadow(
         color: widget.color.withOpacity(0.5),
@@ -131,7 +132,7 @@ class _RollButtonState extends State<RollButton> {
         offset: Offset(1, 1),
       ),
     ];
-    
+
     _labelStyle = TextStyle(
       fontFamily: JuiceTheme.fontFamilySans,
       fontSize: 14,

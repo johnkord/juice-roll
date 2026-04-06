@@ -17,33 +17,37 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../result_display_registry.dart';
-import '../../theme/juice_theme.dart';
+
+import '../../../core/fate_dice_formatter.dart';
 import '../../../models/roll_result.dart';
-import '../../../presets/pay_the_price.dart';
-import '../../../presets/quest.dart';
-import '../../../presets/interrupt_plot_point.dart';
-import '../../../presets/settlement.dart';
-import '../../../presets/object_treasure.dart';
 import '../../../presets/abstract_icons.dart';
 import '../../../presets/dialog_generator.dart';
 import '../../../presets/extended_npc_conversation.dart';
+import '../../../presets/interrupt_plot_point.dart';
 import '../../../presets/name_generator.dart';
-import '../../../core/fate_dice_formatter.dart';
+import '../../../presets/object_treasure.dart';
+import '../../../presets/pay_the_price.dart';
+import '../../../presets/quest.dart';
+import '../../../presets/settlement.dart';
+import '../../theme/juice_theme.dart';
+import '../result_display_registry.dart';
 
 /// Register all miscellaneous display builders with the registry.
 void registerMiscDisplays() {
   ResultDisplayRegistry.register<PayThePriceResult>(buildPayThePriceDisplay);
   ResultDisplayRegistry.register<QuestResult>(buildQuestDisplay);
-  ResultDisplayRegistry.register<InterruptPlotPointResult>(buildInterruptDisplay);
+  ResultDisplayRegistry.register<InterruptPlotPointResult>(
+      buildInterruptDisplay);
   ResultDisplayRegistry.register<SimpleNpcResult>(buildSimpleNpcDisplay);
   ResultDisplayRegistry.register<ItemCreationResult>(buildItemCreationDisplay);
-  ResultDisplayRegistry.register<ObjectTreasureResult>(buildObjectTreasureDisplay);
+  ResultDisplayRegistry.register<ObjectTreasureResult>(
+      buildObjectTreasureDisplay);
   ResultDisplayRegistry.register<FateRollResult>(buildFateRollDisplay);
   ResultDisplayRegistry.register<DialogResult>(buildDialogDisplay);
   ResultDisplayRegistry.register<AbstractIconResult>(buildAbstractIconDisplay);
   ResultDisplayRegistry.register<InformationResult>(buildInformationDisplay);
-  ResultDisplayRegistry.register<CompanionResponseResult>(buildCompanionResponseDisplay);
+  ResultDisplayRegistry.register<CompanionResponseResult>(
+      buildCompanionResponseDisplay);
   ResultDisplayRegistry.register<DialogTopicResult>(buildDialogTopicDisplay);
   ResultDisplayRegistry.register<NameResult>(buildNameResultDisplay);
 }
@@ -76,15 +80,26 @@ Widget buildPayThePriceDisplay(RollResult r, ThemeData theme) {
               children: [
                 Icon(icon, size: 12, color: color),
                 const SizedBox(width: 4),
-                Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: color)),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        color: color)),
               ],
             ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(color: JuiceTheme.sepia10, borderRadius: BorderRadius.circular(4)),
-            child: Text('1d10: ${result.roll}', style: TextStyle(fontSize: 9, fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.parchmentDark)),
+            decoration: BoxDecoration(
+                color: JuiceTheme.sepia10,
+                borderRadius: BorderRadius.circular(4)),
+            child: Text('1d10: ${result.roll}',
+                style: TextStyle(
+                    fontSize: 9,
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    color: JuiceTheme.parchmentDark)),
           ),
         ],
       ),
@@ -99,12 +114,22 @@ Widget buildPayThePriceDisplay(RollResult r, ThemeData theme) {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(result.isMajorTwist ? Icons.error_outline : Icons.report_problem_outlined, size: 18, color: color),
+            Icon(
+                result.isMajorTwist
+                    ? Icons.error_outline
+                    : Icons.report_problem_outlined,
+                size: 18,
+                color: color),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 result.result,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilySerif, color: JuiceTheme.parchment, height: 1.3),
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                    color: JuiceTheme.parchment,
+                    height: 1.3),
               ),
             ),
           ],
@@ -140,13 +165,24 @@ Widget buildQuestDisplay(RollResult r, ThemeData theme) {
               children: [
                 Icon(Icons.auto_stories, size: 14, color: JuiceTheme.rust),
                 const SizedBox(width: 6),
-                Text('Quest Hook', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: JuiceTheme.rust, letterSpacing: 0.5)),
+                Text('Quest Hook',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.rust,
+                        letterSpacing: 0.5)),
               ],
             ),
             const SizedBox(height: 6),
             Text(
               result.questSentence,
-              style: TextStyle(fontFamily: JuiceTheme.fontFamilySerif, fontSize: 14, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: JuiceTheme.parchment, height: 1.3),
+              style: TextStyle(
+                  fontFamily: JuiceTheme.fontFamilySerif,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  fontStyle: FontStyle.italic,
+                  color: JuiceTheme.parchment,
+                  height: 1.3),
             ),
           ],
         ),
@@ -157,11 +193,39 @@ Widget buildQuestDisplay(RollResult r, ThemeData theme) {
         spacing: 6,
         runSpacing: 6,
         children: [
-          _buildQuestComponentChip(roll: result.objectiveRoll, subRoll: null, label: result.objective, category: 'Objective', color: JuiceTheme.info),
-          _buildQuestComponentChip(roll: result.descriptionRoll, subRoll: result.descriptionSubRoll, label: result.descriptionExpanded ?? result.description, category: result.descriptionExpanded != null ? result.description : null, color: JuiceTheme.success),
-          _buildQuestComponentChip(roll: result.focusRoll, subRoll: result.focusSubRoll, label: result.focusExpanded ?? result.focus, category: result.focusExpanded != null ? result.focus : null, color: JuiceTheme.gold),
-          _buildQuestComponentChip(roll: result.prepositionRoll, subRoll: null, label: result.preposition, category: null, color: JuiceTheme.mystic),
-          _buildQuestComponentChip(roll: result.locationRoll, subRoll: result.locationSubRoll, label: result.locationExpanded ?? result.location, category: result.locationExpanded != null ? result.location : null, color: JuiceTheme.rust),
+          _buildQuestComponentChip(
+              roll: result.objectiveRoll,
+              subRoll: null,
+              label: result.objective,
+              category: 'Objective',
+              color: JuiceTheme.info),
+          _buildQuestComponentChip(
+              roll: result.descriptionRoll,
+              subRoll: result.descriptionSubRoll,
+              label: result.descriptionExpanded ?? result.description,
+              category: result.descriptionExpanded != null
+                  ? result.description
+                  : null,
+              color: JuiceTheme.success),
+          _buildQuestComponentChip(
+              roll: result.focusRoll,
+              subRoll: result.focusSubRoll,
+              label: result.focusExpanded ?? result.focus,
+              category: result.focusExpanded != null ? result.focus : null,
+              color: JuiceTheme.gold),
+          _buildQuestComponentChip(
+              roll: result.prepositionRoll,
+              subRoll: null,
+              label: result.preposition,
+              category: null,
+              color: JuiceTheme.mystic),
+          _buildQuestComponentChip(
+              roll: result.locationRoll,
+              subRoll: result.locationSubRoll,
+              label: result.locationExpanded ?? result.location,
+              category:
+                  result.locationExpanded != null ? result.location : null,
+              color: JuiceTheme.rust),
         ],
       ),
     ],
@@ -169,27 +233,49 @@ Widget buildQuestDisplay(RollResult r, ThemeData theme) {
 }
 
 /// Helper to build quest component chip.
-Widget _buildQuestComponentChip({required int roll, required int? subRoll, required String label, required String? category, required Color color}) {
+Widget _buildQuestComponentChip(
+    {required int roll,
+    required int? subRoll,
+    required String label,
+    required String? category,
+    required Color color}) {
   final rollText = subRoll != null ? '$roll→$subRoll' : '$roll';
 
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(6), border: Border.all(color: color.withOpacity(0.4))),
+    decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.4))),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-          decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(3)),
-          child: Text(rollText, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilyMono, color: color)),
+          decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(3)),
+          child: Text(rollText,
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: color)),
         ),
         const SizedBox(width: 6),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: JuiceTheme.parchment)),
-            if (category != null) Text('($category)', style: TextStyle(fontSize: 9, color: color, fontStyle: FontStyle.italic)),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: JuiceTheme.parchment)),
+            if (category != null)
+              Text('($category)',
+                  style: TextStyle(
+                      fontSize: 9, color: color, fontStyle: FontStyle.italic)),
           ],
         ),
       ],
@@ -214,16 +300,25 @@ Widget buildInterruptDisplay(RollResult r, ThemeData theme) {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.15),
+              color: const Color.fromARGB(255, 206, 101, 255).withOpacity(0.15),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.purple.withOpacity(0.4)),
+              border: Border.all(
+                  color: const Color.fromARGB(255, 206, 101, 255)
+                      .withOpacity(0.4)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('d10: ${result.categoryRoll}', style: theme.textTheme.bodySmall?.copyWith(fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: Colors.purple)),
+                Text('d10: ${result.categoryRoll}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontWeight: FontWeight.bold,
+                        color: const Color.fromARGB(255, 206, 101, 255))),
                 const SizedBox(width: 8),
-                Text(result.category, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
+                Text(result.category,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 206, 101, 255))),
               ],
             ),
           ),
@@ -234,20 +329,35 @@ Widget buildInterruptDisplay(RollResult r, ThemeData theme) {
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.purple.withOpacity(0.08),
+          color: const Color.fromARGB(255, 206, 101, 255).withOpacity(0.08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.purple.withOpacity(0.25)),
+          border: Border.all(
+              color:
+                  const Color.fromARGB(255, 206, 101, 255).withOpacity(0.25)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: Colors.purple.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
-              child: Text('d10: ${result.eventRoll}', style: theme.textTheme.bodySmall?.copyWith(fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: Colors.purple)),
+              decoration: BoxDecoration(
+                  color:
+                      const Color.fromARGB(255, 206, 101, 255).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4)),
+              child: Text('d10: ${result.eventRoll}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontWeight: FontWeight.bold,
+                      color: const Color.fromARGB(255, 206, 101, 255))),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(result.event, style: TextStyle(fontFamily: JuiceTheme.fontFamilySerif, fontSize: 14, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: JuiceTheme.parchment)),
+              child: Text(result.event,
+                  style: TextStyle(
+                      fontFamily: JuiceTheme.fontFamilySerif,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.italic,
+                      color: JuiceTheme.parchment)),
             ),
           ],
         ),
@@ -268,11 +378,18 @@ Widget buildSimpleNpcDisplay(RollResult r, ThemeData theme) {
     children: [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: JuiceTheme.categoryCharacter10, borderRadius: BorderRadius.circular(8)),
-        child: Text('Name: ${result.name.rolls.length}d10, Profile: 3d10', style: theme.textTheme.bodySmall?.copyWith(fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.categoryCharacter)),
+        decoration: BoxDecoration(
+            color: JuiceTheme.categoryCharacter10,
+            borderRadius: BorderRadius.circular(8)),
+        child: Text('Name: ${result.name.rolls.length}d10, Profile: 3d10',
+            style: theme.textTheme.bodySmall?.copyWith(
+                fontFamily: JuiceTheme.fontFamilyMono,
+                color: JuiceTheme.categoryCharacter)),
       ),
       const SizedBox(height: 6),
-      Text(result.name.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+      Text(result.name.name,
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold)),
       const SizedBox(height: 4),
       Wrap(
         spacing: 4,
@@ -281,8 +398,11 @@ Widget buildSimpleNpcDisplay(RollResult r, ThemeData theme) {
           Chip(
             avatar: const Icon(Icons.psychology, size: 14),
             label: Text(result.profile.personality),
-            backgroundColor: Colors.purple.withOpacity(0.1),
-            side: BorderSide(color: Colors.purple.withOpacity(0.3)),
+            backgroundColor:
+                const Color.fromARGB(255, 206, 101, 255).withOpacity(0.1),
+            side: BorderSide(
+                color:
+                    const Color.fromARGB(255, 206, 101, 255).withOpacity(0.3)),
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
             labelStyle: const TextStyle(fontSize: 11),
@@ -328,7 +448,9 @@ Widget buildItemCreationDisplay(RollResult r, ThemeData theme) {
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: categoryColor.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+            decoration: BoxDecoration(
+                color: categoryColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6)),
             child: Icon(categoryIcon, size: 16, color: categoryColor),
           ),
           const SizedBox(width: 8),
@@ -336,8 +458,18 @@ Widget buildItemCreationDisplay(RollResult r, ThemeData theme) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(result.baseItem.category, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: categoryColor, letterSpacing: 0.5)),
-                Text(result.baseItem.fullDescription, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilySerif, color: JuiceTheme.parchment)),
+                Text(result.baseItem.category,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: categoryColor,
+                        letterSpacing: 0.5)),
+                Text(result.baseItem.fullDescription,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: JuiceTheme.fontFamilySerif,
+                        color: JuiceTheme.parchment)),
               ],
             ),
           ),
@@ -357,11 +489,19 @@ Widget buildItemCreationDisplay(RollResult r, ThemeData theme) {
             Row(children: [
               Icon(Icons.auto_fix_high, size: 12, color: JuiceTheme.mystic),
               const SizedBox(width: 4),
-              Text('Properties', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: JuiceTheme.mystic)),
+              Text('Properties',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.mystic)),
             ]),
             const SizedBox(height: 6),
-            Text('${result.property1.intensityDescription} ${result.property1.property}', style: theme.textTheme.bodySmall),
-            Text('${result.property2.intensityDescription} ${result.property2.property}', style: theme.textTheme.bodySmall),
+            Text(
+                '${result.property1.intensityDescription} ${result.property1.property}',
+                style: theme.textTheme.bodySmall),
+            Text(
+                '${result.property2.intensityDescription} ${result.property2.property}',
+                style: theme.textTheme.bodySmall),
           ],
         ),
       ),
@@ -369,14 +509,23 @@ Widget buildItemCreationDisplay(RollResult r, ThemeData theme) {
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: JuiceTheme.juiceOrange10, borderRadius: BorderRadius.circular(6)),
+          decoration: BoxDecoration(
+              color: JuiceTheme.juiceOrange10,
+              borderRadius: BorderRadius.circular(6)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.palette, size: 14, color: JuiceTheme.juiceOrange),
               const SizedBox(width: 6),
-              Text(result.color!.result, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: JuiceTheme.juiceOrange)),
-              if (result.color!.emoji != null) ...[const SizedBox(width: 4), Text(result.color!.emoji!, style: const TextStyle(fontSize: 14))],
+              Text(result.color!.result,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.juiceOrange)),
+              if (result.color!.emoji != null) ...[
+                const SizedBox(width: 4),
+                Text(result.color!.emoji!, style: const TextStyle(fontSize: 14))
+              ],
             ],
           ),
         ),
@@ -402,7 +551,9 @@ Widget buildObjectTreasureDisplay(RollResult r, ThemeData theme) {
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: categoryColor.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+            decoration: BoxDecoration(
+                color: categoryColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6)),
             child: Icon(categoryIcon, size: 16, color: categoryColor),
           ),
           const SizedBox(width: 8),
@@ -410,8 +561,18 @@ Widget buildObjectTreasureDisplay(RollResult r, ThemeData theme) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(result.category, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: categoryColor, letterSpacing: 0.5)),
-                Text(result.fullDescription, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilySerif, color: JuiceTheme.parchment)),
+                Text(result.category,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: categoryColor,
+                        letterSpacing: 0.5)),
+                Text(result.fullDescription,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: JuiceTheme.fontFamilySerif,
+                        color: JuiceTheme.parchment)),
               ],
             ),
           ),
@@ -424,14 +585,18 @@ Widget buildObjectTreasureDisplay(RollResult r, ThemeData theme) {
         children: [
           if (result.rolls.isNotEmpty)
             _buildTreasurePropertyChip(
-              result.columnLabels.isNotEmpty ? result.columnLabels[0] : 'Quality',
+              result.columnLabels.isNotEmpty
+                  ? result.columnLabels[0]
+                  : 'Quality',
               result.quality,
               result.rolls.length > 1 ? result.rolls[1] : result.rolls[0],
               categoryColor,
             ),
           if (result.rolls.length > 2)
             _buildTreasurePropertyChip(
-              result.columnLabels.length > 1 ? result.columnLabels[1] : 'Material',
+              result.columnLabels.length > 1
+                  ? result.columnLabels[1]
+                  : 'Material',
               result.material,
               result.rolls[2],
               categoryColor,
@@ -448,8 +613,13 @@ Widget buildObjectTreasureDisplay(RollResult r, ThemeData theme) {
       const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: JuiceTheme.inkDark, borderRadius: BorderRadius.circular(4)),
-        child: Text('4d6: [${result.rolls.join(", ")}]', style: TextStyle(fontSize: 10, fontFamily: JuiceTheme.fontFamilyMono, color: Colors.grey.shade500)),
+        decoration: BoxDecoration(
+            color: JuiceTheme.inkDark, borderRadius: BorderRadius.circular(4)),
+        child: Text('4d6: [${result.rolls.join(", ")}]',
+            style: TextStyle(
+                fontSize: 10,
+                fontFamily: JuiceTheme.fontFamilyMono,
+                color: Colors.grey.shade500)),
       ),
     ],
   );
@@ -496,22 +666,37 @@ IconData _getTreasureCategoryIcon(String category) {
 }
 
 /// Build property chip for treasure.
-Widget _buildTreasurePropertyChip(String label, String value, int roll, Color color) {
+Widget _buildTreasurePropertyChip(
+    String label, String value, int roll, Color color) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     margin: const EdgeInsets.only(bottom: 4),
-    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6), border: Border.all(color: color.withOpacity(0.3))),
+    decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.3))),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(label, style: TextStyle(fontSize: 9, color: Colors.grey.shade500)),
         const SizedBox(width: 4),
-        Text(value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilySerif, color: color)),
+        Text(value,
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                fontFamily: JuiceTheme.fontFamilySerif,
+                color: color)),
         const SizedBox(width: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-          decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(3)),
-          child: Text('$roll', style: TextStyle(fontSize: 9, fontFamily: JuiceTheme.fontFamilyMono, color: color)),
+          decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(3)),
+          child: Text('$roll',
+              style: TextStyle(
+                  fontSize: 9,
+                  fontFamily: JuiceTheme.fontFamilyMono,
+                  color: color)),
         ),
       ],
     ),
@@ -546,7 +731,10 @@ Widget buildFateRollDisplay(RollResult r, ThemeData theme) {
       // Fate dice display using formatter
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(color: resultColor.withOpacity(0.08), borderRadius: BorderRadius.circular(10), border: Border.all(color: resultColor.withOpacity(0.3))),
+        decoration: BoxDecoration(
+            color: resultColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: resultColor.withOpacity(0.3))),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -559,17 +747,30 @@ Widget buildFateRollDisplay(RollResult r, ThemeData theme) {
                 decoration: BoxDecoration(
                   color: JuiceTheme.parchment15,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: resultColor.withOpacity(0.5), width: 2),
+                  border:
+                      Border.all(color: resultColor.withOpacity(0.5), width: 2),
                 ),
-                child: Center(child: Text(FateDiceFormatter.dieToSymbol(value), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: resultColor))),
+                child: Center(
+                    child: Text(FateDiceFormatter.dieToSymbol(value),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: resultColor))),
               );
             }),
             const SizedBox(width: 12),
             // Total
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: resultColor.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-              child: Text('= $total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilyMono, color: resultColor)),
+              decoration: BoxDecoration(
+                  color: resultColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8)),
+              child: Text('= $total',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: resultColor)),
             ),
           ],
         ),
@@ -578,7 +779,9 @@ Widget buildFateRollDisplay(RollResult r, ThemeData theme) {
       // Result interpretation
       Center(
         child: Chip(
-          label: Text(resultLabel, style: TextStyle(color: resultColor, fontWeight: FontWeight.bold)),
+          label: Text(resultLabel,
+              style:
+                  TextStyle(color: resultColor, fontWeight: FontWeight.bold)),
           backgroundColor: resultColor.withOpacity(0.1),
           side: BorderSide(color: resultColor),
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -593,7 +796,7 @@ Widget buildFateRollDisplay(RollResult r, ThemeData theme) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Build display for DialogResult - shows the full Dialog Grid mini-game state.
-/// 
+///
 /// Per Juice instructions, the Dialog Grid tracks:
 /// - Fragment: The type of dialog (Fact, Query, Need, Want, Action, Denial, Support)
 /// - Movement: Old position → New position on the 5x5 grid
@@ -605,7 +808,8 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
   final result = r as DialogResult;
   final hasDoubles = result.isDoubles;
   final accentColor = hasDoubles ? JuiceTheme.gold : JuiceTheme.info;
-  final tenseColor = result.isPast ? JuiceTheme.juiceOrange : JuiceTheme.success;
+  final tenseColor =
+      result.isPast ? JuiceTheme.juiceOrange : JuiceTheme.success;
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -615,18 +819,30 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: accentColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-            child: Text('2d10: [${result.directionRoll}, ${result.subjectRoll}]', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, color: accentColor)),
+            decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8)),
+            child: Text(
+                '2d10: [${result.directionRoll}, ${result.subjectRoll}]',
+                style: TextStyle(
+                    fontFamily: JuiceTheme.fontFamilyMono, color: accentColor)),
           ),
           if (hasDoubles) ...[
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: JuiceTheme.gold20, borderRadius: BorderRadius.circular(6), border: Border.all(color: JuiceTheme.gold)),
+              decoration: BoxDecoration(
+                  color: JuiceTheme.gold20,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: JuiceTheme.gold)),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.star, size: 12, color: JuiceTheme.gold),
                 const SizedBox(width: 4),
-                Text('DOUBLES!', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: JuiceTheme.gold)),
+                Text('DOUBLES!',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.gold)),
               ]),
             ),
           ],
@@ -647,16 +863,23 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
           ),
           child: Column(
             children: [
-              Icon(Icons.stop_circle_outlined, size: 28, color: JuiceTheme.gold),
+              Icon(Icons.stop_circle_outlined,
+                  size: 28, color: JuiceTheme.gold),
               const SizedBox(height: 6),
               Text(
                 'Conversation Ends',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: JuiceTheme.gold),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.gold),
               ),
               const SizedBox(height: 4),
               Text(
                 'The NPC wants to stop. They might be done talking, walk away, or retreat.',
-                style: TextStyle(fontSize: 11, color: JuiceTheme.parchmentDark, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                    fontSize: 11,
+                    color: JuiceTheme.parchmentDark,
+                    fontStyle: FontStyle.italic),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -680,7 +903,8 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
                 children: [
                   Text(
                     result.oldFragment,
-                    style: TextStyle(fontSize: 14, color: JuiceTheme.parchmentDark60),
+                    style: TextStyle(
+                        fontSize: 14, color: JuiceTheme.parchmentDark80),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -692,7 +916,10 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
                   ),
                   Text(
                     result.newFragment,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: JuiceTheme.parchment),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.parchment),
                   ),
                 ],
               ),
@@ -700,7 +927,10 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
               // Fragment description
               Text(
                 result.fragmentDescription,
-                style: TextStyle(fontSize: 12, color: JuiceTheme.parchmentDark, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: JuiceTheme.parchmentDark,
+                    fontStyle: FontStyle.italic),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -713,7 +943,10 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
                 ),
                 child: Text(
                   result.isPast ? '📜 About the Past' : '📍 About the Present',
-                  style: TextStyle(fontSize: 10, color: tenseColor, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: tenseColor,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ],
@@ -728,8 +961,10 @@ Widget buildDialogDisplay(RollResult r, ThemeData theme) {
         spacing: 8,
         runSpacing: 8,
         children: [
-          _buildDialogComponentChip('Tone', result.tone, _getToneIcon(result.tone), accentColor),
-          _buildDialogComponentChip('Subject', result.subject, _getSubjectIcon(result.subject), accentColor),
+          _buildDialogComponentChip(
+              'Tone', result.tone, _getToneIcon(result.tone), accentColor),
+          _buildDialogComponentChip('Subject', result.subject,
+              _getSubjectIcon(result.subject), accentColor),
         ],
       ),
     ],
@@ -769,10 +1004,14 @@ IconData _getSubjectIcon(String subject) {
 }
 
 /// Helper to build dialog component chip.
-Widget _buildDialogComponentChip(String label, String value, IconData icon, Color color) {
+Widget _buildDialogComponentChip(
+    String label, String value, IconData icon, Color color) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-    decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withOpacity(0.3))),
+    decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3))),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -782,8 +1021,17 @@ Widget _buildDialogComponentChip(String label, String value, IconData icon, Colo
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: TextStyle(fontSize: 9, color: color.withOpacity(0.7), fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-            Text(value, style: TextStyle(fontSize: 12, color: JuiceTheme.parchment, fontWeight: FontWeight.w500)),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 9,
+                    color: color.withOpacity(0.7),
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: JuiceTheme.parchment,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ],
@@ -805,18 +1053,30 @@ Widget buildAbstractIconDisplay(RollResult r, ThemeData theme) {
       // Grid coordinates
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(color: JuiceTheme.juiceOrange10, borderRadius: BorderRadius.circular(8)),
-        child: Text('Grid: (${result.rowLabel}, ${result.colLabel})', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 14, color: JuiceTheme.juiceOrange)),
+        decoration: BoxDecoration(
+            color: JuiceTheme.juiceOrange10,
+            borderRadius: BorderRadius.circular(8)),
+        child: Text('Grid: (${result.rowLabel}, ${result.colLabel})',
+            style: TextStyle(
+                fontFamily: JuiceTheme.fontFamilyMono,
+                fontSize: 14,
+                color: JuiceTheme.juiceOrange)),
       ),
       const SizedBox(height: 12),
       // Icon image
       Container(
         width: 120,
         height: 120,
-        decoration: BoxDecoration(color: JuiceTheme.parchment10, borderRadius: BorderRadius.circular(12), border: Border.all(color: JuiceTheme.juiceOrange40)),
+        decoration: BoxDecoration(
+            color: JuiceTheme.parchment10,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: JuiceTheme.juiceOrange40)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(11),
-          child: Image.asset(result.imagePath ?? '', fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, size: 48, color: JuiceTheme.parchment50)),
+          child: Image.asset(result.imagePath ?? '',
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported,
+                  size: 48, color: JuiceTheme.parchment50)),
         ),
       ),
     ],
@@ -835,15 +1095,24 @@ Widget buildInformationDisplay(RollResult r, ThemeData theme) {
     children: [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: JuiceTheme.info10, borderRadius: BorderRadius.circular(8)),
-        child: Text('2d100: [${result.typeRoll}, ${result.topicRoll}]', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.info)),
+        decoration: BoxDecoration(
+            color: JuiceTheme.info10, borderRadius: BorderRadius.circular(8)),
+        child: Text('2d100: [${result.typeRoll}, ${result.topicRoll}]',
+            style: TextStyle(
+                fontFamily: JuiceTheme.fontFamilyMono, color: JuiceTheme.info)),
       ),
       const SizedBox(height: 6),
       Row(
         children: [
-          Chip(label: Text(result.informationType), backgroundColor: JuiceTheme.info15, side: BorderSide(color: JuiceTheme.info), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+          Chip(
+              label: Text(result.informationType),
+              backgroundColor: JuiceTheme.info15,
+              side: BorderSide(color: JuiceTheme.info),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact),
           const SizedBox(width: 8),
-          Expanded(child: Text(result.topic, style: theme.textTheme.bodyMedium)),
+          Expanded(
+              child: Text(result.topic, style: theme.textTheme.bodyMedium)),
         ],
       ),
     ],
@@ -857,15 +1126,20 @@ Widget buildInformationDisplay(RollResult r, ThemeData theme) {
 /// Build display for CompanionResponseResult - shows response.
 Widget buildCompanionResponseDisplay(RollResult r, ThemeData theme) {
   final result = r as CompanionResponseResult;
-  final isPositive = result.response.contains('Agree') || result.response.contains('Supportive');
+  final isPositive = result.response.contains('Agree') ||
+      result.response.contains('Supportive');
   final color = isPositive ? JuiceTheme.success : JuiceTheme.danger;
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-        child: Text('d100: ${result.roll}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, color: color)),
+        decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8)),
+        child: Text('d100: ${result.roll}',
+            style:
+                TextStyle(fontFamily: JuiceTheme.fontFamilyMono, color: color)),
       ),
       const SizedBox(width: 12),
       Flexible(
@@ -900,34 +1174,60 @@ Widget buildDialogTopicDisplay(RollResult r, ThemeData theme) {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: JuiceTheme.juiceOrange15, borderRadius: BorderRadius.circular(6), border: Border.all(color: JuiceTheme.juiceOrange40)),
+            decoration: BoxDecoration(
+                color: JuiceTheme.juiceOrange15,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: JuiceTheme.juiceOrange40)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.forum, size: 12, color: JuiceTheme.juiceOrange),
                 const SizedBox(width: 4),
-                Text('DIALOG TOPIC', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: JuiceTheme.juiceOrange)),
+                Text('DIALOG TOPIC',
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        color: JuiceTheme.juiceOrange)),
               ],
             ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(color: JuiceTheme.juiceOrange10, borderRadius: BorderRadius.circular(4)),
-            child: Text('1d100: ${result.roll}', style: TextStyle(fontSize: 10, fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: JuiceTheme.juiceOrange)),
+            decoration: BoxDecoration(
+                color: JuiceTheme.juiceOrange10,
+                borderRadius: BorderRadius.circular(4)),
+            child: Text('1d100: ${result.roll}',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: JuiceTheme.fontFamilyMono,
+                    fontWeight: FontWeight.bold,
+                    color: JuiceTheme.juiceOrange)),
           ),
         ],
       ),
       const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: JuiceTheme.juiceOrange08, borderRadius: BorderRadius.circular(8), border: Border.all(color: JuiceTheme.juiceOrange20)),
+        decoration: BoxDecoration(
+            color: JuiceTheme.juiceOrange08,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: JuiceTheme.juiceOrange20)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.chat_bubble_outline, size: 16, color: JuiceTheme.juiceOrange70),
+            Icon(Icons.chat_bubble_outline,
+                size: 16, color: JuiceTheme.juiceOrange70),
             const SizedBox(width: 8),
-            Expanded(child: Text(result.topic, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilySerif, color: JuiceTheme.parchment, height: 1.3))),
+            Expanded(
+                child: Text(result.topic,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: JuiceTheme.fontFamilySerif,
+                        color: JuiceTheme.parchment,
+                        height: 1.3))),
           ],
         ),
       ),
@@ -992,7 +1292,11 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
             Expanded(
               child: Text(
                 result.name,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilySerif, fontSize: 22, color: characterColor),
+                style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: JuiceTheme.fontFamilySerif,
+                    fontSize: 22,
+                    color: characterColor),
               ),
             ),
             if (result.style != NameStyle.neutral)
@@ -1003,7 +1307,12 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: characterColor.withOpacity(0.4)),
                 ),
-                child: Text(result.style == NameStyle.masculine ? '♂ Masc' : '♀ Fem', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: characterColor)),
+                child: Text(
+                    result.style == NameStyle.masculine ? '♂ Masc' : '♀ Fem',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: characterColor)),
               ),
           ],
         ),
@@ -1024,14 +1333,28 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
             children: [
               Icon(Icons.casino, size: 12, color: JuiceTheme.juiceOrange),
               const SizedBox(width: 6),
-              Text('d20: ${result.rolls.isNotEmpty ? result.rolls[0] : "?"}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 10, fontWeight: FontWeight.bold, color: JuiceTheme.juiceOrange)),
+              Text('d20: ${result.rolls.isNotEmpty ? result.rolls[0] : "?"}',
+                  style: TextStyle(
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: JuiceTheme.juiceOrange)),
               const SizedBox(width: 8),
-              Text('→', style: TextStyle(color: JuiceTheme.parchment50, fontSize: 10)),
+              Text('→',
+                  style:
+                      TextStyle(color: JuiceTheme.parchment50, fontSize: 10)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: JuiceTheme.juiceOrange15, borderRadius: BorderRadius.circular(4)),
-                child: Text('Pattern: ${result.pattern}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 11, fontWeight: FontWeight.bold, color: JuiceTheme.juiceOrange)),
+                decoration: BoxDecoration(
+                    color: JuiceTheme.juiceOrange15,
+                    borderRadius: BorderRadius.circular(4)),
+                child: Text('Pattern: ${result.pattern}',
+                    style: TextStyle(
+                        fontFamily: JuiceTheme.fontFamilyMono,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: JuiceTheme.juiceOrange)),
               ),
             ],
           ),
@@ -1053,24 +1376,49 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
               if (i > 0)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Text('+', style: TextStyle(color: characterColor.withOpacity(0.4), fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text('+',
+                      style: TextStyle(
+                          color: characterColor.withOpacity(0.4),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
                 ),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  decoration: BoxDecoration(color: characterColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: characterColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6)),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (i < columnLabels.length) Text(columnLabels[i], style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: characterColor.withOpacity(0.6), letterSpacing: 0.5)),
+                      if (i < columnLabels.length)
+                        Text(columnLabels[i],
+                            style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: characterColor.withOpacity(0.6),
+                                letterSpacing: 0.5)),
                       const SizedBox(height: 2),
-                      Text(result.syllables[i], style: TextStyle(fontFamily: JuiceTheme.fontFamilySerif, fontWeight: FontWeight.bold, color: characterColor, fontSize: 15)),
+                      Text(result.syllables[i],
+                          style: TextStyle(
+                              fontFamily: JuiceTheme.fontFamilySerif,
+                              fontWeight: FontWeight.bold,
+                              color: characterColor,
+                              fontSize: 15)),
                       const SizedBox(height: 2),
                       if (i + rollOffset < result.rolls.length)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(color: characterColor.withOpacity(0.15), borderRadius: BorderRadius.circular(3)),
-                          child: Text('d20: ${result.rolls[i + rollOffset]}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontSize: 8, color: characterColor.withOpacity(0.8))),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                              color: characterColor.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(3)),
+                          child: Text('d20: ${result.rolls[i + rollOffset]}',
+                              style: TextStyle(
+                                  fontFamily: JuiceTheme.fontFamilyMono,
+                                  fontSize: 8,
+                                  color: characterColor.withOpacity(0.8))),
                         ),
                     ],
                   ),
@@ -1081,17 +1429,33 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
             if (suffix != null) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Text('+', style: TextStyle(color: characterColor.withOpacity(0.4), fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text('+',
+                    style: TextStyle(
+                        color: characterColor.withOpacity(0.4),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: characterColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                    color: characterColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('SUFFIX', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: characterColor.withOpacity(0.6), letterSpacing: 0.5)),
+                    Text('SUFFIX',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: characterColor.withOpacity(0.6),
+                            letterSpacing: 0.5)),
                     const SizedBox(height: 2),
-                    Text(suffix, style: TextStyle(fontFamily: JuiceTheme.fontFamilySerif, fontWeight: FontWeight.bold, color: characterColor, fontSize: 15)),
+                    Text(suffix,
+                        style: TextStyle(
+                            fontFamily: JuiceTheme.fontFamilySerif,
+                            fontWeight: FontWeight.bold,
+                            color: characterColor,
+                            fontSize: 15)),
                   ],
                 ),
               ),
@@ -1104,8 +1468,13 @@ Widget buildNameResultDisplay(RollResult r, ThemeData theme) {
       if (result.method != NameMethod.pattern) ...[
         const SizedBox(height: 4),
         Text(
-          result.method == NameMethod.simple ? 'Method: 3d20 across columns 1-2-3' : 'Method: 3d20 on column 1 only',
-          style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: JuiceTheme.parchment50, fontSize: 10),
+          result.method == NameMethod.simple
+              ? 'Method: 3d20 across columns 1-2-3'
+              : 'Method: 3d20 on column 1 only',
+          style: theme.textTheme.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: JuiceTheme.parchment50,
+              fontSize: 10),
         ),
       ],
     ],

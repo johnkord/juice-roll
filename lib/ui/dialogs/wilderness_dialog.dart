@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import '../theme/juice_theme.dart';
-import '../shared/oracle_dialog.dart';
-import '../shared/dialog_components.dart';
-import '../../presets/wilderness.dart';
-import '../../presets/dungeon_generator.dart';
-import '../../presets/challenge.dart';
-import '../../presets/monster_encounter.dart';
+
 import '../../models/roll_result.dart';
+import '../../presets/challenge.dart';
+import '../../presets/dungeon_generator.dart';
+import '../../presets/monster_encounter.dart';
+import '../../presets/wilderness.dart';
+import '../shared/dialog_components.dart';
+import '../shared/oracle_dialog.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for Wilderness exploration options.
 /// Includes environment transitions, encounters, and monster levels.
-/// 
+///
 /// State management is now external - the dialog receives state and
 /// calls back when state changes.
 class WildernessDialog extends StatefulWidget {
@@ -46,7 +47,7 @@ class _WildernessDialogState extends State<WildernessDialog> {
   Widget build(BuildContext context) {
     final state = widget.wildernessState;
     final isInitialized = state != null;
-    
+
     return SimpleOracleDialog(
       title: 'Wilderness',
       closeButtonText: 'Close',
@@ -67,7 +68,8 @@ class _WildernessDialogState extends State<WildernessDialog> {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text('Reset Wilderness?'),
-                        content: const Text('This will clear the current wilderness state. You will need to initialize a new starting area.'),
+                        content: const Text(
+                            'This will clear the current wilderness state. You will need to initialize a new starting area.'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
@@ -79,7 +81,8 @@ class _WildernessDialogState extends State<WildernessDialog> {
                               Navigator.pop(ctx);
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Wilderness state reset')),
+                                const SnackBar(
+                                    content: Text('Wilderness state reset')),
                               );
                             },
                             child: const Text('Reset'),
@@ -116,7 +119,7 @@ class _WildernessDialogState extends State<WildernessDialog> {
             iconSize: 14,
           ),
           const SizedBox(height: 6),
-          
+
           if (!isInitialized) ...[
             _WildernessActionButton(
               title: 'Initialize Random Area',
@@ -132,11 +135,16 @@ class _WildernessDialogState extends State<WildernessDialog> {
             ),
             const SizedBox(height: 6),
             _WildernessActionButton(
-              title: _showEnvironmentPicker ? 'Hide Picker' : 'Set Known Position...',
+              title: _showEnvironmentPicker
+                  ? 'Hide Picker'
+                  : 'Set Known Position...',
               subtitle: 'Start from an existing location',
-              icon: _showEnvironmentPicker ? Icons.expand_less : Icons.expand_more,
+              icon: _showEnvironmentPicker
+                  ? Icons.expand_less
+                  : Icons.expand_more,
               color: JuiceTheme.sepia,
-              onTap: () => setState(() => _showEnvironmentPicker = !_showEnvironmentPicker),
+              onTap: () => setState(
+                  () => _showEnvironmentPicker = !_showEnvironmentPicker),
             ),
           ] else ...[
             _WildernessActionButton(
@@ -153,11 +161,15 @@ class _WildernessDialogState extends State<WildernessDialog> {
             ),
             const SizedBox(height: 6),
             _WildernessActionButton(
-              title: _showEnvironmentPicker ? 'Hide Picker' : 'Change Position...',
+              title:
+                  _showEnvironmentPicker ? 'Hide Picker' : 'Change Position...',
               subtitle: 'Set to a different location',
-              icon: _showEnvironmentPicker ? Icons.expand_less : Icons.expand_more,
+              icon: _showEnvironmentPicker
+                  ? Icons.expand_less
+                  : Icons.expand_more,
               color: JuiceTheme.sepia,
-              onTap: () => setState(() => _showEnvironmentPicker = !_showEnvironmentPicker),
+              onTap: () => setState(
+                  () => _showEnvironmentPicker = !_showEnvironmentPicker),
             ),
           ],
 
@@ -167,10 +179,12 @@ class _WildernessDialogState extends State<WildernessDialog> {
             _WildernessEnvironmentPicker(
               selectedEnvironment: _selectedEnvironment,
               selectedType: _selectedType,
-              onEnvironmentChanged: (v) => setState(() => _selectedEnvironment = v),
+              onEnvironmentChanged: (v) =>
+                  setState(() => _selectedEnvironment = v),
               onTypeChanged: (v) => setState(() => _selectedType = v),
               onConfirm: () {
-                final result = widget.wilderness.initializeAt(_selectedEnvironment, typeRow: _selectedType);
+                final result = widget.wilderness
+                    .initializeAt(_selectedEnvironment, typeRow: _selectedType);
                 widget.onStateChange(result.newState);
                 widget.onRoll(result);
                 Navigator.pop(context);
@@ -196,7 +210,8 @@ class _WildernessDialogState extends State<WildernessDialog> {
                 subtitle: 'Disadvantage',
                 isSelected: _hasDangerousTerrain,
                 color: JuiceTheme.danger,
-                onTap: () => setState(() => _hasDangerousTerrain = !_hasDangerousTerrain),
+                onTap: () => setState(
+                    () => _hasDangerousTerrain = !_hasDangerousTerrain),
               ),
               const SizedBox(width: 8),
               _WildernessModifierChip(
@@ -212,7 +227,7 @@ class _WildernessDialogState extends State<WildernessDialog> {
 
           _WildernessActionButton(
             title: 'Roll Encounter',
-            subtitle: isInitialized 
+            subtitle: isInitialized
                 ? 'What happens? (d${state.isLost ? 6 : 10}${_getSkewLabel()})'
                 : 'What happens? (d10)',
             icon: Icons.casino,
@@ -250,11 +265,13 @@ class _WildernessDialogState extends State<WildernessDialog> {
                       widget.onStateChange(state.copyWith(isLost: false));
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('No longer lost - using d10')),
+                        const SnackBar(
+                            content: Text('No longer lost - using d10')),
                       );
                     },
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -351,16 +368,16 @@ class _WildernessDialogState extends State<WildernessDialog> {
   String _getMonsterFormula(int environmentRow) {
     // Monster formulas from the wilderness table
     const formulas = [
-      '@-',      // 1 Arctic
-      '+1@-',    // 2 Mountains
-      '+1@-',    // 3 Cavern
-      '+2',      // 4 Hills
-      '+2@+',    // 5 Grassland
-      '+3',      // 6 Forest
-      '+3@+',    // 7 Swamp
-      '+4',      // 8 Water
-      '+4@+',    // 9 Coast
-      '+4@+',    // 10 Desert
+      '@-', // 1 Arctic
+      '+1@-', // 2 Mountains
+      '+1@-', // 3 Cavern
+      '+2', // 4 Hills
+      '+2@+', // 5 Grassland
+      '+3', // 6 Forest
+      '+3@+', // 7 Swamp
+      '+4', // 8 Water
+      '+4@+', // 9 Coast
+      '+4@+', // 10 Desert
     ];
     final index = (environmentRow - 1).clamp(0, 9);
     return '1d6${formulas[index]}';
@@ -369,19 +386,19 @@ class _WildernessDialogState extends State<WildernessDialog> {
   /// Roll an encounter and automatically roll any required follow-up
   void _rollEncounterWithFollowUp() {
     final currentState = widget.wildernessState;
-    
+
     var encounterResult = widget.wilderness.rollEncounter(
       currentState: currentState,
       hasDangerousTerrain: _hasDangerousTerrain,
       hasMapOrGuide: _hasMapOrGuide,
     );
-    
+
     // If follow-up is required, roll it and embed the result
     if (encounterResult.requiresFollowUp) {
       final encounter = encounterResult.encounter;
       final environmentRow = currentState?.environmentRow ?? 5;
       final typeRow = currentState?.typeRow ?? 5;
-      
+
       if (encounter == 'Natural Hazard') {
         final hazard = widget.wilderness.rollNaturalHazard();
         encounterResult = encounterResult.withFollowUp(
@@ -417,7 +434,8 @@ class _WildernessDialogState extends State<WildernessDialog> {
         final challenge = widget.challenge.rollFullChallenge();
         encounterResult = encounterResult.withFollowUp(
           followUpRoll: challenge.physicalRoll,
-          followUpResult: '${challenge.physicalSkill} DC${challenge.physicalDc} / ${challenge.mentalSkill} DC${challenge.mentalDc}',
+          followUpResult:
+              '${challenge.physicalSkill} DC${challenge.physicalDc} / ${challenge.mentalSkill} DC${challenge.mentalDc}',
           followUpData: {
             'physicalSkill': challenge.physicalSkill,
             'physicalDc': challenge.physicalDc,
@@ -444,7 +462,7 @@ class _WildernessDialogState extends State<WildernessDialog> {
         );
       }
     }
-    
+
     // Update wilderness state if the encounter changed it
     if (encounterResult.newState != null) {
       widget.onStateChange(encounterResult.newState);
@@ -452,7 +470,7 @@ class _WildernessDialogState extends State<WildernessDialog> {
       // If became lost, update the state
       widget.onStateChange(currentState.copyWith(isLost: true));
     }
-    
+
     // Add the single encounter result (with embedded follow-up if any)
     widget.onRoll(encounterResult);
   }
@@ -486,7 +504,8 @@ class _WildernessStateCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.location_on, size: 16, color: JuiceTheme.categoryExplore),
+              Icon(Icons.location_on,
+                  size: 16, color: JuiceTheme.categoryExplore),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -512,7 +531,8 @@ class _WildernessStateCard extends StatelessWidget {
               const SizedBox(width: 8),
               if (state.isLost)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: JuiceTheme.danger20,
                     borderRadius: BorderRadius.circular(4),
@@ -547,7 +567,8 @@ class _StateInfoChip extends StatelessWidget {
   final String label;
   final String value;
 
-  const _StateInfoChip({required this.icon, required this.label, required this.value});
+  const _StateInfoChip(
+      {required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -594,7 +615,7 @@ class _WildernessActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.12),
+      color: color.withOpacity(0.10),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
@@ -631,7 +652,8 @@ class _WildernessActionButton extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, size: 16, color: color.withOpacity(0.5)),
+              Icon(Icons.chevron_right,
+                  size: 16, color: color.withOpacity(0.5)),
             ],
           ),
         ),
@@ -706,7 +728,7 @@ class _WildernessModifierChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: isSelected ? color.withOpacity(0.2) : JuiceTheme.sepia08,
+        color: isSelected ? color.withOpacity(0.15) : JuiceTheme.sepia08,
         borderRadius: BorderRadius.circular(6),
         child: InkWell(
           onTap: onTap,
@@ -790,7 +812,8 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
               labelText: 'Environment',
               labelStyle: TextStyle(color: JuiceTheme.parchmentDark),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: JuiceTheme.sepia30),
@@ -827,17 +850,24 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
                   children: [
                     Text(
                       '${i + 1}. ',
-                      style: TextStyle(fontSize: 13, color: JuiceTheme.sepia, fontFamily: JuiceTheme.fontFamilyMono),
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: JuiceTheme.sepia,
+                          fontFamily: JuiceTheme.fontFamilyMono),
                     ),
                     Expanded(
                       child: Text(
                         name.trim(),
-                        style: TextStyle(fontSize: 13, color: JuiceTheme.parchment, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: JuiceTheme.parchment,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                     if (formula.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: JuiceTheme.gold15,
                           borderRadius: BorderRadius.circular(4),
@@ -866,7 +896,8 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
               labelText: 'Type',
               labelStyle: TextStyle(color: JuiceTheme.parchmentDark),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: JuiceTheme.sepia30),
@@ -899,12 +930,18 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
                   children: [
                     Text(
                       '${i + 1}. ',
-                      style: TextStyle(fontSize: 13, color: JuiceTheme.sepia, fontFamily: JuiceTheme.fontFamilyMono),
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: JuiceTheme.sepia,
+                          fontFamily: JuiceTheme.fontFamilyMono),
                     ),
                     Expanded(
                       child: Text(
                         type,
-                        style: TextStyle(fontSize: 13, color: JuiceTheme.parchment, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: JuiceTheme.parchment,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -925,7 +962,8 @@ class _WildernessEnvironmentPicker extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.location_on, size: 14, color: JuiceTheme.categoryExplore),
+                Icon(Icons.location_on,
+                    size: 14, color: JuiceTheme.categoryExplore),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(

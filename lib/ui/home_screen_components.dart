@@ -49,6 +49,7 @@
 library;
 
 import 'package:flutter/material.dart';
+
 import 'home_state.dart';
 import 'theme/juice_theme.dart';
 import 'widgets/roll_button.dart';
@@ -259,7 +260,7 @@ class OracleButtonGrid extends StatelessWidget {
 /// Helper widget for building a row of buttons with consistent spacing.
 class _ButtonRow extends StatelessWidget {
   final List<Widget> children;
-  
+
   const _ButtonRow({required this.children});
 
   @override
@@ -308,7 +309,7 @@ class OracleButtonCallbacks {
   final VoidCallback showExtendedNpcDialog;
   final VoidCallback showAbstractIconsDialog;
   final VoidCallback showDiceRollDialog;
-  
+
   // Quick roll actions (no dialog)
   final VoidCallback rollScale;
   final VoidCallback rollInterruptPlotPoint;
@@ -459,7 +460,7 @@ class HistorySection extends StatelessWidget {
       listenable: notifier,
       builder: (context, _) {
         final history = notifier.state.history;
-        
+
         if (history.isEmpty) {
           return Center(
             child: Column(
@@ -468,14 +469,14 @@ class HistorySection extends StatelessWidget {
                 Icon(
                   Icons.auto_stories,
                   size: 48,
-                  color: JuiceTheme.parchmentDark30,
+                  color: JuiceTheme.parchmentDark60,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'No rolls yet',
                   style: TextStyle(
                     fontFamily: JuiceTheme.fontFamilySerif,
-                    color: JuiceTheme.parchmentDark50,
+                    color: JuiceTheme.parchmentDark,
                     fontSize: 16,
                   ),
                 ),
@@ -483,7 +484,7 @@ class HistorySection extends StatelessWidget {
                 Text(
                   'Tap an oracle button to begin',
                   style: TextStyle(
-                    color: JuiceTheme.parchmentDark35,
+                    color: JuiceTheme.parchmentDark80,
                     fontSize: 12,
                   ),
                 ),
@@ -491,7 +492,7 @@ class HistorySection extends StatelessWidget {
             ),
           );
         }
-        
+
         return RollHistory(
           history: history,
           onSetWildernessPosition: notifier.setWildernessPosition,
@@ -529,14 +530,14 @@ class HistorySectionHeader extends StatelessWidget {
           Icon(
             Icons.history,
             size: 12,
-            color: JuiceTheme.parchmentDark60,
+            color: JuiceTheme.parchmentDark80,
           ),
           const SizedBox(width: 6),
           Text(
             'Roll History',
             style: TextStyle(
               fontSize: 11,
-              color: JuiceTheme.parchmentDark60,
+              color: JuiceTheme.parchmentDark80,
             ),
           ),
         ],

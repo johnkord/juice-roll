@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+
 import '../../../models/results/ironsworn_result.dart';
 import '../../theme/juice_theme.dart';
 import '../result_display_registry.dart';
 
 /// Ironsworn/Starforged result display builders.
-/// 
+///
 /// This module handles display widgets for all Ironsworn-related results:
 /// - IronswornActionResult - Action rolls (d6+stat vs 2d10)
 /// - IronswornProgressResult - Progress rolls (progress vs 2d10)
@@ -14,10 +15,10 @@ import '../result_display_registry.dart';
 /// - IronswornMomentumBurnResult - Momentum burn outcomes
 
 /// Ironsworn theme color (Indigo)
-const _ironswornColor = Color(0xFF5C6BC0);
+const _ironswornColor = Color(0xFF8595d8);
 
 /// Registers all Ironsworn display builders with the registry.
-/// 
+///
 /// Call this during app initialization:
 /// ```dart
 /// void main() {
@@ -26,19 +27,26 @@ const _ironswornColor = Color(0xFF5C6BC0);
 /// }
 /// ```
 void registerIronswornDisplays() {
-  ResultDisplayRegistry.register<IronswornActionResult>(buildIronswornActionDisplay);
-  ResultDisplayRegistry.register<IronswornProgressResult>(buildIronswornProgressDisplay);
-  ResultDisplayRegistry.register<IronswornOracleResult>(buildIronswornOracleDisplay);
-  ResultDisplayRegistry.register<IronswornYesNoResult>(buildIronswornYesNoDisplay);
-  ResultDisplayRegistry.register<IronswornCursedOracleResult>(buildIronswornCursedOracleDisplay);
-  ResultDisplayRegistry.register<IronswornMomentumBurnResult>(buildIronswornMomentumBurnDisplay);
+  ResultDisplayRegistry.register<IronswornActionResult>(
+      buildIronswornActionDisplay);
+  ResultDisplayRegistry.register<IronswornProgressResult>(
+      buildIronswornProgressDisplay);
+  ResultDisplayRegistry.register<IronswornOracleResult>(
+      buildIronswornOracleDisplay);
+  ResultDisplayRegistry.register<IronswornYesNoResult>(
+      buildIronswornYesNoDisplay);
+  ResultDisplayRegistry.register<IronswornCursedOracleResult>(
+      buildIronswornCursedOracleDisplay);
+  ResultDisplayRegistry.register<IronswornMomentumBurnResult>(
+      buildIronswornMomentumBurnDisplay);
 }
 
 // =============================================================================
 // ACTION ROLL DISPLAY
 // =============================================================================
 
-Widget buildIronswornActionDisplay(IronswornActionResult result, ThemeData theme) {
+Widget buildIronswornActionDisplay(
+    IronswornActionResult result, ThemeData theme) {
   final outcomeColor = result.outcome == IronswornOutcome.strongHit
       ? JuiceTheme.success
       : result.outcome == IronswornOutcome.weakHit
@@ -75,7 +83,7 @@ Widget buildIronswornActionDisplay(IronswornActionResult result, ThemeData theme
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _ironswornColor.withValues(alpha: 0.2),
+              color: _ironswornColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: _ironswornColor.withValues(alpha: 0.4)),
             ),
@@ -104,14 +112,16 @@ Widget buildIronswornActionDisplay(IronswornActionResult result, ThemeData theme
           _buildIronswornDieBox(
             label: 'd10',
             value: result.challengeDice[0],
-            color: _getChallengeColor(result.actionScore, result.challengeDice[0]),
+            color:
+                _getChallengeColor(result.actionScore, result.challengeDice[0]),
             isBeaten: result.actionScore > result.challengeDice[0],
           ),
           const SizedBox(width: 6),
           _buildIronswornDieBox(
             label: 'd10',
             value: result.challengeDice[1],
-            color: _getChallengeColor(result.actionScore, result.challengeDice[1]),
+            color:
+                _getChallengeColor(result.actionScore, result.challengeDice[1]),
             isBeaten: result.actionScore > result.challengeDice[1],
           ),
         ],
@@ -135,7 +145,8 @@ Widget buildIronswornActionDisplay(IronswornActionResult result, ThemeData theme
 // PROGRESS ROLL DISPLAY
 // =============================================================================
 
-Widget buildIronswornProgressDisplay(IronswornProgressResult result, ThemeData theme) {
+Widget buildIronswornProgressDisplay(
+    IronswornProgressResult result, ThemeData theme) {
   final outcomeColor = result.outcome == IronswornOutcome.strongHit
       ? JuiceTheme.success
       : result.outcome == IronswornOutcome.weakHit
@@ -152,7 +163,7 @@ Widget buildIronswornProgressDisplay(IronswornProgressResult result, ThemeData t
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: _ironswornColor.withValues(alpha: 0.2),
+              color: _ironswornColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _ironswornColor.withValues(alpha: 0.4)),
             ),
@@ -162,7 +173,7 @@ Widget buildIronswornProgressDisplay(IronswornProgressResult result, ThemeData t
                   'Progress',
                   style: TextStyle(
                     fontSize: 10,
-                    color: _ironswornColor.withValues(alpha: 0.8),
+                    color: _ironswornColor.withValues(alpha: 0.9),
                   ),
                 ),
                 Text(
@@ -191,14 +202,16 @@ Widget buildIronswornProgressDisplay(IronswornProgressResult result, ThemeData t
           _buildIronswornDieBox(
             label: 'd10',
             value: result.challengeDice[0],
-            color: _getChallengeColor(result.progressScore, result.challengeDice[0]),
+            color: _getChallengeColor(
+                result.progressScore, result.challengeDice[0]),
             isBeaten: result.progressScore > result.challengeDice[0],
           ),
           const SizedBox(width: 6),
           _buildIronswornDieBox(
             label: 'd10',
             value: result.challengeDice[1],
-            color: _getChallengeColor(result.progressScore, result.challengeDice[1]),
+            color: _getChallengeColor(
+                result.progressScore, result.challengeDice[1]),
             isBeaten: result.progressScore > result.challengeDice[1],
           ),
         ],
@@ -222,7 +235,8 @@ Widget buildIronswornProgressDisplay(IronswornProgressResult result, ThemeData t
 // ORACLE ROLL DISPLAY
 // =============================================================================
 
-Widget buildIronswornOracleDisplay(IronswornOracleResult result, ThemeData theme) {
+Widget buildIronswornOracleDisplay(
+    IronswornOracleResult result, ThemeData theme) {
   return Row(
     children: [
       Container(
@@ -282,10 +296,11 @@ Widget buildIronswornOracleDisplay(IronswornOracleResult result, ThemeData theme
 // YES/NO ORACLE DISPLAY
 // =============================================================================
 
-Widget buildIronswornYesNoDisplay(IronswornYesNoResult result, ThemeData theme) {
+Widget buildIronswornYesNoDisplay(
+    IronswornYesNoResult result, ThemeData theme) {
   final isYes = result.isYes;
   final answerColor = isYes ? JuiceTheme.success : JuiceTheme.danger;
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -425,9 +440,10 @@ Widget buildIronswornYesNoDisplay(IronswornYesNoResult result, ThemeData theme) 
 // CURSED ORACLE DISPLAY
 // =============================================================================
 
-Widget buildIronswornCursedOracleDisplay(IronswornCursedOracleResult result, ThemeData theme) {
+Widget buildIronswornCursedOracleDisplay(
+    IronswornCursedOracleResult result, ThemeData theme) {
   const cursedColor = Color(0xFF9C27B0); // Purple for cursed
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -448,7 +464,7 @@ Widget buildIronswornCursedOracleDisplay(IronswornCursedOracleResult result, The
                   'd100:',
                   style: TextStyle(
                     fontSize: 12,
-                    color: _ironswornColor.withValues(alpha: 0.8),
+                    color: _ironswornColor.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -469,14 +485,13 @@ Widget buildIronswornCursedOracleDisplay(IronswornCursedOracleResult result, The
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: (result.isCursed 
-                  ? cursedColor 
-                  : JuiceTheme.parchmentDark).withValues(alpha: 0.15),
+              color: (result.isCursed ? cursedColor : JuiceTheme.parchmentDark)
+                  .withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: (result.isCursed 
-                    ? cursedColor 
-                    : JuiceTheme.parchmentDark).withValues(alpha: 0.4),
+                color:
+                    (result.isCursed ? cursedColor : JuiceTheme.parchmentDark)
+                        .withValues(alpha: 0.4),
                 width: result.isCursed ? 2 : 1,
               ),
             ),
@@ -486,18 +501,18 @@ Widget buildIronswornCursedOracleDisplay(IronswornCursedOracleResult result, The
                 Icon(
                   result.isCursed ? Icons.warning_amber : Icons.shield_outlined,
                   size: 16,
-                  color: result.isCursed 
-                      ? cursedColor 
-                      : JuiceTheme.parchmentDark,
+                  color:
+                      result.isCursed ? cursedColor : JuiceTheme.parchmentDark,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   'Cursed d10:',
                   style: TextStyle(
                     fontSize: 11,
-                    color: (result.isCursed 
-                        ? cursedColor 
-                        : JuiceTheme.parchmentDark).withValues(alpha: 0.8),
+                    color: (result.isCursed
+                            ? cursedColor
+                            : JuiceTheme.parchmentDark)
+                        .withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -507,8 +522,8 @@ Widget buildIronswornCursedOracleDisplay(IronswornCursedOracleResult result, The
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     fontFamily: JuiceTheme.fontFamilyMono,
-                    color: result.isCursed 
-                        ? cursedColor 
+                    color: result.isCursed
+                        ? cursedColor
                         : JuiceTheme.parchmentDark,
                   ),
                 ),
@@ -574,7 +589,8 @@ Widget buildIronswornCursedOracleDisplay(IronswornCursedOracleResult result, The
 // MOMENTUM BURN DISPLAY
 // =============================================================================
 
-Widget buildIronswornMomentumBurnDisplay(IronswornMomentumBurnResult result, ThemeData theme) {
+Widget buildIronswornMomentumBurnDisplay(
+    IronswornMomentumBurnResult result, ThemeData theme) {
   final outcomeColor = result.burnedOutcome == IronswornOutcome.strongHit
       ? JuiceTheme.success
       : result.burnedOutcome == IronswornOutcome.weakHit
@@ -587,7 +603,7 @@ Widget buildIronswornMomentumBurnDisplay(IronswornMomentumBurnResult result, The
       : originalOutcome == IronswornOutcome.weakHit
           ? JuiceTheme.gold
           : JuiceTheme.danger;
-  
+
   final improved = result.wasUpgraded;
 
   return Column(
@@ -682,14 +698,16 @@ Widget buildIronswornMomentumBurnDisplay(IronswornMomentumBurnResult result, The
           _buildIronswornDieBox(
             label: 'd10',
             value: result.challengeDice[0],
-            color: _getChallengeColor(result.momentumValue, result.challengeDice[0]),
+            color: _getChallengeColor(
+                result.momentumValue, result.challengeDice[0]),
             isBeaten: result.momentumValue > result.challengeDice[0],
           ),
           const SizedBox(width: 6),
           _buildIronswornDieBox(
             label: 'd10',
             value: result.challengeDice[1],
-            color: _getChallengeColor(result.momentumValue, result.challengeDice[1]),
+            color: _getChallengeColor(
+                result.momentumValue, result.challengeDice[1]),
             isBeaten: result.momentumValue > result.challengeDice[1],
           ),
         ],
@@ -706,7 +724,8 @@ Widget buildIronswornMomentumBurnDisplay(IronswornMomentumBurnResult result, The
               decoration: BoxDecoration(
                 color: JuiceTheme.gold.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: JuiceTheme.gold.withValues(alpha: 0.4)),
+                border:
+                    Border.all(color: JuiceTheme.gold.withValues(alpha: 0.4)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -823,7 +842,7 @@ Widget _buildOutcomeChip(IronswornOutcome outcome, Color color) {
 
 Widget _buildMatchIndicator(bool isSuccess) {
   final color = isSuccess ? JuiceTheme.success : JuiceTheme.danger;
-  
+
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
@@ -854,7 +873,7 @@ Widget _buildMatchIndicator(bool isSuccess) {
 }
 
 Color _getChallengeColor(int actionScore, int challengeValue) {
-  return actionScore > challengeValue 
-      ? JuiceTheme.success.withValues(alpha: 0.8)  // Beaten
-      : JuiceTheme.danger.withValues(alpha: 0.8);  // Not beaten
+  return actionScore > challengeValue
+      ? JuiceTheme.success.withValues(alpha: 0.8) // Beaten
+      : JuiceTheme.danger.withValues(alpha: 0.8); // Not beaten
 }
