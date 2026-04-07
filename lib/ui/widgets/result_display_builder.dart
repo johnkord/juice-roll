@@ -23,6 +23,7 @@
 library;
 
 import 'package:flutter/material.dart';
+
 import '../../models/roll_result.dart';
 import '../theme/juice_theme.dart';
 import 'result_display_registry.dart';
@@ -138,7 +139,7 @@ class ResultDisplayBuilder {
                             child: Text(
                               '+',
                               style: TextStyle(
-                                color: themeColor.withOpacity(0.6),
+                                color: themeColor.withOpacity(0.75),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -261,7 +262,7 @@ class ResultDisplayBuilder {
       constraints: const BoxConstraints(minWidth: 28),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withOpacity(0.4)),
       ),

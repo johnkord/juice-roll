@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/roll_result.dart';
 import '../../presets/settlement.dart';
 import '../shared/dialog_components.dart';
@@ -19,7 +20,7 @@ class SettlementDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settlementColor = JuiceTheme.categoryWorld;
-    
+
     return OracleDialog(
       icon: Icons.location_city,
       accentColor: settlementColor,
@@ -35,10 +36,11 @@ class SettlementDialog extends StatelessWidget {
             iconColor: settlementColor,
             backgroundColor: settlementColor.withOpacity(0.1),
             borderColor: settlementColor.withOpacity(0.3),
-            text: 'Settlements are places to rest, stock up on supplies, collect quests, or chat with NPCs.',
+            text:
+                'Settlements are places to rest, stock up on supplies, collect quests, or chat with NPCs.',
           ),
           const SizedBox(height: 12),
-          
+
           // Generate Settlement section - prominent
           OracleDialogSection(
             icon: Icons.add_location_alt,
@@ -46,7 +48,7 @@ class SettlementDialog extends StatelessWidget {
             color: settlementColor,
           ),
           const SizedBox(height: 8),
-          
+
           // Village and City as prominent cards
           Row(
             children: [
@@ -79,11 +81,11 @@ class SettlementDialog extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
           Divider(color: settlementColor.withOpacity(0.3)),
           const SizedBox(height: 8),
-          
+
           // Individual Rolls section
           OracleDialogSection(
             icon: Icons.casino,
@@ -91,7 +93,7 @@ class SettlementDialog extends StatelessWidget {
             color: settlementColor,
           ),
           const SizedBox(height: 8),
-          
+
           DialogOption(
             title: 'Name (2d10)',
             subtitle: 'Also usable for NPC last names',
@@ -102,7 +104,8 @@ class SettlementDialog extends StatelessWidget {
           ),
           DialogOption(
             title: 'Establishment (d6)',
-            subtitle: 'Village: Stable, Tavern, Inn, Entertainment, General Store, Artisan',
+            subtitle:
+                'Village: Stable, Tavern, Inn, Entertainment, General Store, Artisan',
             onTap: () {
               onRoll(settlement.rollEstablishment(isVillage: true));
               Navigator.pop(context);
@@ -118,17 +121,18 @@ class SettlementDialog extends StatelessWidget {
           ),
           DialogOption(
             title: 'Artisan (d10)',
-            subtitle: 'Artist, Baker, Tailor, Tanner, Archer, Blacksmith, Carpenter, Apothecary, Jeweler, Scribe',
+            subtitle:
+                'Artist, Baker, Tailor, Tanner, Archer, Blacksmith, Carpenter, Apothecary, Jeweler, Scribe',
             onTap: () {
               onRoll(settlement.rollArtisan());
               Navigator.pop(context);
             },
           ),
-          
+
           const SizedBox(height: 12),
           Divider(color: settlementColor.withOpacity(0.3)),
           const SizedBox(height: 8),
-          
+
           // Naming & Description section
           OracleDialogSection(
             icon: Icons.edit_note,
@@ -136,7 +140,7 @@ class SettlementDialog extends StatelessWidget {
             color: JuiceTheme.mystic,
           ),
           const SizedBox(height: 6),
-          
+
           // Tip box for naming
           Container(
             padding: const EdgeInsets.all(6),
@@ -165,7 +169,7 @@ class SettlementDialog extends StatelessWidget {
               ],
             ),
           ),
-          
+
           DialogOption(
             title: 'Establishment Name',
             subtitle: 'Color + Object → "The [Color] [Object]"',
@@ -176,7 +180,8 @@ class SettlementDialog extends StatelessWidget {
           ),
           DialogOption(
             title: 'Settlement Properties',
-            subtitle: 'Two properties with intensity (e.g., "Major Style" + "Minimal Weight")',
+            subtitle:
+                'Two properties with intensity (e.g., "Major Style" + "Minimal Weight")',
             onTap: () {
               onRoll(settlement.generateProperties());
               Navigator.pop(context);
@@ -184,17 +189,18 @@ class SettlementDialog extends StatelessWidget {
           ),
           DialogOption(
             title: 'Simple NPC',
-            subtitle: 'Name + Personality + Need + Motive (for establishment owners)',
+            subtitle:
+                'Name + Personality + Need + Motive (for establishment owners)',
             onTap: () {
               onRoll(settlement.generateSimpleNpc());
               Navigator.pop(context);
             },
           ),
-          
+
           const SizedBox(height: 12),
           Divider(color: settlementColor.withOpacity(0.3)),
           const SizedBox(height: 8),
-          
+
           // News section
           OracleDialogSection(
             icon: Icons.campaign,
@@ -202,7 +208,7 @@ class SettlementDialog extends StatelessWidget {
             color: JuiceTheme.juiceOrange,
           ),
           const SizedBox(height: 6),
-          
+
           // News tip box
           Container(
             padding: const EdgeInsets.all(6),
@@ -215,7 +221,8 @@ class SettlementDialog extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, size: 12, color: JuiceTheme.juiceOrange70),
+                Icon(Icons.info_outline,
+                    size: 12, color: JuiceTheme.juiceOrange70),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -231,16 +238,17 @@ class SettlementDialog extends StatelessWidget {
               ],
             ),
           ),
-          
+
           DialogOption(
             title: 'News (d10)',
-            subtitle: 'War, Sickness, Disaster, Crime, Succession, Remote Event, Arrival, Mail, Sale, Celebration',
+            subtitle:
+                'War, Sickness, Disaster, Crime, Succession, Remote Event, Arrival, Mail, Sale, Celebration',
             onTap: () {
               onRoll(settlement.rollNews());
               Navigator.pop(context);
             },
           ),
-          
+
           const SizedBox(height: 8),
         ],
       ),
@@ -325,7 +333,8 @@ class _SettlementTypeCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.25),
                       borderRadius: BorderRadius.circular(4),

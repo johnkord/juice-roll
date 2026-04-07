@@ -15,7 +15,8 @@ import '../result_display_registry.dart';
 
 /// Register all NPC display builders with the registry.
 void registerNpcDisplays() {
-  ResultDisplayRegistry.register<MotiveWithFollowUpResult>(_buildMotiveWithFollowUpDisplay);
+  ResultDisplayRegistry.register<MotiveWithFollowUpResult>(
+      _buildMotiveWithFollowUpDisplay);
   ResultDisplayRegistry.register<NpcActionResult>(_buildNpcActionDisplay);
   ResultDisplayRegistry.register<NpcProfileResult>(_buildNpcProfileDisplay);
   ResultDisplayRegistry.register<ComplexNpcResult>(_buildComplexNpcDisplay);
@@ -25,14 +26,15 @@ void registerNpcDisplays() {
 // MOTIVE WITH FOLLOW-UP DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildMotiveWithFollowUpDisplay(MotiveWithFollowUpResult result, ThemeData theme) {
+Widget _buildMotiveWithFollowUpDisplay(
+    MotiveWithFollowUpResult result, ThemeData theme) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.teal.withOpacity(0.1),
+          color: const Color.fromARGB(255, 1, 176, 159).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -40,7 +42,7 @@ Widget _buildMotiveWithFollowUpDisplay(MotiveWithFollowUpResult result, ThemeDat
           style: theme.textTheme.bodyMedium?.copyWith(
             fontFamily: 'monospace',
             fontWeight: FontWeight.bold,
-            color: Colors.teal.shade700,
+            color: const Color.fromARGB(255, 29, 170, 151),
           ),
         ),
       ),
@@ -49,8 +51,9 @@ Widget _buildMotiveWithFollowUpDisplay(MotiveWithFollowUpResult result, ThemeDat
         children: [
           Chip(
             label: const Text('Motive'),
-            backgroundColor: Colors.teal.withOpacity(0.2),
-            side: const BorderSide(color: Colors.teal),
+            backgroundColor:
+                const Color.fromARGB(255, 1, 176, 159).withOpacity(0.2),
+            side: const BorderSide(color: Color.fromARGB(255, 1, 176, 159)),
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
           ),
@@ -99,7 +102,7 @@ Widget _buildMotiveWithFollowUpDisplay(MotiveWithFollowUpResult result, ThemeDat
                   result.historyResult != null ? 'History' : 'Focus',
                   style: TextStyle(
                     fontSize: 10,
-                    color: Colors.deepPurple[300],
+                    color: const Color.fromARGB(255, 161, 123, 226),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -138,7 +141,7 @@ Widget _buildNpcActionDisplay(NpcActionResult result, ThemeData theme) {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.teal.withOpacity(0.1),
+          color: const Color.fromARGB(255, 1, 176, 159).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -146,7 +149,7 @@ Widget _buildNpcActionDisplay(NpcActionResult result, ThemeData theme) {
           style: theme.textTheme.bodyMedium?.copyWith(
             fontFamily: 'monospace',
             fontWeight: FontWeight.bold,
-            color: Colors.teal.shade700,
+            color: const Color.fromARGB(255, 29, 170, 151),
           ),
         ),
       ),
@@ -155,8 +158,9 @@ Widget _buildNpcActionDisplay(NpcActionResult result, ThemeData theme) {
         children: [
           Chip(
             label: Text(result.column.displayText),
-            backgroundColor: Colors.teal.withOpacity(0.2),
-            side: const BorderSide(color: Colors.teal),
+            backgroundColor:
+                const Color.fromARGB(255, 1, 176, 159).withOpacity(0.2),
+            side: const BorderSide(color: Color.fromARGB(255, 1, 176, 159)),
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
           ),
@@ -355,7 +359,10 @@ Widget _buildComplexNpcDisplay(ComplexNpcResult result, ThemeData theme) {
           _buildNpcDiceBadge(
             'Pers',
             result.secondaryPersonalityRoll != null
-                ? [result.primaryPersonalityRoll, result.secondaryPersonalityRoll!]
+                ? [
+                    result.primaryPersonalityRoll,
+                    result.secondaryPersonalityRoll!
+                  ]
                 : [result.primaryPersonalityRoll],
             charColor,
             theme,

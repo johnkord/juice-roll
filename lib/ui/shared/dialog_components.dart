@@ -11,10 +11,12 @@ class ScrollableDialogContent extends StatefulWidget {
     super.key,
     this.child,
     this.children,
-  }) : assert(child != null || children != null, 'Either child or children must be provided');
+  }) : assert(child != null || children != null,
+            'Either child or children must be provided');
 
   @override
-  State<ScrollableDialogContent> createState() => _ScrollableDialogContentState();
+  State<ScrollableDialogContent> createState() =>
+      _ScrollableDialogContentState();
 }
 
 class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
@@ -26,7 +28,8 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
   void initState() {
     super.initState();
     _scrollController.addListener(_updateScrollIndicators);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollIndicators());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _updateScrollIndicators());
   }
 
   @override
@@ -79,11 +82,12 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
         Expanded(
           child: SingleChildScrollView(
             controller: _scrollController,
-            child: widget.child ?? Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: widget.children!,
-            ),
+            child: widget.child ??
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: widget.children!,
+                ),
           ),
         ),
         // Scroll down indicator
@@ -118,7 +122,7 @@ class _ScrollableDialogContentState extends State<ScrollableDialogContent> {
 }
 
 /// Helper widget for section headers with icons.
-/// 
+///
 /// Supports various styles used across dialogs:
 /// - Basic: icon + title
 /// - With subtitle: icon + title + smaller subtitle below
@@ -146,7 +150,7 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = color ?? JuiceTheme.gold;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(

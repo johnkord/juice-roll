@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../models/roll_result.dart';
 import '../../presets/challenge.dart';
-import '../theme/juice_theme.dart';
-import '../shared/oracle_dialog.dart';
 import '../shared/dialog_components.dart';
+import '../shared/oracle_dialog.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for Challenge options.
 class ChallengeDialog extends StatelessWidget {
@@ -37,7 +38,8 @@ class ChallengeDialog extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.fitness_center, size: 14, color: JuiceTheme.categoryCombat),
+                    Icon(Icons.fitness_center,
+                        size: 14, color: JuiceTheme.categoryCombat),
                     const SizedBox(width: 6),
                     Text(
                       'Challenge Procedure',
@@ -105,7 +107,8 @@ class ChallengeDialog extends StatelessWidget {
                   hint: 'advantage',
                   color: JuiceTheme.success,
                   onTap: () {
-                    onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.advantage));
+                    onRoll(
+                        challenge.rollFullChallenge(dcSkew: DcSkew.advantage));
                     Navigator.pop(context);
                   },
                 ),
@@ -117,7 +120,8 @@ class ChallengeDialog extends StatelessWidget {
                   hint: 'disadvantage',
                   color: JuiceTheme.danger,
                   onTap: () {
-                    onRoll(challenge.rollFullChallenge(dcSkew: DcSkew.disadvantage));
+                    onRoll(challenge.rollFullChallenge(
+                        dcSkew: DcSkew.disadvantage));
                     Navigator.pop(context);
                   },
                 ),
@@ -457,7 +461,9 @@ class _ChallengeSkillButton extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    title == 'Physical' ? Icons.directions_run : Icons.psychology,
+                    title == 'Physical'
+                        ? Icons.directions_run
+                        : Icons.psychology,
                     size: 14,
                     color: color,
                   ),
@@ -530,12 +536,14 @@ class _ChallengeExample extends StatelessWidget {
               children: [
                 TextSpan(
                   text: physical,
-                  style: TextStyle(color: JuiceTheme.rust, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      color: JuiceTheme.rust, fontWeight: FontWeight.w600),
                 ),
                 const TextSpan(text: ' or '),
                 TextSpan(
                   text: mental,
-                  style: TextStyle(color: JuiceTheme.mystic, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      color: JuiceTheme.mystic, fontWeight: FontWeight.w600),
                 ),
                 TextSpan(
                   text: ' - $scenario',

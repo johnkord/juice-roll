@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../theme/juice_theme.dart';
+
 import '../shared/dialog_components.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog displaying information about Juice Oracle and the app.
 class AboutJuiceDialog extends StatelessWidget {
@@ -117,7 +118,7 @@ class AboutJuiceDialog extends StatelessWidget {
                       'The Juice Oracle was created by thunder9861, who has been iterating on this oracle for a long time to bring together the best concepts from various solo roleplaying systems.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: JuiceTheme.parchment85,
+                        color: JuiceTheme.parchment90,
                         height: 1.3,
                       ),
                     ),
@@ -125,7 +126,8 @@ class AboutJuiceDialog extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => _launchUrl('https://thunder9861.itch.io/juice-oracle'),
+                        onPressed: () => _launchUrl(
+                            'https://thunder9861.itch.io/juice-oracle'),
                         icon: const Icon(Icons.open_in_new, size: 16),
                         label: const Text('Get the Juice Oracle PDFs'),
                         style: OutlinedButton.styleFrom(
@@ -183,7 +185,7 @@ class AboutJuiceDialog extends StatelessWidget {
                       'This app was independently created by John Kordich, an artist and software engineer who loves all types of games. Built just for fun to make the Juice Oracle more accessible!',
                       style: TextStyle(
                         fontSize: 12,
-                        color: JuiceTheme.parchment85,
+                        color: JuiceTheme.parchment90,
                         height: 1.3,
                       ),
                     ),
@@ -192,7 +194,8 @@ class AboutJuiceDialog extends StatelessWidget {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () => _launchUrl('https://github.com/johnkord'),
+                            onPressed: () =>
+                                _launchUrl('https://github.com/johnkord'),
                             icon: const Icon(Icons.person, size: 16),
                             label: const Text('GitHub'),
                             style: OutlinedButton.styleFrom(
@@ -206,7 +209,8 @@ class AboutJuiceDialog extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () => _launchUrl('https://github.com/johnkord/juice-roll'),
+                            onPressed: () => _launchUrl(
+                                'https://github.com/johnkord/juice-roll'),
                             icon: const Icon(Icons.code, size: 16),
                             label: const Text('Source'),
                             style: OutlinedButton.styleFrom(

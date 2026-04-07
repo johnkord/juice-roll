@@ -35,11 +35,12 @@ class DetailsDialog extends StatelessWidget {
         children: [
           // Introduction
           const OracleDialogIntro(
-            text: 'Add flavor to NPCs, items, settlements, or interpret oracle results.',
+            text:
+                'Add flavor to NPCs, items, settlements, or interpret oracle results.',
             icon: Icons.lightbulb_outline,
           ),
           const SizedBox(height: 14),
-          
+
           // ═══════════════════════════════════════════════════════════════
           // COLOR SECTION
           // ═══════════════════════════════════════════════════════════════
@@ -47,12 +48,14 @@ class DetailsDialog extends StatelessWidget {
             icon: Icons.palette,
             title: 'Color',
             color: _colorSectionColor,
-            description: 'Eye/hair color, armor accents, banners, dragon species...',
+            description:
+                'Eye/hair color, armor accents, banners, dragon species...',
             child: Column(
               children: [
                 // Color swatches preview
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: JuiceTheme.inkDark50,
                     borderRadius: BorderRadius.circular(6),
@@ -88,7 +91,7 @@ class DetailsDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // ═══════════════════════════════════════════════════════════════
           // PROPERTY SECTION - ESSENTIAL
           // ═══════════════════════════════════════════════════════════════
@@ -113,7 +116,8 @@ class DetailsDialog extends StatelessWidget {
                 const SizedBox(height: 8),
                 // Quote
                 const OracleDialogQuote(
-                  text: '"If you only take one table from this whole thing, take this one."',
+                  text:
+                      '"If you only take one table from this whole thing, take this one."',
                   borderColor: JuiceTheme.gold,
                 ),
                 const SizedBox(height: 10),
@@ -133,29 +137,34 @@ class DetailsDialog extends StatelessWidget {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 1),
                                   decoration: BoxDecoration(
                                     color: JuiceTheme.rust30,
                                     borderRadius: BorderRadius.circular(3),
                                   ),
-                                  child: const Text('d10', 
+                                  child: const Text(
+                                    'd10',
                                     style: TextStyle(
-                                      fontSize: 9, 
+                                      fontSize: 9,
                                       fontFamily: JuiceTheme.fontFamilyMono,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Text('Property', 
-                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500),
+                                const Text(
+                                  'Property',
+                                  style: TextStyle(
+                                      fontSize: 9, fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 3),
                             const Text(
                               'Age • Size • Value • Style • Power • Quality...',
-                              style: TextStyle(fontSize: 9, color: JuiceTheme.parchmentDark),
+                              style: TextStyle(
+                                  fontSize: 9, color: JuiceTheme.parchmentDark),
                             ),
                           ],
                         ),
@@ -175,29 +184,34 @@ class DetailsDialog extends StatelessWidget {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 1),
                                   decoration: BoxDecoration(
                                     color: JuiceTheme.info30,
                                     borderRadius: BorderRadius.circular(3),
                                   ),
-                                  child: const Text('d6', 
+                                  child: const Text(
+                                    'd6',
                                     style: TextStyle(
-                                      fontSize: 9, 
+                                      fontSize: 9,
                                       fontFamily: JuiceTheme.fontFamilyMono,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Text('Intensity', 
-                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500),
+                                const Text(
+                                  'Intensity',
+                                  style: TextStyle(
+                                      fontSize: 9, fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 3),
                             const Text(
                               'Minimal → Minor → Mundane → Major → Max',
-                              style: TextStyle(fontSize: 9, color: JuiceTheme.parchmentDark),
+                              style: TextStyle(
+                                  fontSize: 9, color: JuiceTheme.parchmentDark),
                             ),
                           ],
                         ),
@@ -243,7 +257,7 @@ class DetailsDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // ═══════════════════════════════════════════════════════════════
           // DETAIL SECTION
           // ═══════════════════════════════════════════════════════════════
@@ -251,7 +265,8 @@ class DetailsDialog extends StatelessWidget {
             icon: Icons.help_outline,
             title: 'Detail',
             color: _detailSectionColor,
-            description: 'Oracle threw a curveball? Ground meaning to a thread, character, or emotion.',
+            description:
+                'Oracle threw a curveball? Ground meaning to a thread, character, or emotion.',
             child: Column(
               children: [
                 OracleRollButton(
@@ -274,7 +289,8 @@ class DetailsDialog extends StatelessWidget {
                         icon: Icons.thumb_up_outlined,
                         color: JuiceTheme.success,
                         onTap: () {
-                          onRoll(details.rollDetailWithFollowUp(skew: SkewType.advantage));
+                          onRoll(details.rollDetailWithFollowUp(
+                              skew: SkewType.advantage));
                           Navigator.pop(context);
                         },
                       ),
@@ -287,7 +303,8 @@ class DetailsDialog extends StatelessWidget {
                         icon: Icons.thumb_down_outlined,
                         color: JuiceTheme.danger,
                         onTap: () {
-                          onRoll(details.rollDetailWithFollowUp(skew: SkewType.disadvantage));
+                          onRoll(details.rollDetailWithFollowUp(
+                              skew: SkewType.disadvantage));
                           Navigator.pop(context);
                         },
                       ),
@@ -298,7 +315,7 @@ class DetailsDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // ═══════════════════════════════════════════════════════════════
           // HISTORY SECTION
           // ═══════════════════════════════════════════════════════════════
@@ -306,7 +323,8 @@ class DetailsDialog extends StatelessWidget {
             icon: Icons.history,
             title: 'History',
             color: _historySectionColor,
-            description: 'Tie elements to the past: backstory, past scenes, previous actions, or threads.',
+            description:
+                'Tie elements to the past: backstory, past scenes, previous actions, or threads.',
             child: Column(
               children: [
                 OracleRollButton(
@@ -342,7 +360,8 @@ class DetailsDialog extends StatelessWidget {
                         icon: Icons.hourglass_empty,
                         color: JuiceTheme.sepia,
                         onTap: () {
-                          onRoll(details.rollHistory(skew: SkewType.disadvantage));
+                          onRoll(
+                              details.rollHistory(skew: SkewType.disadvantage));
                           Navigator.pop(context);
                         },
                       ),

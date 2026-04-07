@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../theme/juice_theme.dart';
-import '../shared/shared.dart';
-import '../../presets/dungeon_generator.dart';
+
 import '../../models/roll_result.dart';
+import '../../presets/dungeon_generator.dart';
+import '../shared/shared.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for Dungeon Generator options.
 /// Includes One-Pass and Two-Pass modes, encounters, traps, and more.
@@ -35,10 +36,11 @@ class DungeonDialog extends StatefulWidget {
 class _DungeonDialogState extends State<DungeonDialog> {
   // Theme colors for dungeon - forest brown-green for exploration
   static const Color _dungeonColor = JuiceTheme.categoryExplore;
-  static const Color _phaseEnteringColor = JuiceTheme.rust;  // @- worse/smaller
-  static const Color _phaseExploringColor = JuiceTheme.success;  // @+ better/larger
-  static const Color _encounterColor = JuiceTheme.danger;  // Red for danger
-  static const Color _trapColor = JuiceTheme.juiceOrange;  // Orange for traps
+  static const Color _phaseEnteringColor = JuiceTheme.rust; // @- worse/smaller
+  static const Color _phaseExploringColor =
+      JuiceTheme.success; // @+ better/larger
+  static const Color _encounterColor = JuiceTheme.danger; // Red for danger
+  static const Color _trapColor = JuiceTheme.juiceOrange; // Orange for traps
 
   late bool _isEntering;
   // Local state for Two-Pass mode (synced with parent on change)
@@ -51,7 +53,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
   // Passage/Condition skew
   // Disadvantage = Smaller/Worse, Advantage = Larger/Better
   AdvantageType _passageConditionSkew = AdvantageType.none;
-  
+
   // Encounter table settings
   // d6 = Lingering (10+ min in unsafe area), d10 = First entry
   bool _isLingering = false;
@@ -71,7 +73,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
     _twoPassHasFirstDoubles = widget.twoPassHasFirstDoubles;
     _scrollController.addListener(_updateScrollIndicators);
     // Check initial scroll state after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollIndicators());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _updateScrollIndicators());
   }
 
   @override
@@ -154,7 +157,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
   }
 
   // Build a themed die size chip (d6/d10)
-  Widget _buildDieChip(String label, bool isSelected, Color color, VoidCallback onTap) {
+  Widget _buildDieChip(
+      String label, bool isSelected, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -180,7 +184,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
   }
 
   // Build a themed skew chip (@-/@+)
-  Widget _buildSkewChip(String label, AdvantageType type, AdvantageType current, Color color, Function(AdvantageType) onTap) {
+  Widget _buildSkewChip(String label, AdvantageType type, AdvantageType current,
+      Color color, Function(AdvantageType) onTap) {
     final isSelected = current == type;
     return GestureDetector(
       onTap: () => onTap(isSelected ? AdvantageType.none : type),
@@ -196,10 +201,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (isSelected)
-              Icon(Icons.check, size: 12, color: color),
-            if (isSelected)
-              const SizedBox(width: 4),
+            if (isSelected) Icon(Icons.check, size: 12, color: color),
+            if (isSelected) const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
@@ -251,23 +254,30 @@ class _DungeonDialogState extends State<DungeonDialog> {
   String _getPassageDieLabel() => _useD6ForPassage ? 'd6' : 'd10';
   String _getPassageSkewLabel() {
     switch (_passageConditionSkew) {
-      case AdvantageType.advantage: return '@+';
-      case AdvantageType.disadvantage: return '@-';
-      case AdvantageType.none: return '';
+      case AdvantageType.advantage:
+        return '@+';
+      case AdvantageType.disadvantage:
+        return '@-';
+      case AdvantageType.none:
+        return '';
     }
   }
-  
+
   String _getEncounterDieLabel() => _isLingering ? 'd6' : 'd10';
   String _getEncounterSkewLabel() {
     switch (_encounterSkew) {
-      case AdvantageType.advantage: return '@+';
-      case AdvantageType.disadvantage: return '@-';
-      case AdvantageType.none: return '';
+      case AdvantageType.advantage:
+        return '@+';
+      case AdvantageType.disadvantage:
+        return '@-';
+      case AdvantageType.none:
+        return '';
     }
   }
 
   // Compact phase chip for sticky header
-  Widget _buildCompactPhaseChip(String label, bool isSelected, Color color, VoidCallback onTap) {
+  Widget _buildCompactPhaseChip(
+      String label, bool isSelected, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -275,7 +285,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
         decoration: BoxDecoration(
           color: isSelected ? color.withOpacity(0.25) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: isSelected ? color : color.withOpacity(0.4)),
+          border:
+              Border.all(color: isSelected ? color : color.withOpacity(0.4)),
         ),
         child: Text(
           label,
@@ -291,7 +302,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
   }
 
   // Compact doubles indicator for sticky header
-  Widget _buildCompactDoublesIndicator(String label, bool isActive, Color color) {
+  Widget _buildCompactDoublesIndicator(
+      String label, bool isActive, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
       decoration: BoxDecoration(
@@ -326,7 +338,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     // Determine current status text based on mode
     final String statusText;
     final Color statusColor;
@@ -385,16 +397,19 @@ class _DungeonDialogState extends State<DungeonDialog> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildCompactPhaseChip('(@-)', _isEntering, _phaseEnteringColor, () => _setPhase(true)),
+                    _buildCompactPhaseChip('(@-)', _isEntering,
+                        _phaseEnteringColor, () => _setPhase(true)),
                     const SizedBox(width: 4),
-                    _buildCompactPhaseChip('(@+)', !_isEntering, _phaseExploringColor, () => _setPhase(false)),
+                    _buildCompactPhaseChip('(@+)', !_isEntering,
+                        _phaseExploringColor, () => _setPhase(false)),
                   ],
                 ),
               ),
             ],
             // Two-Pass doubles indicators
             if (_isTwoPassMode) ...[
-              _buildCompactDoublesIndicator('1st', _twoPassHasFirstDoubles, _phaseEnteringColor),
+              _buildCompactDoublesIndicator(
+                  '1st', _twoPassHasFirstDoubles, _phaseEnteringColor),
               const SizedBox(width: 4),
               _buildCompactDoublesIndicator('2nd', false, _encounterColor),
             ],
@@ -404,7 +419,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
               borderRadius: BorderRadius.circular(4),
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: Icon(Icons.refresh, size: 16, color: statusColor.withOpacity(0.7)),
+                child: Icon(Icons.refresh,
+                    size: 16, color: statusColor.withOpacity(0.7)),
               ),
             ),
           ],
@@ -451,7 +467,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
                   ),
                 ),
                 child: Center(
-                  child: Icon(Icons.keyboard_arrow_up, size: 12, color: JuiceTheme.parchmentDark60),
+                  child: Icon(Icons.keyboard_arrow_up,
+                      size: 12, color: JuiceTheme.parchmentDark60),
                 ),
               ),
             // Main scrollable content
@@ -465,46 +482,61 @@ class _DungeonDialogState extends State<DungeonDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Dungeon Name Section
-                        SectionHeader(title: 'Dungeon Name', icon: Icons.castle, color: _dungeonColor, fontSize: 13),
+                        SectionHeader(
+                            title: 'Dungeon Name',
+                            icon: Icons.castle,
+                            color: _dungeonColor,
+                            fontSize: 13),
                         DialogOption(
                           title: 'Generate Name (3d10)',
                           subtitle: '[Dungeon] of the [Description] [Subject]',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.generateName());
+                            widget
+                                .onRoll(widget.dungeonGenerator.generateName());
                             Navigator.pop(context);
                           },
                         ),
                         const Divider(),
-                        
+
                         // ============ UNIFIED MAP GENERATION SECTION ============
-                        SectionHeader(title: 'Map Generation', icon: Icons.map, color: _dungeonColor, fontSize: 13),
+                        SectionHeader(
+                            title: 'Map Generation',
+                            icon: Icons.map,
+                            color: _dungeonColor,
+                            fontSize: 13),
                         const SizedBox(height: 8),
-                        
+
                         // Mode Toggle: One-Pass vs Two-Pass
                         Row(
                           children: [
-                            Expanded(child: _buildModeChip('One-Pass', !_isTwoPassMode, _dungeonColor)),
+                            Expanded(
+                                child: _buildModeChip('One-Pass',
+                                    !_isTwoPassMode, _dungeonColor)),
                             const SizedBox(width: 8),
-                            Expanded(child: _buildModeChip('Two-Pass', _isTwoPassMode, JuiceTheme.mystic)),
+                            Expanded(
+                                child: _buildModeChip('Two-Pass',
+                                    _isTwoPassMode, JuiceTheme.mystic)),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        
+
                         // Mode-specific explanation
                         _buildInfoBox(
                           _isTwoPassMode
-                            ? 'Two-Pass: Pre-generate map, then explore\n'
-                              '• Start 1d10@+ → 1st doubles → 1d10@-\n'
-                              '• 2nd doubles → STOP (remaining = dead ends)\n'
-                              '• Roll encounters during exploration phase'
-                            : 'One-Pass: Explore as you generate\n'
-                              '• Start 1d10@- → doubles → switch to 1d10@+\n'
-                              '• Roll encounters as you enter each room\n'
-                              '• Mimics "Skyrim" style: long way in, shortcut out',
-                          color: _isTwoPassMode ? JuiceTheme.mystic : _dungeonColor,
+                              ? 'Two-Pass: Pre-generate map, then explore\n'
+                                  '• Start 1d10@+ → 1st doubles → 1d10@-\n'
+                                  '• 2nd doubles → STOP (remaining = dead ends)\n'
+                                  '• Roll encounters during exploration phase'
+                              : 'One-Pass: Explore as you generate\n'
+                                  '• Start 1d10@- → doubles → switch to 1d10@+\n'
+                                  '• Roll encounters as you enter each room\n'
+                                  '• Mimics "Skyrim" style: long way in, shortcut out',
+                          color: _isTwoPassMode
+                              ? JuiceTheme.mystic
+                              : _dungeonColor,
                         ),
                         const SizedBox(height: 8),
-              
+
                         // Map Generation Buttons
                         DialogOption(
                           title: 'Next Area',
@@ -514,48 +546,57 @@ class _DungeonDialogState extends State<DungeonDialog> {
                           onTap: () {
                             if (_isTwoPassMode) {
                               // Two-Pass mode: use generateTwoPassArea
-                              final result = widget.dungeonGenerator.generateTwoPassArea(
+                              final result =
+                                  widget.dungeonGenerator.generateTwoPassArea(
                                 hasFirstDoubles: _twoPassHasFirstDoubles,
                                 useD6ForPassage: _useD6ForPassage,
                                 passageSkew: _passageConditionSkew,
                               );
                               widget.onRoll(result);
-                              
+
                               // Handle doubles transitions
                               if (result.isSecondDoubles) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
-                                    backgroundColor: const Color(0xFF8B3A3A),  // Dark danger
+                                    content: const Text(
+                                        '🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
+                                    backgroundColor:
+                                        const Color(0xFF8B3A3A), // Dark danger
                                     duration: const Duration(seconds: 4),
                                   ),
                                 );
-                              } else if (result.isDoubles && !_twoPassHasFirstDoubles) {
+                              } else if (result.isDoubles &&
+                                  !_twoPassHasFirstDoubles) {
                                 _setTwoPassFirstDoubles(true);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
-                                    backgroundColor: const Color(0xFF8B5513),  // Dark rust
+                                    content: const Text(
+                                        '🎲 1st DOUBLES! Switching to @- for remaining areas'),
+                                    backgroundColor:
+                                        const Color(0xFF8B5513), // Dark rust
                                   ),
                                 );
                               }
                             } else {
                               // One-Pass mode: use generateNextArea
-                              final result = widget.dungeonGenerator.generateNextArea(
+                              final result =
+                                  widget.dungeonGenerator.generateNextArea(
                                 isEntering: _isEntering,
                                 includePassage: true,
                                 useD6ForPassage: _useD6ForPassage,
                                 passageSkew: _passageConditionSkew,
                               );
                               widget.onRoll(result);
-                              
+
                               // Auto-switch phase if doubles while entering
                               if (result.isDoubles && _isEntering) {
                                 _setPhase(false);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
-                                    backgroundColor: const Color(0xFF4A6B4A),  // Dark success
+                                    content: const Text(
+                                        '🎲 DOUBLES! Switched to Exploring phase (@+)'),
+                                    backgroundColor:
+                                        const Color(0xFF4A6B4A), // Dark success
                                   ),
                                 );
                               }
@@ -571,34 +612,41 @@ class _DungeonDialogState extends State<DungeonDialog> {
                           onTap: () {
                             if (_isTwoPassMode) {
                               // Two-Pass mode: use generateTwoPassArea (already includes condition)
-                              final result = widget.dungeonGenerator.generateTwoPassArea(
+                              final result =
+                                  widget.dungeonGenerator.generateTwoPassArea(
                                 hasFirstDoubles: _twoPassHasFirstDoubles,
                                 useD6ForPassage: _useD6ForPassage,
                                 passageSkew: _passageConditionSkew,
                               );
                               widget.onRoll(result);
-                              
+
                               // Handle doubles transitions
                               if (result.isSecondDoubles) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text('🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
-                                    backgroundColor: const Color(0xFF8B3A3A),  // Dark danger
+                                    content: const Text(
+                                        '🎲 2nd DOUBLES! STOP MAP GENERATION\nAll remaining paths → Small Chamber: 1 Door'),
+                                    backgroundColor:
+                                        const Color(0xFF8B3A3A), // Dark danger
                                     duration: const Duration(seconds: 4),
                                   ),
                                 );
-                              } else if (result.isDoubles && !_twoPassHasFirstDoubles) {
+                              } else if (result.isDoubles &&
+                                  !_twoPassHasFirstDoubles) {
                                 _setTwoPassFirstDoubles(true);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text('🎲 1st DOUBLES! Switching to @- for remaining areas'),
-                                    backgroundColor: const Color(0xFF8B5513),  // Dark rust
+                                    content: const Text(
+                                        '🎲 1st DOUBLES! Switching to @- for remaining areas'),
+                                    backgroundColor:
+                                        const Color(0xFF8B5513), // Dark rust
                                   ),
                                 );
                               }
                             } else {
                               // One-Pass mode: use generateFullArea
-                              final result = widget.dungeonGenerator.generateFullArea(
+                              final result =
+                                  widget.dungeonGenerator.generateFullArea(
                                 isEntering: _isEntering,
                                 isOccupied: !_useD6ForPassage,
                                 conditionSkew: _passageConditionSkew,
@@ -607,14 +655,16 @@ class _DungeonDialogState extends State<DungeonDialog> {
                                 passageSkew: _passageConditionSkew,
                               );
                               widget.onRoll(result);
-                              
+
                               // Auto-switch phase if doubles while entering
                               if (result.area.isDoubles && _isEntering) {
                                 _setPhase(false);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text('🎲 DOUBLES! Switched to Exploring phase (@+)'),
-                                    backgroundColor: const Color(0xFF4A6B4A),  // Dark success
+                                    content: const Text(
+                                        '🎲 DOUBLES! Switched to Exploring phase (@+)'),
+                                    backgroundColor:
+                                        const Color(0xFF4A6B4A), // Dark success
                                   ),
                                 );
                               }
@@ -624,9 +674,11 @@ class _DungeonDialogState extends State<DungeonDialog> {
                         ),
                         DialogOption(
                           title: 'Passage',
-                          subtitle: 'Manual passage roll (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
+                          subtitle:
+                              'Manual passage roll (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.generatePassage(
+                            widget
+                                .onRoll(widget.dungeonGenerator.generatePassage(
                               useD6: _useD6ForPassage,
                               skew: _passageConditionSkew,
                             ));
@@ -635,9 +687,11 @@ class _DungeonDialogState extends State<DungeonDialog> {
                         ),
                         DialogOption(
                           title: 'Condition',
-                          subtitle: 'Room state (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
+                          subtitle:
+                              'Room state (${_getPassageDieLabel()}${_getPassageSkewLabel()})',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.generateCondition(
+                            widget.onRoll(
+                                widget.dungeonGenerator.generateCondition(
                               useD6: _useD6ForPassage,
                               skew: _passageConditionSkew,
                             ));
@@ -645,7 +699,7 @@ class _DungeonDialogState extends State<DungeonDialog> {
                           },
                         ),
                         const SizedBox(height: 4),
-                        
+
                         // Passage & Condition Settings (collapsed)
                         Container(
                           padding: const EdgeInsets.all(10),
@@ -659,7 +713,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.tune, size: 14, color: JuiceTheme.mystic),
+                                  Icon(Icons.tune,
+                                      size: 14, color: JuiceTheme.mystic),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Passage/Condition Settings',
@@ -686,36 +741,65 @@ class _DungeonDialogState extends State<DungeonDialog> {
                                 spacing: 8,
                                 runSpacing: 6,
                                 children: [
-                                  _buildDieChip('d6', _useD6ForPassage, JuiceTheme.info, () => setState(() => _useD6ForPassage = true)),
-                                  _buildDieChip('d10', !_useD6ForPassage, JuiceTheme.info, () => setState(() => _useD6ForPassage = false)),
+                                  _buildDieChip(
+                                      'd6',
+                                      _useD6ForPassage,
+                                      JuiceTheme.info,
+                                      () => setState(
+                                          () => _useD6ForPassage = true)),
+                                  _buildDieChip(
+                                      'd10',
+                                      !_useD6ForPassage,
+                                      JuiceTheme.info,
+                                      () => setState(
+                                          () => _useD6ForPassage = false)),
                                   const SizedBox(width: 8),
-                                  _buildSkewChip('@-', AdvantageType.disadvantage, _passageConditionSkew, _phaseEnteringColor, 
-                                    (v) => setState(() => _passageConditionSkew = v)),
-                                  _buildSkewChip('@+', AdvantageType.advantage, _passageConditionSkew, _phaseExploringColor,
-                                    (v) => setState(() => _passageConditionSkew = v)),
+                                  _buildSkewChip(
+                                      '@-',
+                                      AdvantageType.disadvantage,
+                                      _passageConditionSkew,
+                                      _phaseEnteringColor,
+                                      (v) => setState(
+                                          () => _passageConditionSkew = v)),
+                                  _buildSkewChip(
+                                      '@+',
+                                      AdvantageType.advantage,
+                                      _passageConditionSkew,
+                                      _phaseExploringColor,
+                                      (v) => setState(
+                                          () => _passageConditionSkew = v)),
                                 ],
                               ),
                             ],
                           ),
                         ),
-                        
+
                         const Divider(),
                         // Encounter Settings
-                        SectionHeader(title: 'Dungeon Encounter', icon: Icons.warning_amber_rounded, color: _encounterColor, fontSize: 13),
+                        SectionHeader(
+                            title: 'Dungeon Encounter',
+                            icon: Icons.warning_amber_rounded,
+                            color: _encounterColor,
+                            fontSize: 13),
                         Container(
                           padding: const EdgeInsets.all(10),
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           decoration: BoxDecoration(
                             color: _encounterColor.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _encounterColor.withOpacity(0.25)),
+                            border: Border.all(
+                                color: _encounterColor.withOpacity(0.25)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 '10m 1d6 (NH: d6); Trap: 10m AP@+ A/L, PP L/T',
-                                style: TextStyle(fontSize: 10, fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: _encounterColor),
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontFamily: JuiceTheme.fontFamilyMono,
+                                    fontWeight: FontWeight.bold,
+                                    color: _encounterColor),
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -733,13 +817,33 @@ class _DungeonDialogState extends State<DungeonDialog> {
                                 spacing: 8,
                                 runSpacing: 6,
                                 children: [
-                                  _buildDieChip('d6 Linger', _isLingering, _encounterColor, () => setState(() => _isLingering = true)),
-                                  _buildDieChip('d10 Entry', !_isLingering, _encounterColor, () => setState(() => _isLingering = false)),
+                                  _buildDieChip(
+                                      'd6 Linger',
+                                      _isLingering,
+                                      _encounterColor,
+                                      () =>
+                                          setState(() => _isLingering = true)),
+                                  _buildDieChip(
+                                      'd10 Entry',
+                                      !_isLingering,
+                                      _encounterColor,
+                                      () =>
+                                          setState(() => _isLingering = false)),
                                   const SizedBox(width: 8),
-                                  _buildSkewChip('@-', AdvantageType.disadvantage, _encounterSkew, _phaseEnteringColor,
-                                    (v) => setState(() => _encounterSkew = v)),
-                                  _buildSkewChip('@+', AdvantageType.advantage, _encounterSkew, _phaseExploringColor,
-                                    (v) => setState(() => _encounterSkew = v)),
+                                  _buildSkewChip(
+                                      '@-',
+                                      AdvantageType.disadvantage,
+                                      _encounterSkew,
+                                      _phaseEnteringColor,
+                                      (v) =>
+                                          setState(() => _encounterSkew = v)),
+                                  _buildSkewChip(
+                                      '@+',
+                                      AdvantageType.advantage,
+                                      _encounterSkew,
+                                      _phaseExploringColor,
+                                      (v) =>
+                                          setState(() => _encounterSkew = v)),
                                 ],
                               ),
                             ],
@@ -748,9 +852,11 @@ class _DungeonDialogState extends State<DungeonDialog> {
                         const SizedBox(height: 8),
                         DialogOption(
                           title: 'Encounter Type',
-                          subtitle: 'What do you find? (${_getEncounterDieLabel()}${_getEncounterSkewLabel()})',
+                          subtitle:
+                              'What do you find? (${_getEncounterDieLabel()}${_getEncounterSkewLabel()})',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.rollEncounterType(
+                            widget.onRoll(
+                                widget.dungeonGenerator.rollEncounterType(
                               isLingering: _isLingering,
                               skew: _encounterSkew,
                             ));
@@ -761,7 +867,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
                           title: 'Full Encounter',
                           subtitle: 'Type + Monster/Trap/Feature if applicable',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.rollFullEncounter(
+                            widget.onRoll(
+                                widget.dungeonGenerator.rollFullEncounter(
                               isLingering: _isLingering,
                               skew: _encounterSkew,
                             ));
@@ -769,12 +876,17 @@ class _DungeonDialogState extends State<DungeonDialog> {
                           },
                         ),
                         const Divider(),
-                        SectionHeader(title: 'Encounter Details', icon: Icons.pest_control, color: _trapColor, fontSize: 13),
+                        SectionHeader(
+                            title: 'Encounter Details',
+                            icon: Icons.pest_control,
+                            color: _trapColor,
+                            fontSize: 13),
                         DialogOption(
                           title: 'Monster (2d10)',
                           subtitle: 'Descriptor + Ability',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.rollMonsterDescription());
+                            widget.onRoll(widget.dungeonGenerator
+                                .rollMonsterDescription());
                             Navigator.pop(context);
                           },
                         ),
@@ -788,17 +900,21 @@ class _DungeonDialogState extends State<DungeonDialog> {
                         ),
                         DialogOption(
                           title: 'Trap Procedure (Searching)',
-                          subtitle: 'Trap + DC (10 min, @+): Pass=Avoid, Fail=Locate',
+                          subtitle:
+                              'Trap + DC (10 min, @+): Pass=Avoid, Fail=Locate',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.rollTrapProcedure(isSearching: true));
+                            widget.onRoll(widget.dungeonGenerator
+                                .rollTrapProcedure(isSearching: true));
                             Navigator.pop(context);
                           },
                         ),
                         DialogOption(
                           title: 'Trap Procedure (Passive)',
-                          subtitle: 'Trap + DC (Passive): Pass=Locate, Fail=Trigger',
+                          subtitle:
+                              'Trap + DC (Passive): Pass=Locate, Fail=Trigger',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.rollTrapProcedure(isSearching: false));
+                            widget.onRoll(widget.dungeonGenerator
+                                .rollTrapProcedure(isSearching: false));
                             Navigator.pop(context);
                           },
                         ),
@@ -806,7 +922,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
                           title: 'Feature (1d10)',
                           subtitle: 'Library, Mural, Mushrooms, Prison...',
                           onTap: () {
-                            widget.onRoll(widget.dungeonGenerator.rollFeature());
+                            widget
+                                .onRoll(widget.dungeonGenerator.rollFeature());
                             Navigator.pop(context);
                           },
                         ),
@@ -817,18 +934,23 @@ class _DungeonDialogState extends State<DungeonDialog> {
                           decoration: BoxDecoration(
                             color: _trapColor.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _trapColor.withOpacity(0.2)),
+                            border:
+                                Border.all(color: _trapColor.withOpacity(0.2)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.motion_photos_paused, size: 14, color: _trapColor),
+                                  Icon(Icons.motion_photos_paused,
+                                      size: 14, color: _trapColor),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Trap Procedure',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: _trapColor),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                        color: _trapColor),
                                   ),
                                 ],
                               ),
@@ -865,11 +987,15 @@ class _DungeonDialogState extends State<DungeonDialog> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.menu_book, size: 14, color: JuiceTheme.sepia),
+                                  Icon(Icons.menu_book,
+                                      size: 14, color: JuiceTheme.sepia),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Encounter Reference',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: JuiceTheme.sepia),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                        color: JuiceTheme.sepia),
                                   ),
                                 ],
                               ),
@@ -889,7 +1015,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8), // Extra padding at bottom for scroll
+                        const SizedBox(
+                            height: 8), // Extra padding at bottom for scroll
                       ],
                     ),
                   ),
@@ -911,7 +1038,8 @@ class _DungeonDialogState extends State<DungeonDialog> {
                   ),
                 ),
                 child: Center(
-                  child: Icon(Icons.keyboard_arrow_down, size: 14, color: JuiceTheme.parchmentDark60),
+                  child: Icon(Icons.keyboard_arrow_down,
+                      size: 14, color: JuiceTheme.parchmentDark60),
                 ),
               ),
           ],

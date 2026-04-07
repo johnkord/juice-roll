@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../models/roll_result.dart';
 import '../../presets/expectation_check.dart';
-import '../theme/juice_theme.dart';
 import '../shared/oracle_dialog.dart';
+import '../theme/juice_theme.dart';
 
 /// Dialog for Expectation Check options.
 class ExpectationCheckDialog extends StatelessWidget {
@@ -28,11 +29,12 @@ class ExpectationCheckDialog extends StatelessWidget {
             icon: Icons.help_outline,
             iconColor: JuiceTheme.info,
             backgroundColor: JuiceTheme.info10,
-            text: 'Instead of asking "Is X true?", you assume X is true and test '
+            text:
+                'Instead of asking "Is X true?", you assume X is true and test '
                 'whether your expectation holds.',
           ),
           const SizedBox(height: 10),
-          
+
           // Use cases row
           Row(
             children: [
@@ -56,12 +58,12 @@ class ExpectationCheckDialog extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Outcome reference grid
           _buildOutcomeGrid(),
-          
+
           const SizedBox(height: 12),
-          
+
           // Roll button
           _ExpectDialogOption(
             title: 'Roll 2dF',
@@ -74,9 +76,9 @@ class ExpectationCheckDialog extends StatelessWidget {
               Navigator.pop(context);
             },
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Tip
           Container(
             padding: const EdgeInsets.all(6),
@@ -87,7 +89,8 @@ class ExpectationCheckDialog extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.tips_and_updates, size: 12, color: JuiceTheme.juiceOrange),
+                Icon(Icons.tips_and_updates,
+                    size: 12, color: JuiceTheme.juiceOrange),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -136,18 +139,25 @@ class ExpectationCheckDialog extends StatelessWidget {
           // Expected outcomes (positive zone)
           const Row(
             children: [
-              _ExpectOutcomeChip(dice: '++', label: 'Expected!', color: JuiceTheme.success, isIntense: true),
+              _ExpectOutcomeChip(
+                  dice: '++',
+                  label: 'Expected!',
+                  color: JuiceTheme.success,
+                  isIntense: true),
               SizedBox(width: 4),
-              _ExpectOutcomeChip(dice: '+○', label: 'Expected', color: JuiceTheme.success),
+              _ExpectOutcomeChip(
+                  dice: '+○', label: 'Expected', color: JuiceTheme.success),
             ],
           ),
           const SizedBox(height: 4),
           // Middle outcomes
           const Row(
             children: [
-              _ExpectOutcomeChip(dice: '+−', label: 'Next Most', color: JuiceTheme.gold),
+              _ExpectOutcomeChip(
+                  dice: '+−', label: 'Next Most', color: JuiceTheme.gold),
               SizedBox(width: 4),
-              _ExpectOutcomeChip(dice: '−+', label: 'Next Most', color: JuiceTheme.gold),
+              _ExpectOutcomeChip(
+                  dice: '−+', label: 'Next Most', color: JuiceTheme.gold),
             ],
           ),
           const SizedBox(height: 4),
@@ -155,17 +165,19 @@ class ExpectationCheckDialog extends StatelessWidget {
           Row(
             children: [
               _ExpectOutcomeChip(
-                dice: '○+', 
-                label: 'Favorable*', 
+                dice: '○+',
+                label: 'Favorable*',
                 color: JuiceTheme.gold,
-                tooltip: 'HELPS your character\'s situation.\nAsk: What modification benefits them?',
+                tooltip:
+                    'HELPS your character\'s situation.\nAsk: What modification benefits them?',
               ),
               const SizedBox(width: 4),
               _ExpectOutcomeChip(
-                dice: '○−', 
-                label: 'Unfavorable*', 
+                dice: '○−',
+                label: 'Unfavorable*',
                 color: JuiceTheme.gold,
-                tooltip: 'HURTS your character\'s situation.\nAsk: What modification works against them?',
+                tooltip:
+                    'HURTS your character\'s situation.\nAsk: What modification works against them?',
               ),
             ],
           ),
@@ -174,20 +186,26 @@ class ExpectationCheckDialog extends StatelessWidget {
           Row(
             children: [
               _ExpectOutcomeChip(
-                dice: '○○', 
-                label: 'Mod+Idea*', 
-                color: JuiceTheme.juiceOrange, 
+                dice: '○○',
+                label: 'Mod+Idea*',
+                color: JuiceTheme.juiceOrange,
                 isSpecial: true,
-                tooltip: 'Twist your expectation using the\nauto-rolled Modifier + Idea pair.',
+                tooltip:
+                    'Twist your expectation using the\nauto-rolled Modifier + Idea pair.',
               ),
               const SizedBox(width: 4),
-              const _ExpectOutcomeChip(dice: '−○', label: 'Opposite', color: JuiceTheme.danger),
+              const _ExpectOutcomeChip(
+                  dice: '−○', label: 'Opposite', color: JuiceTheme.danger),
             ],
           ),
           const SizedBox(height: 4),
           const Row(
             children: [
-              _ExpectOutcomeChip(dice: '−−', label: 'Opposite!', color: JuiceTheme.danger, isIntense: true),
+              _ExpectOutcomeChip(
+                  dice: '−−',
+                  label: 'Opposite!',
+                  color: JuiceTheme.danger,
+                  isIntense: true),
               Spacer(),
             ],
           ),
@@ -249,7 +267,7 @@ class _ExpectUseCaseBox extends StatelessWidget {
             style: TextStyle(
               fontSize: 9,
               fontStyle: FontStyle.italic,
-              color: color.withOpacity(0.8),
+              color: color.withOpacity(0.9),
             ),
           ),
         ],
@@ -312,22 +330,22 @@ class _ExpectOutcomeChip extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 9,
-                fontWeight: isIntense || tooltip != null ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isIntense || tooltip != null
+                    ? FontWeight.bold
+                    : FontWeight.normal,
                 color: color,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (isIntense)
-            Icon(Icons.whatshot, size: 10, color: color),
-          if (isSpecial)
-            Icon(Icons.auto_awesome, size: 10, color: color),
+          if (isIntense) Icon(Icons.whatshot, size: 10, color: color),
+          if (isSpecial) Icon(Icons.auto_awesome, size: 10, color: color),
           if (tooltip != null)
             Icon(Icons.help_outline, size: 9, color: color.withOpacity(0.6)),
         ],
       ),
     );
-    
+
     Widget content = tooltip != null
         ? Tooltip(
             message: tooltip!,
@@ -341,7 +359,7 @@ class _ExpectOutcomeChip extends StatelessWidget {
             child: container,
           )
         : container;
-    
+
     return Expanded(child: content);
   }
 }
@@ -375,15 +393,12 @@ class _ExpectDialogOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             border: Border.all(
-              color: highlighted
-                  ? iconColor.withOpacity(0.5)
-                  : JuiceTheme.gold30,
+              color:
+                  highlighted ? iconColor.withOpacity(0.5) : JuiceTheme.gold30,
               width: highlighted ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: highlighted
-                ? iconColor.withOpacity(0.1)
-                : JuiceTheme.gold08,
+            color: highlighted ? iconColor.withOpacity(0.1) : JuiceTheme.gold08,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

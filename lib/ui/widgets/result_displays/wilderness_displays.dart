@@ -13,20 +13,26 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/fate_dice_formatter.dart';
+import '../../../presets/location.dart';
 import '../../../presets/monster_encounter.dart';
 import '../../../presets/wilderness.dart';
-import '../../../presets/location.dart';
 import '../../theme/juice_theme.dart';
 import '../result_display_registry.dart';
 
 /// Register all Wilderness and Monster display builders with the registry.
 void registerWildernessDisplays() {
-  ResultDisplayRegistry.register<WildernessAreaResult>(_buildWildernessAreaDisplay);
-  ResultDisplayRegistry.register<WildernessEncounterResult>(_buildWildernessEncounterDisplay);
-  ResultDisplayRegistry.register<WildernessWeatherResult>(_buildWildernessWeatherDisplay);
-  ResultDisplayRegistry.register<FullMonsterEncounterResult>(_buildFullMonsterEncounterDisplay);
-  ResultDisplayRegistry.register<MonsterEncounterResult>(_buildMonsterEncounterDisplay);
-  ResultDisplayRegistry.register<MonsterTracksResult>(_buildMonsterTracksDisplay);
+  ResultDisplayRegistry.register<WildernessAreaResult>(
+      _buildWildernessAreaDisplay);
+  ResultDisplayRegistry.register<WildernessEncounterResult>(
+      _buildWildernessEncounterDisplay);
+  ResultDisplayRegistry.register<WildernessWeatherResult>(
+      _buildWildernessWeatherDisplay);
+  ResultDisplayRegistry.register<FullMonsterEncounterResult>(
+      _buildFullMonsterEncounterDisplay);
+  ResultDisplayRegistry.register<MonsterEncounterResult>(
+      _buildMonsterEncounterDisplay);
+  ResultDisplayRegistry.register<MonsterTracksResult>(
+      _buildMonsterTracksDisplay);
   ResultDisplayRegistry.register<LocationResult>(_buildLocationDisplay);
 }
 
@@ -34,9 +40,10 @@ void registerWildernessDisplays() {
 // WILDERNESS AREA DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme) {
+Widget _buildWildernessAreaDisplay(
+    WildernessAreaResult result, ThemeData theme) {
   final exploreColor = JuiceTheme.categoryExplore;
-  
+
   // For manual set, show a simpler display
   if (result.isManualSet) {
     return Column(
@@ -112,7 +119,8 @@ Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme)
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(result.isTransition ? Icons.swap_horiz : Icons.explore, size: 12, color: exploreColor),
+            Icon(result.isTransition ? Icons.swap_horiz : Icons.explore,
+                size: 12, color: exploreColor),
             const SizedBox(width: 4),
             Text(
               result.isTransition ? 'TRANSITION' : 'INITIALIZE',
@@ -208,7 +216,8 @@ Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme)
             ),
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: exploreColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -265,13 +274,14 @@ Widget _buildWildernessAreaDisplay(WildernessAreaResult result, ThemeData theme)
 // WILDERNESS ENCOUNTER DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeData theme) {
+Widget _buildWildernessEncounterDisplay(
+    WildernessEncounterResult result, ThemeData theme) {
   final exploreColor = JuiceTheme.categoryExplore;
-  
+
   // Determine encounter color based on type
   Color encounterColor = exploreColor;
   IconData encounterIcon = Icons.explore;
-  
+
   if (result.encounter == 'Natural Hazard') {
     encounterColor = JuiceTheme.danger;
     encounterIcon = Icons.warning;
@@ -279,7 +289,8 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
     encounterColor = JuiceTheme.categoryCombat;
     encounterIcon = Icons.pest_control;
   } else if (result.encounter == 'Destination/Lost') {
-    encounterColor = result.becameLost ? JuiceTheme.juiceOrange : JuiceTheme.info;
+    encounterColor =
+        result.becameLost ? JuiceTheme.juiceOrange : JuiceTheme.info;
     encounterIcon = result.becameLost ? Icons.explore_off : Icons.flag;
   } else if (result.encounter == 'River/Road') {
     encounterColor = result.becameFound ? JuiceTheme.info : JuiceTheme.mystic;
@@ -296,11 +307,12 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
   } else if (result.encounter == 'Dungeon') {
     encounterColor = JuiceTheme.rust;
     encounterIcon = Icons.castle;
-  } else if (result.encounter.contains('Settlement') || result.encounter.contains('Camp')) {
+  } else if (result.encounter.contains('Settlement') ||
+      result.encounter.contains('Camp')) {
     encounterColor = JuiceTheme.gold;
     encounterIcon = Icons.home;
   }
-  
+
   // Build the encounter text with italic styling where appropriate
   Widget encounterText;
   if (result.partialItalic != null) {
@@ -396,7 +408,8 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.explore_off, size: 10, color: JuiceTheme.juiceOrange),
+                  Icon(Icons.explore_off,
+                      size: 10, color: JuiceTheme.juiceOrange),
                   const SizedBox(width: 3),
                   Text(
                     'LOST',
@@ -445,11 +458,15 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.explore_off, size: 12, color: JuiceTheme.juiceOrange),
+                  Icon(Icons.explore_off,
+                      size: 12, color: JuiceTheme.juiceOrange),
                   const SizedBox(width: 4),
                   Text(
                     'Now Lost!',
-                    style: TextStyle(fontSize: 11, color: JuiceTheme.juiceOrange, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: JuiceTheme.juiceOrange,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -471,7 +488,10 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
                   const SizedBox(width: 4),
                   Text(
                     'Found!',
-                    style: TextStyle(fontSize: 11, color: JuiceTheme.success, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: JuiceTheme.success,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -485,15 +505,20 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.subdirectory_arrow_right, size: 16, color: JuiceTheme.sepia),
+            Icon(Icons.subdirectory_arrow_right,
+                size: 16, color: JuiceTheme.sepia),
             const SizedBox(width: 6),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _getFollowUpThemeColor(result.encounter).withOpacity(0.12),
+                  color: _getFollowUpThemeColor(result.encounter)
+                      .withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _getFollowUpThemeColor(result.encounter).withOpacity(0.4)),
+                  border: Border.all(
+                      color: _getFollowUpThemeColor(result.encounter)
+                          .withOpacity(0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,7 +526,8 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: JuiceTheme.parchment50,
                             borderRadius: BorderRadius.circular(4),
@@ -526,10 +552,13 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
                         ),
                       ],
                     ),
-                    if (result.followUpData != null && result.encounter == 'Monster' && result.followUpData!['hasBoss'] == true) ...[
+                    if (result.followUpData != null &&
+                        result.encounter == 'Monster' &&
+                        result.followUpData!['hasBoss'] == true) ...[
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: JuiceTheme.categoryCombat20,
                           borderRadius: BorderRadius.circular(4),
@@ -537,7 +566,8 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.star, size: 12, color: JuiceTheme.categoryCombat),
+                            Icon(Icons.star,
+                                size: 12, color: JuiceTheme.categoryCombat),
                             const SizedBox(width: 4),
                             Text(
                               'Boss: ${result.followUpData!['bossMonster']}',
@@ -561,7 +591,8 @@ Widget _buildWildernessEncounterDisplay(WildernessEncounterResult result, ThemeD
         const SizedBox(height: 4),
         Row(
           children: [
-            Icon(Icons.subdirectory_arrow_right, size: 14, color: JuiceTheme.sepia50),
+            Icon(Icons.subdirectory_arrow_right,
+                size: 14, color: JuiceTheme.sepia50),
             const SizedBox(width: 4),
             Text(
               _getFollowUpHint(result.encounter),
@@ -622,15 +653,24 @@ String _getFollowUpHint(String encounter) {
 // WILDERNESS WEATHER DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildWildernessWeatherDisplay(WildernessWeatherResult result, ThemeData theme) {
+Widget _buildWildernessWeatherDisplay(
+    WildernessWeatherResult result, ThemeData theme) {
   return Row(children: [
     Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-      child: Text('d6@${result.environmentSkew}: ${result.baseRoll}', style: TextStyle(fontFamily: JuiceTheme.fontFamilyMono, fontWeight: FontWeight.bold, color: Colors.blue)),
+      decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8)),
+      child: Text('d6@${result.environmentSkew}: ${result.baseRoll}',
+          style: TextStyle(
+              fontFamily: JuiceTheme.fontFamilyMono,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue)),
     ),
     const SizedBox(width: 8),
-    Text(result.weather, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+    Text(result.weather,
+        style:
+            theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
   ]);
 }
 
@@ -638,9 +678,10 @@ Widget _buildWildernessWeatherDisplay(WildernessWeatherResult result, ThemeData 
 // FULL MONSTER ENCOUNTER DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, ThemeData theme) {
+Widget _buildFullMonsterEncounterDisplay(
+    FullMonsterEncounterResult result, ThemeData theme) {
   final combatColor = JuiceTheme.categoryCombat;
-  
+
   final difficultyColor = switch (result.difficulty) {
     MonsterDifficulty.easy => JuiceTheme.success,
     MonsterDifficulty.medium => JuiceTheme.juiceOrange,
@@ -652,12 +693,14 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
   // Structure: [row dice...] + [diff d10, diff d10]
   final totalDice = result.diceResults.length;
   final rowDiceCount = totalDice - 2; // Last 2 are always the difficulty dice
-  final rowDice = rowDiceCount > 0 ? result.diceResults.sublist(0, rowDiceCount) : <int>[];
-  final diffDice = totalDice >= 2 ? result.diceResults.sublist(totalDice - 2) : <int>[];
-  
+  final rowDice =
+      rowDiceCount > 0 ? result.diceResults.sublist(0, rowDiceCount) : <int>[];
+  final diffDice =
+      totalDice >= 2 ? result.diceResults.sublist(totalDice - 2) : <int>[];
+
   // Row dice label based on environment formula (advantage/disadvantage)
   final rowDiceLabel = rowDice.length == 2 ? '2d6' : '1d6';
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -770,10 +813,12 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.landscape, size: 12, color: JuiceTheme.categoryExplore),
+                Icon(Icons.landscape,
+                    size: 12, color: JuiceTheme.categoryExplore),
                 const SizedBox(width: 4),
                 Text(
-                  MonsterEncounter.environmentNames[(result.environmentRow - 1).clamp(0, 9)],
+                  MonsterEncounter.environmentNames[
+                      (result.environmentRow - 1).clamp(0, 9)],
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: JuiceTheme.categoryExplore,
@@ -859,7 +904,7 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.mystic20,
+                color: JuiceTheme.mystic15,
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: JuiceTheme.mystic40),
               ),
@@ -921,25 +966,29 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
               if (result.monsters.any((m) => m.count > 0))
                 const SizedBox(height: 6),
             ],
-            ...result.monsters.where((m) => m.count > 0).map((monster) => Padding(
-              padding: const EdgeInsets.only(bottom: 3),
-              child: Row(
-                children: [
-                  Icon(Icons.pest_control, size: 12, color: combatColor.withOpacity(0.6)),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${monster.count}× ${monster.name}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontFamily: JuiceTheme.fontFamilySerif,
-                    ),
-                  ),
-                ],
-              ),
-            )),
+            ...result.monsters
+                .where((m) => m.count > 0)
+                .map((monster) => Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Row(
+                        children: [
+                          Icon(Icons.pest_control,
+                              size: 12, color: combatColor.withOpacity(0.6)),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${monster.count}× ${monster.name}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontFamily: JuiceTheme.fontFamilySerif,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
             if (result.monsters.every((m) => m.count == 0) && !result.hasBoss)
               Row(
                 children: [
-                  Icon(Icons.sentiment_neutral, size: 14, color: JuiceTheme.sepia),
+                  Icon(Icons.sentiment_neutral,
+                      size: 14, color: JuiceTheme.sepia),
                   const SizedBox(width: 6),
                   Text(
                     'No monsters appeared (all rolled 0)',
@@ -961,9 +1010,10 @@ Widget _buildFullMonsterEncounterDisplay(FullMonsterEncounterResult result, Them
 // MONSTER ENCOUNTER DISPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 
-Widget _buildMonsterEncounterDisplay(MonsterEncounterResult result, ThemeData theme) {
+Widget _buildMonsterEncounterDisplay(
+    MonsterEncounterResult result, ThemeData theme) {
   final combatColor = JuiceTheme.categoryCombat;
-  
+
   final difficultyColor = switch (result.difficulty) {
     MonsterDifficulty.easy => JuiceTheme.success,
     MonsterDifficulty.medium => JuiceTheme.juiceOrange,
@@ -1049,12 +1099,13 @@ Widget _buildMonsterEncounterDisplay(MonsterEncounterResult result, ThemeData th
             ),
           ),
           // Show DOUBLES! only if not Boss (Boss already implies doubles in its name)
-          if (result.wasDoubles && result.difficulty != MonsterDifficulty.boss) ...[
+          if (result.wasDoubles &&
+              result.difficulty != MonsterDifficulty.boss) ...[
             const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.mystic20,
+                color: JuiceTheme.mystic15,
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: JuiceTheme.mystic40),
               ),
@@ -1080,7 +1131,7 @@ Widget _buildMonsterEncounterDisplay(MonsterEncounterResult result, ThemeData th
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: JuiceTheme.danger20,
+                color: JuiceTheme.danger15,
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: JuiceTheme.danger40),
               ),
@@ -1204,7 +1255,8 @@ Widget _buildMonsterTracksDisplay(MonsterTracksResult result, ThemeData theme) {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.add_circle_outline, size: 12, color: JuiceTheme.info),
+                Icon(Icons.add_circle_outline,
+                    size: 12, color: JuiceTheme.info),
                 const SizedBox(width: 4),
                 Text(
                   'Modifier: ${result.modifier >= 0 ? '+' : ''}${result.modifier}',
@@ -1254,7 +1306,7 @@ Widget _buildMonsterTracksDisplay(MonsterTracksResult result, ThemeData theme) {
 Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
   final exploreColor = JuiceTheme.categoryExplore;
   final compassColor = JuiceTheme.info;
-  
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -1300,7 +1352,7 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
         ),
       ),
       const SizedBox(height: 8),
-      
+
       // 5x5 grid with selected cell highlighted
       Center(
         child: Container(
@@ -1314,7 +1366,12 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
             mainAxisSize: MainAxisSize.min,
             children: [
               // North label
-              Text('N', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilyMono, color: compassColor)),
+              Text('N',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: compassColor)),
               const SizedBox(height: 2),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1322,7 +1379,12 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
                   // West label
                   Padding(
                     padding: const EdgeInsets.only(right: 4),
-                    child: Text('W', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilyMono, color: compassColor)),
+                    child: Text('W',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: JuiceTheme.fontFamilyMono,
+                            color: compassColor)),
                   ),
                   // 5x5 grid
                   Column(
@@ -1331,10 +1393,15 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
                         mainAxisSize: MainAxisSize.min,
                         children: List.generate(5, (col) {
                           // Grid uses 1-indexed (row 1-5, col 1-5)
-                          final isSelected = (row + 1) == result.row && (col + 1) == result.column;
+                          final isSelected = (row + 1) == result.row &&
+                              (col + 1) == result.column;
                           final isCenter = row == 2 && col == 2;
-                          final isClose = !isCenter && row >= 1 && row <= 3 && col >= 1 && col <= 3;
-                          
+                          final isClose = !isCenter &&
+                              row >= 1 &&
+                              row <= 3 &&
+                              col >= 1 &&
+                              col <= 3;
+
                           Color cellColor;
                           if (isSelected) {
                             cellColor = JuiceTheme.juiceOrange;
@@ -1345,26 +1412,33 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
                           } else {
                             cellColor = JuiceTheme.parchmentDark;
                           }
-                          
+
                           return Container(
                             width: 20,
                             height: 20,
                             margin: const EdgeInsets.all(1),
                             decoration: BoxDecoration(
-                              color: cellColor.withOpacity(isSelected ? 0.6 : (isCenter ? 0.3 : 0.15)),
+                              color: cellColor.withOpacity(
+                                  isSelected ? 0.6 : (isCenter ? 0.3 : 0.15)),
                               borderRadius: BorderRadius.circular(3),
                               border: Border.all(
-                                color: isSelected ? JuiceTheme.juiceOrange : cellColor.withOpacity(0.4),
+                                color: isSelected
+                                    ? JuiceTheme.juiceOrange
+                                    : cellColor.withOpacity(0.4),
                                 width: isSelected ? 2 : (isCenter ? 1 : 0.5),
                               ),
                             ),
                             child: Center(
                               child: Text(
-                                isSelected ? '●' : (isCenter ? '◉' : (isClose ? '○' : '·')),
+                                isSelected
+                                    ? '●'
+                                    : (isCenter ? '◉' : (isClose ? '○' : '·')),
                                 style: TextStyle(
                                   fontSize: isSelected ? 10 : 8,
                                   color: isSelected ? Colors.white : cellColor,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ),
@@ -1376,19 +1450,29 @@ Widget _buildLocationDisplay(LocationResult result, ThemeData theme) {
                   // East label
                   Padding(
                     padding: const EdgeInsets.only(left: 4),
-                    child: Text('E', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilyMono, color: compassColor)),
+                    child: Text('E',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: JuiceTheme.fontFamilyMono,
+                            color: compassColor)),
                   ),
                 ],
               ),
               const SizedBox(height: 2),
               // South label
-              Text('S', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, fontFamily: JuiceTheme.fontFamilyMono, color: compassColor)),
+              Text('S',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: JuiceTheme.fontFamilyMono,
+                      color: compassColor)),
             ],
           ),
         ),
       ),
       const SizedBox(height: 6),
-      
+
       // Grid position footer
       Center(
         child: Text(

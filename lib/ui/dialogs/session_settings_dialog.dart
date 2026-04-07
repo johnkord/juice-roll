@@ -30,7 +30,9 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
     super.initState();
     _useCustomMaxRolls = widget.session.maxRollsPerSession != null;
     _maxRollsController = TextEditingController(
-      text: (widget.session.maxRollsPerSession ?? SessionService.defaultMaxRollsPerSession).toString(),
+      text: (widget.session.maxRollsPerSession ??
+              SessionService.defaultMaxRollsPerSession)
+          .toString(),
     );
   }
 
@@ -42,7 +44,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
 
   Future<void> _saveSettings() async {
     setState(() => _isSaving = true);
-    
+
     int? maxRolls;
     if (_useCustomMaxRolls) {
       final parsed = int.tryParse(_maxRollsController.text);
@@ -50,14 +52,14 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
         maxRolls = parsed;
       }
     }
-    
+
     final updatedSession = widget.session.copyWith(
       maxRollsPerSession: maxRolls,
       clearMaxRollsPerSession: !_useCustomMaxRolls,
     );
-    
+
     await widget.onUpdate(updatedSession);
-    
+
     if (mounted) {
       setState(() => _isSaving = false);
       Navigator.pop(context);
@@ -117,7 +119,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                 title: 'History Settings',
               ),
               const SizedBox(height: 8),
-              
+
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -158,8 +160,9 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                             setState(() {
                               _useCustomMaxRolls = value;
                               if (value) {
-                                _maxRollsController.text = 
-                                    SessionService.defaultMaxRollsPerSession.toString();
+                                _maxRollsController.text = SessionService
+                                    .defaultMaxRollsPerSession
+                                    .toString();
                               }
                             });
                           },
@@ -167,7 +170,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                         ),
                       ],
                     ),
-                    
+
                     if (_useCustomMaxRolls) ...[
                       const SizedBox(height: 12),
                       Row(
@@ -258,16 +261,16 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Current session info
               const SectionHeader(
                 icon: Icons.analytics,
                 title: 'Current Usage',
               ),
               const SizedBox(height: 8),
-              
+
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -285,7 +288,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                     DetailRow(
                       icon: Icons.storage,
                       label: 'Current Limit',
-                      value: widget.session.maxRollsPerSession != null 
+                      value: widget.session.maxRollsPerSession != null
                           ? '${widget.session.maxRollsPerSession}'
                           : 'Unlimited',
                     ),
@@ -299,7 +302,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 12),
             ],
           ),

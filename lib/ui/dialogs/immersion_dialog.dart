@@ -35,11 +35,12 @@ class ImmersionDialog extends StatelessWidget {
         children: [
           // Introduction
           const OracleDialogIntro(
-            text: 'See what they see, feel what they feel. Perfect when you\'re "stuck" — provides hints about the environment.',
+            text:
+                'See what they see, feel what they feel. Perfect when you\'re "stuck" — provides hints about the environment.',
             icon: Icons.psychology,
           ),
           const SizedBox(height: 14),
-          
+
           // ═══════════════════════════════════════════════════════════════
           // FULL IMMERSION - COMPLETE EXPERIENCE
           // ═══════════════════════════════════════════════════════════════
@@ -64,7 +65,8 @@ class ImmersionDialog extends StatelessWidget {
                 const SizedBox(height: 8),
                 // Output format quote
                 OracleDialogQuote(
-                  text: '"You [sense] something [detail] [where], and it causes [emotion] because [cause]"',
+                  text:
+                      '"You [sense] something [detail] [where], and it causes [emotion] because [cause]"',
                   borderColor: _fullImmersionColor.withOpacity(0.6),
                 ),
                 const SizedBox(height: 10),
@@ -84,7 +86,7 @@ class ImmersionDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          
+
           // ═══════════════════════════════════════════════════════════════
           // SENSORY DETAIL SECTION
           // ═══════════════════════════════════════════════════════════════
@@ -105,11 +107,23 @@ class ImmersionDialog extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDiceReference('d10', 'Sense', 'See (1-3), Hear (4-6), Smell (7-8), Feel (9-0)', _sensoryColor),
+                      _buildDiceReference(
+                          'd10',
+                          'Sense',
+                          'See (1-3), Hear (4-6), Smell (7-8), Feel (9-0)',
+                          _sensoryColor),
                       const SizedBox(height: 3),
-                      _buildDiceReference('d10', 'Detail', 'Based on sense (Broken, Colorful, Shiny...)', _sensoryColor),
+                      _buildDiceReference(
+                          'd10',
+                          'Detail',
+                          'Based on sense (Broken, Colorful, Shiny...)',
+                          _sensoryColor),
                       const SizedBox(height: 3),
-                      _buildDiceReference('d10', 'Where', 'Above, Behind, In The Distance, Next To You...', _sensoryColor),
+                      _buildDiceReference(
+                          'd10',
+                          'Where',
+                          'Above, Behind, In The Distance, Next To You...',
+                          _sensoryColor),
                     ],
                   ),
                 ),
@@ -134,7 +148,8 @@ class ImmersionDialog extends StatelessWidget {
                         icon: Icons.near_me,
                         color: JuiceTheme.success,
                         onTap: () {
-                          onRoll(immersion.generateSensoryDetail(skew: SkewType.advantage));
+                          onRoll(immersion.generateSensoryDetail(
+                              skew: SkewType.advantage));
                           Navigator.pop(context);
                         },
                       ),
@@ -147,7 +162,8 @@ class ImmersionDialog extends StatelessWidget {
                         icon: Icons.explore,
                         color: JuiceTheme.info,
                         onTap: () {
-                          onRoll(immersion.generateSensoryDetail(skew: SkewType.disadvantage));
+                          onRoll(immersion.generateSensoryDetail(
+                              skew: SkewType.disadvantage));
                           Navigator.pop(context);
                         },
                       ),
@@ -169,7 +185,7 @@ class ImmersionDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // ═══════════════════════════════════════════════════════════════
           // EMOTIONAL ATMOSPHERE SECTION
           // ═══════════════════════════════════════════════════════════════
@@ -196,19 +212,24 @@ class ImmersionDialog extends StatelessWidget {
                           const SizedBox(width: 6),
                           Text(
                             'polarity: (−/blank) negative, (+) positive',
-                            style: TextStyle(fontSize: 9, color: JuiceTheme.parchmentDark),
+                            style: TextStyle(
+                                fontSize: 9, color: JuiceTheme.parchmentDark),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Emotions paired as opposites: Despair↔Hope, Fear↔Courage, Anger↔Calm...',
-                        style: TextStyle(fontSize: 9, color: JuiceTheme.parchmentDark),
+                        style: TextStyle(
+                            fontSize: 9, color: JuiceTheme.parchmentDark),
                       ),
                       const SizedBox(height: 2),
                       const Text(
                         'Basic 6: Joy, Sadness, Fear, Anger, Disgust, Surprise',
-                        style: TextStyle(fontSize: 9, fontStyle: FontStyle.italic, color: JuiceTheme.parchment),
+                        style: TextStyle(
+                            fontSize: 9,
+                            fontStyle: FontStyle.italic,
+                            color: JuiceTheme.parchment),
                       ),
                     ],
                   ),
@@ -216,7 +237,8 @@ class ImmersionDialog extends StatelessWidget {
                 const SizedBox(height: 10),
                 OracleRollButton(
                   label: 'Emotional Atmosphere',
-                  subtitle: '2d10 + 1dF → "It causes [emotion] because [cause]"',
+                  subtitle:
+                      '2d10 + 1dF → "It causes [emotion] because [cause]"',
                   icon: Icons.mood,
                   color: _emotionalColor,
                   onTap: () {
@@ -234,7 +256,8 @@ class ImmersionDialog extends StatelessWidget {
                         icon: Icons.sentiment_satisfied_alt,
                         color: JuiceTheme.success,
                         onTap: () {
-                          onRoll(immersion.generateEmotionalAtmosphere(skew: SkewType.advantage));
+                          onRoll(immersion.generateEmotionalAtmosphere(
+                              skew: SkewType.advantage));
                           Navigator.pop(context);
                         },
                       ),
@@ -247,7 +270,8 @@ class ImmersionDialog extends StatelessWidget {
                         icon: Icons.sentiment_dissatisfied,
                         color: JuiceTheme.danger,
                         onTap: () {
-                          onRoll(immersion.generateEmotionalAtmosphere(skew: SkewType.disadvantage));
+                          onRoll(immersion.generateEmotionalAtmosphere(
+                              skew: SkewType.disadvantage));
                           Navigator.pop(context);
                         },
                       ),
@@ -261,7 +285,8 @@ class ImmersionDialog extends StatelessWidget {
                   icon: Icons.emoji_emotions_outlined,
                   color: _emotionalColor.withOpacity(0.7),
                   onTap: () {
-                    onRoll(immersion.generateEmotionalAtmosphere(emotionDie: 6));
+                    onRoll(
+                        immersion.generateEmotionalAtmosphere(emotionDie: 6));
                     Navigator.pop(context);
                   },
                 ),
@@ -269,17 +294,19 @@ class ImmersionDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Example
           const OracleDialogExample(
-            text: '"You see something discarded behind you, and it causes joy because you were warned about it"',
+            text:
+                '"You see something discarded behind you, and it causes joy because you were warned about it"',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDiceReference(String die, String label, String values, Color color) {
+  Widget _buildDiceReference(
+      String die, String label, String values, Color color) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
