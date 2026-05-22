@@ -19,8 +19,6 @@ class FateCheckDialog extends StatefulWidget {
 }
 
 class _FateCheckDialogState extends State<FateCheckDialog> {
-  String _selectedLikelihood = 'Even Odds';
-
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -69,8 +67,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               subtitle: 'If either die is −, result is No-like',
               icon: Icons.remove_circle_outline,
               iconColor: JuiceTheme.danger,
-              isSelected: _selectedLikelihood == 'Unlikely',
-              onTap: () => setState(() => _selectedLikelihood = 'Unlikely'),
+              onTap: () => _performCheck('Unlikely'),
             ),
             const SizedBox(height: 6),
             _LikelihoodTile(
@@ -78,8 +75,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               subtitle: 'Standard 50/50 interpretation',
               icon: Icons.balance,
               iconColor: JuiceTheme.gold,
-              isSelected: _selectedLikelihood == 'Even Odds',
-              onTap: () => setState(() => _selectedLikelihood = 'Even Odds'),
+              onTap: () => _performCheck('Even Odds'),
             ),
             const SizedBox(height: 6),
             _LikelihoodTile(
@@ -87,8 +83,7 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
               subtitle: 'If either die is +, result is Yes-like',
               icon: Icons.add_circle_outline,
               iconColor: JuiceTheme.success,
-              isSelected: _selectedLikelihood == 'Likely',
-              onTap: () => setState(() => _selectedLikelihood = 'Likely'),
+              onTap: () => _performCheck('Likely'),
             ),
 
             const Divider(height: 20),
@@ -189,24 +184,12 @@ class _FateCheckDialogState extends State<FateCheckDialog> {
             style: TextStyle(color: JuiceTheme.parchmentDark),
           ),
         ),
-        ElevatedButton.icon(
-          onPressed: _performCheck,
-          icon: Icon(Icons.help_outline, color: JuiceTheme.gold),
-          label: Text(
-            'Check Fate',
-            style: TextStyle(color: JuiceTheme.gold),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: JuiceTheme.surface,
-            side: BorderSide(color: JuiceTheme.gold50),
-          ),
-        ),
       ],
     );
   }
 
-  void _performCheck() {
-    final result = widget.fateCheck.check(likelihood: _selectedLikelihood);
+  void _performCheck(String likelihood) {
+    final result = widget.fateCheck.check(likelihood: likelihood);
     widget.onRoll(result);
     Navigator.pop(context);
   }
@@ -218,7 +201,6 @@ class _LikelihoodTile extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color iconColor;
-  final bool isSelected;
   final VoidCallback onTap;
 
   const _LikelihoodTile({
@@ -226,7 +208,6 @@ class _LikelihoodTile extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.iconColor,
-    required this.isSelected,
     required this.onTap,
   });
 
@@ -241,42 +222,16 @@ class _LikelihoodTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             border: Border.all(
-              color:
-                  isSelected ? iconColor.withOpacity(0.6) : JuiceTheme.gold20,
-              width: isSelected ? 2 : 1,
+              color: JuiceTheme.gold20,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: isSelected ? iconColor.withOpacity(0.1) : JuiceTheme.gold03,
+            color: JuiceTheme.gold03,
           ),
           child: Row(
             children: [
-              // Radio indicator
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? iconColor : JuiceTheme.parchmentDark,
-                    width: 2,
-                  ),
-                ),
-                child: isSelected
-                    ? Center(
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: iconColor,
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
+              Icon(icon, size: 20, color: iconColor),
               const SizedBox(width: 10),
-              Icon(icon, size: 18, color: iconColor),
-              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,7 +240,7 @@ class _LikelihoodTile extends StatelessWidget {
                       title,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? iconColor : JuiceTheme.parchment,
+                        color: JuiceTheme.parchment,
                       ),
                     ),
                     Text(
@@ -298,6 +253,8 @@ class _LikelihoodTile extends StatelessWidget {
                   ],
                 ),
               ),
+              Icon(Icons.chevron_right,
+                  size: 18, color: JuiceTheme.parchmentDark),
             ],
           ),
         ),
