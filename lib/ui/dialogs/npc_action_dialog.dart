@@ -77,7 +77,7 @@ class _NpcActionDialogState extends State<NpcActionDialog> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'WH: ΔCtx, SH: ΔCtx & +/-1',
+                  'WH: Ctx change; SH: Ctx change & +/-1',
                   style: TextStyle(fontSize: 11, fontFamily: 'monospace'),
                 ),
               ],
@@ -166,7 +166,7 @@ class _NpcActionDialogState extends State<NpcActionDialog> {
           ),
           const SizedBox(height: 4),
           DialogOption(
-            title: '⭐ Complex NPC (Person)',
+            title: 'Complex NPC (Person)',
             subtitle:
                 'Name + 2 Personalities + Need@+ + Motive + Color + Properties',
             onTap: () {
@@ -179,7 +179,7 @@ class _NpcActionDialogState extends State<NpcActionDialog> {
             },
           ),
           DialogOption(
-            title: '⭐ Complex NPC (Monster)',
+            title: 'Complex NPC (Monster)',
             subtitle:
                 'Name + 2 Personalities + Need@- + Motive + Color + Properties',
             onTap: () {
@@ -453,7 +453,7 @@ class _NpcActionDialogState extends State<NpcActionDialog> {
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                 Text(
-                  '• Weak Hit: Change Context (Active↔Passive)\n'
+                  '• Weak Hit: Change Context (Active<->Passive)\n'
                   '• Strong Hit: Change Context AND +/-1 to roll',
                   style: TextStyle(fontSize: 9),
                 ),

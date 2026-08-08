@@ -2,6 +2,21 @@
 
 A Flutter app that emulates the Juice Oracle dice mechanics for solo roleplaying games. Runs on iOS, web, and Linux.
 
+**Live app:** [Open Juice Roll](https://juiceroll.curlyquote.com/)
+
+## Install on Android or iPhone and Use Offline
+
+Juice Roll installs as a Progressive Web App from Chrome on Android or Safari
+on iPhone and iPad. No coding, app store, or APK is required.
+
+See the **[complete mobile installation and offline guide](docs/mobile-pwa-offline-guide.md)**
+for step-by-step Android and iOS instructions, the required airplane-mode test,
+session backup and restore, updates, storage behavior, and troubleshooting.
+
+Sessions are stored only on that device. Export important sessions before
+uninstalling Juice Roll or clearing browser site data, because either action can
+remove local sessions.
+
 ## Features
 
 ### Core Roll Engine
@@ -62,6 +77,7 @@ A Flutter app that emulates the Juice Oracle dice mechanics for solo roleplaying
 
 ### Prerequisites
 - Flutter SDK 3.0.0 or higher
+- Node.js 20 or higher for release web builds and offline browser tests
 
 ### Installation
 
@@ -91,8 +107,11 @@ flutter run -d linux
 ### Building
 
 ```bash
-# Web
-flutter build web
+# Install pinned web build tooling
+npm ci
+
+# Web PWA (required for deployable offline builds)
+npm run build:web
 
 # iOS
 flutter build ios
@@ -171,7 +190,13 @@ lib/
 ## Running Tests
 
 ```bash
+# Dart and Flutter tests
 flutter test
+
+# PWA build contract and offline browser tests
+npm run build:web
+npx playwright install chromium
+npm run test:pwa
 ```
 
 ## Deployment

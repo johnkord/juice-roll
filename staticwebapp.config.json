@@ -15,6 +15,30 @@
   },
   "routes": [
     {
+      "route": "/flutter_service_worker.js",
+      "headers": {
+        "cache-control": "no-cache, no-store, must-revalidate"
+      }
+    },
+    {
+      "route": "/",
+      "headers": {
+        "cache-control": "no-cache, must-revalidate"
+      }
+    },
+    {
+      "route": "/index.html",
+      "headers": {
+        "cache-control": "no-cache, must-revalidate"
+      }
+    },
+    {
+      "route": "/manifest.json",
+      "headers": {
+        "cache-control": "no-cache, must-revalidate"
+      }
+    },
+    {
       "route": "/assets/*",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
@@ -29,7 +53,7 @@
     {
       "route": "/*.js",
       "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
+        "cache-control": "no-cache, must-revalidate"
       }
     }
   ],
@@ -41,8 +65,5 @@
   "mimeTypes": {
     ".wasm": "application/wasm",
     ".json": "application/json"
-  },
-  "platform": {
-    "apiRuntime": "node:18"
   }
 }

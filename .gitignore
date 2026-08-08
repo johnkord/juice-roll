@@ -56,6 +56,9 @@ coverage/
 
 # Test
 .test_coverage.dart
+node_modules/
+playwright-report/
+test-results/
 
 # Local deployment configs (contain real infrastructure values)
 scripts/deploy.local.sh

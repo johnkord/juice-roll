@@ -1,0 +1,18 @@
+{
+  "name": "juice-roll-web-build",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build:web": "flutter build web --release --pwa-strategy=none && npm run pwa:generate && npm run pwa:stage-config && npm run pwa:verify",
+    "pwa:generate": "node tool/pwa/generate-service-worker.mjs",
+    "pwa:stage-config": "node tool/pwa/stage-static-web-app-config.mjs",
+    "pwa:verify": "node tool/pwa/verify-build.mjs",
+    "test:pwa": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "workbox-build": "7.4.1"
+  }
+}

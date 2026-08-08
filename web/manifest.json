@@ -1,13 +1,19 @@
 {
-    "name": "juice_roll",
-    "short_name": "juice_roll",
-    "start_url": ".",
+    "name": "Juice Roll",
+    "short_name": "Juice Roll",
+    "id": "/",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1C1814",
+    "theme_color": "#1C1814",
+    "description": "An offline oracle and dice roller for solo roleplaying games.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": [
+        "games",
+        "utilities"
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",

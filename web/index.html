@@ -18,61 +18,30 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="An offline oracle and dice roller for solo roleplaying games.">
+  <meta name="theme-color" content="#1C1814">
+  <meta name="color-scheme" content="dark">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="juice_roll">
+  <meta name="apple-mobile-web-app-title" content="Juice Roll">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>juice_roll</title>
+  <title>Juice Roll</title>
   <link rel="manifest" href="manifest.json">
 
   <script>
-    // Aggressive service worker update handling for reliable cache busting
     if ('serviceWorker' in navigator) {
-      // Reload when a new service worker takes control
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
-      });
-
-      // On page load, check for updates and activate immediately
-      window.addEventListener('load', async () => {
-        try {
-          const registration = await navigator.serviceWorker.getRegistration();
-          if (registration) {
-            // Check for updates immediately
-            await registration.update();
-            
-            // If there's a waiting service worker, activate it immediately
-            if (registration.waiting) {
-              registration.waiting.postMessage('skipWaiting');
-            }
-            
-            // Listen for new service workers becoming available
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New version available, activate it
-                    newWorker.postMessage('skipWaiting');
-                  }
-                });
-              }
-            });
-          }
-        } catch (e) {
-          console.log('Service worker update check failed:', e);
-        }
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('flutter_service_worker.js', {
+          updateViaCache: 'none',
+        }).catch((error) => {
+          console.warn('Service worker setup failed:', error);
+        });
       });
     }
   </script>

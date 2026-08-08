@@ -271,6 +271,12 @@ class JuiceTheme {
   /// Monospace font for dice values and code
   static const String fontFamilyMono = 'RobotoMono';
 
+  /// Local fallback for oracle notation and other non-ASCII symbols
+  static const String fontFamilySymbols = 'JuiceSymbols';
+
+  /// Extended local fallback for symbols not present in Noto Sans Symbols
+  static const String fontFamilySymbolsExtended = 'JuiceSymbolsExtended';
+
   static TextTheme get textTheme => TextTheme(
         // Display styles - large headers
         displayLarge: TextStyle(
@@ -466,6 +472,10 @@ class JuiceTheme {
   static ThemeData get themeData => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
+        fontFamilyFallback: const [
+          fontFamilySymbols,
+          fontFamilySymbolsExtended,
+        ],
 
         // Color scheme
         colorScheme: ColorScheme.dark(

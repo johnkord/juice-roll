@@ -192,12 +192,10 @@ class AbstractIconsDialog extends StatelessWidget {
                           width: 16,
                           height: 20,
                           alignment: Alignment.center,
-                          child: Text(
-                            '⋮',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: JuiceTheme.parchmentDark60,
-                            ),
+                          child: Icon(
+                            Icons.more_vert,
+                            size: 12,
+                            color: JuiceTheme.parchmentDark60,
                           ),
                         ),
                       ],
@@ -228,12 +226,10 @@ class AbstractIconsDialog extends StatelessWidget {
                               width: 20,
                               height: 16,
                               alignment: Alignment.center,
-                              child: Text(
-                                '⋯',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: JuiceTheme.parchmentDark60,
-                                ),
+                              child: Icon(
+                                Icons.more_horiz,
+                                size: 12,
+                                color: JuiceTheme.parchmentDark60,
                               ),
                             ),
                           ],
@@ -255,12 +251,10 @@ class AbstractIconsDialog extends StatelessWidget {
                                   width: 20,
                                   height: 20,
                                   alignment: Alignment.center,
-                                  child: Text(
-                                    '⋯',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: JuiceTheme.parchmentDark40,
-                                    ),
+                                  child: Icon(
+                                    Icons.more_horiz,
+                                    size: 12,
+                                    color: JuiceTheme.parchmentDark40,
                                   ),
                                 ),
                               ],
@@ -275,12 +269,10 @@ class AbstractIconsDialog extends StatelessWidget {
                                 height: 20,
                                 margin: const EdgeInsets.only(right: 2),
                                 alignment: Alignment.center,
-                                child: Text(
-                                  '⋮',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: JuiceTheme.parchmentDark40,
-                                  ),
+                                child: Icon(
+                                  Icons.more_vert,
+                                  size: 12,
+                                  color: JuiceTheme.parchmentDark40,
                                 ),
                               ),
                           ],

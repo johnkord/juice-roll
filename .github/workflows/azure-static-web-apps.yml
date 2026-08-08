@@ -28,11 +28,23 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install web build dependencies
+        run: npm ci
 
       - name: Build Flutter Web
-        run: flutter build web --release
+        run: npm run build:web
+
+      - name: Install browser test dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Test offline web release
+        run: npm run test:pwa
 
       - name: Deploy to Azure Static Web Apps
         id: deploy
