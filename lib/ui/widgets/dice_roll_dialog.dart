@@ -327,34 +327,49 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
     Color color,
     VoidCallback onTap,
   ) {
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: '$label dice mode',
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: isSelected
-              ? Border.all(color: color.withOpacity(0.5), width: 1.5)
-              : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? color : JuiceTheme.parchmentDark,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        excludeFromSemantics: true,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: isSelected
+                ? Border.all(color: color.withOpacity(0.5), width: 1.5)
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
                 color: isSelected ? color : JuiceTheme.parchmentDark,
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected ? color : JuiceTheme.parchmentDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -719,6 +734,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                   Icons.remove,
                   _momentum > -6 ? () => setState(() => _momentum--) : null,
                   momentumColor,
+                  semanticLabel: 'Decrease momentum',
                 ),
                 Container(
                   constraints: const BoxConstraints(minWidth: 36),
@@ -738,6 +754,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                   Icons.add,
                   _momentum < 10 ? () => setState(() => _momentum++) : null,
                   momentumColor,
+                  semanticLabel: 'Increase momentum',
                 ),
               ],
             ],
@@ -1054,6 +1071,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 Icons.remove,
                 value > min ? () => onChanged(value - 1) : null,
                 color,
+                semanticLabel: 'Decrease $label',
               ),
               Expanded(
                 child: Center(
@@ -1072,6 +1090,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 Icons.add,
                 value < max ? () => onChanged(value + 1) : null,
                 color,
+                semanticLabel: 'Increase $label',
               ),
             ],
           ),
@@ -1081,18 +1100,33 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
   }
 
   Widget _buildControlButton(
-      IconData icon, VoidCallback? onPressed, Color color) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    IconData icon,
+    VoidCallback? onPressed,
+    Color color, {
+    required String semanticLabel,
+  }) {
+    return Tooltip(
+      message: semanticLabel,
+      child: Semantics(
+        button: true,
+        enabled: onPressed != null,
+        label: semanticLabel,
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            icon,
-            size: 20,
-            color: onPressed != null ? color : JuiceTheme.parchmentDark30,
+        excludeSemantics: true,
+        child: SizedBox.square(
+          dimension: 44,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              excludeFromSemantics: true,
+              borderRadius: BorderRadius.circular(6),
+              child: Icon(
+                icon,
+                size: 20,
+                color: onPressed != null ? color : JuiceTheme.parchmentDark30,
+              ),
+            ),
           ),
         ),
       ),
@@ -1390,6 +1424,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 Icons.remove,
                 _modifier > -20 ? () => setState(() => _modifier--) : null,
                 modColor,
+                semanticLabel: 'Decrease modifier',
               ),
               Container(
                 constraints: const BoxConstraints(minWidth: 48),
@@ -1410,6 +1445,7 @@ class _DiceRollDialogState extends State<DiceRollDialog> {
                 Icons.add,
                 _modifier < 20 ? () => setState(() => _modifier++) : null,
                 modColor,
+                semanticLabel: 'Increase modifier',
               ),
             ],
           ),

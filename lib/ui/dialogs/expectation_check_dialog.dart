@@ -296,7 +296,7 @@ class _ExpectOutcomeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget container = Container(
+    final container = Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(isIntense || isSpecial ? 0.15 : 0.08),
@@ -346,7 +346,7 @@ class _ExpectOutcomeChip extends StatelessWidget {
       ),
     );
 
-    Widget content = tooltip != null
+    final content = tooltip != null
         ? Tooltip(
             message: tooltip!,
             preferBelow: true,

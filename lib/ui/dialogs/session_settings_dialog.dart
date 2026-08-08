@@ -8,7 +8,7 @@ import '../shared/dialog_components.dart';
 /// Dialog for managing session-specific settings.
 class SessionSettingsDialog extends StatefulWidget {
   final Session session;
-  final Future<void> Function(Session) onUpdate;
+  final Future<bool> Function(Session) onUpdate;
 
   const SessionSettingsDialog({
     super.key,
@@ -58,14 +58,23 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
       clearMaxRollsPerSession: !_useCustomMaxRolls,
     );
 
-    await widget.onUpdate(updatedSession);
+    final saved = await widget.onUpdate(updatedSession);
 
     if (mounted) {
       setState(() => _isSaving = false);
-      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session settings saved')),
+        SnackBar(
+          content: Text(
+            saved
+                ? 'Session settings saved'
+                : 'Session settings were not saved',
+          ),
+          backgroundColor: saved ? null : Colors.red,
+        ),
       );
+      if (saved) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -145,7 +154,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                                 ),
                               ),
                               Text(
-                                'Limit how many rolls are stored',
+                                'Keep only the newest rolls in this session',
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: JuiceTheme.parchmentDark,
@@ -198,6 +207,14 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Saving a lower limit permanently removes older rolls.',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: JuiceTheme.danger,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       // Quick presets
@@ -282,7 +299,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                     DetailRow(
                       icon: Icons.casino,
                       label: 'Rolls in History',
-                      value: '${widget.session.history.length}',
+                      value: '${widget.session.rollCount}',
                     ),
                     const SizedBox(height: 8),
                     DetailRow(
@@ -295,7 +312,7 @@ class _SessionSettingsDialogState extends State<SessionSettingsDialog> {
                     if (widget.session.maxRollsPerSession != null) ...[
                       const SizedBox(height: 8),
                       _UsageBar(
-                        current: widget.session.history.length,
+                        current: widget.session.rollCount,
                         max: widget.session.maxRollsPerSession!,
                       ),
                     ],

@@ -1,18 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/session.dart';
 import '../shared/dialog_components.dart';
 
+enum _SessionTransferAction { backupAll, importBackup }
+
 /// A bottom sheet for selecting or managing sessions.
 class SessionSelectorSheet extends StatelessWidget {
   final List<Session> sessions;
   final Session? currentSession;
-  final void Function(Session) onSelectSession;
-  final void Function(Session) onShowDetails;
-  final void Function(Session) onShowSettings;
-  final void Function(Session) onDeleteSession;
+  final Future<void> Function(Session) onSelectSession;
+  final Future<void> Function(Session) onShowDetails;
+  final Future<void> Function(Session) onShowSettings;
+  final Future<void> Function(Session) onDeleteSession;
   final VoidCallback onNewSession;
-  final VoidCallback onImportSession;
+  final Future<void> Function() onImportSession;
+  final Future<void> Function() onBackupAll;
+  final Future<void> Function() onImportBackup;
 
   const SessionSelectorSheet({
     super.key,
@@ -24,6 +30,8 @@ class SessionSelectorSheet extends StatelessWidget {
     required this.onDeleteSession,
     required this.onNewSession,
     required this.onImportSession,
+    required this.onBackupAll,
+    required this.onImportBackup,
   });
 
   String _formatDate(DateTime date) {
@@ -76,9 +84,39 @@ class SessionSelectorSheet extends StatelessWidget {
                 ),
                 const Spacer(),
                 TextButton.icon(
-                  onPressed: onImportSession,
+                  onPressed: () => unawaited(onImportSession()),
                   icon: const Icon(Icons.download, size: 18),
                   label: const Text('Import'),
+                ),
+                PopupMenuButton<_SessionTransferAction>(
+                  tooltip: 'Session backup options',
+                  onSelected: (action) {
+                    Navigator.pop(context);
+                    switch (action) {
+                      case _SessionTransferAction.backupAll:
+                        unawaited(onBackupAll());
+                      case _SessionTransferAction.importBackup:
+                        unawaited(onImportBackup());
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _SessionTransferAction.backupAll,
+                      child: ListTile(
+                        leading: Icon(Icons.file_upload_outlined),
+                        title: Text('Backup All Sessions'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _SessionTransferAction.importBackup,
+                      child: ListTile(
+                        leading: Icon(Icons.settings_backup_restore),
+                        title: Text('Import Session Backup'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -124,9 +162,9 @@ class SessionSelectorSheet extends StatelessWidget {
                             content: Text(
                               isSelected
                                   ? 'This is your current session. Deleting it will create a new empty session. '
-                                      'Are you sure you want to delete "${session.name}" with ${session.history.length} rolls?'
+                                      'Are you sure you want to delete "${session.name}" with ${session.rollCount} rolls?'
                                   : 'Are you sure you want to delete "${session.name}"? '
-                                      'This will permanently remove all ${session.history.length} rolls.',
+                                      'This will permanently remove all ${session.rollCount} rolls.',
                             ),
                             actions: [
                               TextButton(
@@ -145,7 +183,7 @@ class SessionSelectorSheet extends StatelessWidget {
                         false;
                   },
                   onDismissed: (direction) {
-                    onDeleteSession(session);
+                    unawaited(onDeleteSession(session));
                   },
                   child: ListTile(
                     leading: CircleAvatar(
@@ -168,7 +206,7 @@ class SessionSelectorSheet extends StatelessWidget {
                       ),
                     ),
                     subtitle: Text(
-                      '${session.history.length} rolls • ${_formatDate(session.lastAccessedAt)}',
+                      '${session.rollCount} rolls • ${_formatDate(session.lastAccessedAt)}',
                       style: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 12,
@@ -182,7 +220,7 @@ class SessionSelectorSheet extends StatelessWidget {
                           tooltip: 'Settings',
                           onPressed: () {
                             Navigator.pop(context);
-                            onShowSettings(session);
+                            unawaited(onShowSettings(session));
                           },
                         ),
                         IconButton(
@@ -190,7 +228,7 @@ class SessionSelectorSheet extends StatelessWidget {
                           tooltip: 'Details',
                           onPressed: () {
                             Navigator.pop(context);
-                            onShowDetails(session);
+                            unawaited(onShowDetails(session));
                           },
                         ),
                       ],
@@ -199,7 +237,7 @@ class SessionSelectorSheet extends StatelessWidget {
                     onTap: () {
                       Navigator.pop(context);
                       if (!isSelected) {
-                        onSelectSession(session);
+                        unawaited(onSelectSession(session));
                       }
                     },
                   ),
@@ -228,10 +266,10 @@ class SessionSelectorSheet extends StatelessWidget {
 class SessionDetailsDialog extends StatefulWidget {
   final Session session;
   final bool isCurrentSession;
-  final Future<void> Function(Session) onUpdate;
-  final Future<void> Function() onDelete;
-  final VoidCallback onExport;
-  final VoidCallback? onShowSettings;
+  final Future<bool> Function(Session) onUpdate;
+  final Future<bool> Function() onDelete;
+  final Future<void> Function() onExport;
+  final Future<void> Function()? onShowSettings;
 
   const SessionDetailsDialog({
     super.key,
@@ -295,12 +333,18 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
           : _nameController.text.trim(),
       notes: _notesController.text.trim(),
     );
-    await widget.onUpdate(updatedSession);
+    final updated = await widget.onUpdate(updatedSession);
     if (mounted) {
-      setState(() => _isEditing = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session updated')),
+        SnackBar(
+          content:
+              Text(updated ? 'Session updated' : 'Session was not updated'),
+          backgroundColor: updated ? null : Colors.red,
+        ),
       );
+      if (updated) {
+        setState(() => _isEditing = false);
+      }
     }
   }
 
@@ -312,9 +356,9 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
         content: Text(
           widget.isCurrentSession
               ? 'This is your current session. Deleting it will create a new empty session. '
-                  'Are you sure you want to delete "${widget.session.name}" with ${widget.session.history.length} rolls?'
+                  'Are you sure you want to delete "${widget.session.name}" with ${widget.session.rollCount} rolls?'
               : 'Are you sure you want to delete "${widget.session.name}"? '
-                  'This will permanently remove all ${widget.session.history.length} rolls.',
+                  'This will permanently remove all ${widget.session.rollCount} rolls.',
         ),
         actions: [
           TextButton(
@@ -332,9 +376,13 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
 
     if (confirmed == true && mounted) {
       setState(() => _isDeleting = true);
-      await widget.onDelete();
+      final deleted = await widget.onDelete();
       if (mounted) {
-        Navigator.pop(context);
+        if (deleted) {
+          Navigator.pop(context);
+        } else {
+          setState(() => _isDeleting = false);
+        }
       }
     }
   }
@@ -388,7 +436,7 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
                     DetailRow(
                       icon: Icons.casino,
                       label: 'Rolls',
-                      value: '${widget.session.history.length}',
+                      value: '${widget.session.rollCount}',
                     ),
                     const SizedBox(height: 8),
                     DetailRow(
@@ -455,7 +503,7 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: widget.onExport,
+                      onPressed: () => unawaited(widget.onExport()),
                       icon: const Icon(Icons.copy, size: 18),
                       label: const Text('Export'),
                     ),
@@ -466,7 +514,7 @@ class _SessionDetailsDialogState extends State<SessionDetailsDialog> {
                       child: OutlinedButton.icon(
                         onPressed: () {
                           Navigator.pop(context);
-                          widget.onShowSettings!();
+                          unawaited(widget.onShowSettings!());
                         },
                         icon: const Icon(Icons.settings, size: 18),
                         label: const Text('Settings'),

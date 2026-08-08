@@ -413,16 +413,6 @@ class _DungeonDialogState extends State<DungeonDialog> {
               const SizedBox(width: 4),
               _buildCompactDoublesIndicator('2nd', false, _encounterColor),
             ],
-            const SizedBox(width: 4),
-            InkWell(
-              onTap: _resetMap,
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: Icon(Icons.refresh,
-                    size: 16, color: statusColor.withOpacity(0.7)),
-              ),
-            ),
           ],
         ),
       );
@@ -433,12 +423,25 @@ class _DungeonDialogState extends State<DungeonDialog> {
         children: [
           Icon(Icons.door_front_door, size: 22, color: _dungeonColor),
           const SizedBox(width: 10),
-          Text(
-            'Dungeon Generator',
-            style: TextStyle(
-              fontFamily: JuiceTheme.fontFamilySerif,
-              color: _dungeonColor,
+          Expanded(
+            child: Text(
+              'Dungeon Generator',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: JuiceTheme.fontFamilySerif,
+                color: _dungeonColor,
+              ),
             ),
+          ),
+          IconButton(
+            onPressed: _resetMap,
+            tooltip: 'Reset dungeon map',
+            constraints: const BoxConstraints.tightFor(
+              width: 44,
+              height: 44,
+            ),
+            icon: const Icon(Icons.refresh, size: 18),
           ),
         ],
       ),

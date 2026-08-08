@@ -274,7 +274,7 @@ class _ReferenceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget row = Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 1),
       child: Row(
         children: [

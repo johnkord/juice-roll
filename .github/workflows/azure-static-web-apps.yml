@@ -34,6 +34,15 @@ jobs:
           node-version: '20'
           cache: npm
 
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Analyze Dart code
+        run: flutter analyze
+
+      - name: Test Flutter code
+        run: flutter test
+
       - name: Install web build dependencies
         run: npm ci
 

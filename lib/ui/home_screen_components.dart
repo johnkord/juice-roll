@@ -370,21 +370,29 @@ class SessionAppBarTitle extends StatelessWidget {
       listenable: notifier,
       builder: (context, _) {
         final sessionName = notifier.state.currentSession?.name ?? 'JuiceRoll';
-        return GestureDetector(
+        return Semantics(
+          button: true,
+          label: 'Select session: $sessionName',
           onTap: onTap,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  sessionName,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14),
+          excludeSemantics: true,
+          child: InkWell(
+            onTap: onTap,
+            excludeFromSemantics: true,
+            borderRadius: BorderRadius.circular(4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    sessionName,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 2),
-              const Icon(Icons.arrow_drop_down, size: 16),
-            ],
+                const SizedBox(width: 2),
+                const Icon(Icons.arrow_drop_down, size: 16),
+              ],
+            ),
           ),
         );
       },

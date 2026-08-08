@@ -63,8 +63,10 @@ remove local sessions.
 
 ### Session Management
 - **Multiple Sessions**: Create, switch, and manage separate play sessions
-- **Persistent History**: Roll history saved per session (up to 200 rolls each)
-- **Session Export/Import**: Copy sessions to clipboard as JSON for backup
+- **Persistent History**: Roll history saved locally per session; unlimited
+   unless a custom session limit is enabled
+- **Session Export/Import**: Copy one session or all sessions to the clipboard;
+   import individual sessions or a non-destructive full backup
 - **Wilderness/Dungeon State**: Track exploration state across sessions
 
 ### User Interface

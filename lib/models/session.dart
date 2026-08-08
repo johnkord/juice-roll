@@ -8,7 +8,7 @@ class Session {
   final DateTime createdAt;
   DateTime lastAccessedAt;
   String? notes;
-  
+
   // Stateful presets
   int? wildernessEnvironmentRow;
   int? wildernessTypeRow;
@@ -16,17 +16,21 @@ class Session {
   bool dungeonIsEntering;
   bool dungeonIsTwoPassMode;
   bool twoPassHasFirstDoubles;
-  
+
   // Dice dialog state
   int diceDialogMode; // 0 = Standard, 1 = Fate, 2 = Ironsworn
-  String diceDialogIronswornRollType; // 'action', 'progress', 'oracle', 'yesno', 'cursed'
+  String
+      diceDialogIronswornRollType; // 'action', 'progress', 'oracle', 'yesno', 'cursed'
   int diceDialogOracleDieType; // 6, 20, or 100
-  
+
   // Session settings
   int? maxRollsPerSession; // null = unlimited history
-  
+
   // Roll history
   List<Map<String, dynamic>> history;
+
+  // Present only on metadata-only session objects.
+  final int? _metadataRollCount;
 
   Session({
     required this.id,
@@ -45,7 +49,9 @@ class Session {
     this.diceDialogOracleDieType = 100,
     this.maxRollsPerSession,
     List<Map<String, dynamic>>? history,
-  }) : history = history ?? [];
+    int? metadataRollCount,
+  })  : history = history ?? [],
+        _metadataRollCount = metadataRollCount;
 
   /// Create a new session with generated ID
   factory Session.create(String name, {String? notes}) {
@@ -59,7 +65,7 @@ class Session {
     );
   }
 
-  int get rollCount => history.length;
+  int get rollCount => _metadataRollCount ?? history.length;
 
   /// Create a copy with updated fields
   Session copyWith({
@@ -87,38 +93,45 @@ class Session {
       createdAt: createdAt ?? this.createdAt,
       lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
       notes: notes ?? this.notes,
-      wildernessEnvironmentRow: wildernessEnvironmentRow ?? this.wildernessEnvironmentRow,
+      wildernessEnvironmentRow:
+          wildernessEnvironmentRow ?? this.wildernessEnvironmentRow,
       wildernessTypeRow: wildernessTypeRow ?? this.wildernessTypeRow,
       wildernessIsLost: wildernessIsLost ?? this.wildernessIsLost,
       dungeonIsEntering: dungeonIsEntering ?? this.dungeonIsEntering,
       dungeonIsTwoPassMode: dungeonIsTwoPassMode ?? this.dungeonIsTwoPassMode,
-      twoPassHasFirstDoubles: twoPassHasFirstDoubles ?? this.twoPassHasFirstDoubles,
+      twoPassHasFirstDoubles:
+          twoPassHasFirstDoubles ?? this.twoPassHasFirstDoubles,
       diceDialogMode: diceDialogMode ?? this.diceDialogMode,
-      diceDialogIronswornRollType: diceDialogIronswornRollType ?? this.diceDialogIronswornRollType,
-      diceDialogOracleDieType: diceDialogOracleDieType ?? this.diceDialogOracleDieType,
-      maxRollsPerSession: clearMaxRollsPerSession ? null : (maxRollsPerSession ?? this.maxRollsPerSession),
+      diceDialogIronswornRollType:
+          diceDialogIronswornRollType ?? this.diceDialogIronswornRollType,
+      diceDialogOracleDieType:
+          diceDialogOracleDieType ?? this.diceDialogOracleDieType,
+      maxRollsPerSession: clearMaxRollsPerSession
+          ? null
+          : (maxRollsPerSession ?? this.maxRollsPerSession),
       history: history ?? List<Map<String, dynamic>>.from(this.history),
+      metadataRollCount: _metadataRollCount,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'createdAt': createdAt.toIso8601String(),
-    'lastAccessedAt': lastAccessedAt.toIso8601String(),
-    'notes': notes,
-    'wildernessEnvironmentRow': wildernessEnvironmentRow,
-    'wildernessTypeRow': wildernessTypeRow,
-    'wildernessIsLost': wildernessIsLost,
-    'dungeonIsEntering': dungeonIsEntering,
-    'dungeonIsTwoPassMode': dungeonIsTwoPassMode,
-    'twoPassHasFirstDoubles': twoPassHasFirstDoubles,
-    'diceDialogMode': diceDialogMode,
-    'diceDialogIronswornRollType': diceDialogIronswornRollType,
-    'diceDialogOracleDieType': diceDialogOracleDieType,
-    'maxRollsPerSession': maxRollsPerSession,
-    'history': history,
-  };
+        'id': id,
+        'name': name,
+        'createdAt': createdAt.toIso8601String(),
+        'lastAccessedAt': lastAccessedAt.toIso8601String(),
+        'notes': notes,
+        'wildernessEnvironmentRow': wildernessEnvironmentRow,
+        'wildernessTypeRow': wildernessTypeRow,
+        'wildernessIsLost': wildernessIsLost,
+        'dungeonIsEntering': dungeonIsEntering,
+        'dungeonIsTwoPassMode': dungeonIsTwoPassMode,
+        'twoPassHasFirstDoubles': twoPassHasFirstDoubles,
+        'diceDialogMode': diceDialogMode,
+        'diceDialogIronswornRollType': diceDialogIronswornRollType,
+        'diceDialogOracleDieType': diceDialogOracleDieType,
+        'maxRollsPerSession': maxRollsPerSession,
+        'history': history,
+      };
 
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
@@ -134,24 +147,26 @@ class Session {
       dungeonIsTwoPassMode: json['dungeonIsTwoPassMode'] as bool? ?? false,
       twoPassHasFirstDoubles: json['twoPassHasFirstDoubles'] as bool? ?? false,
       diceDialogMode: json['diceDialogMode'] as int? ?? 0,
-      diceDialogIronswornRollType: json['diceDialogIronswornRollType'] as String? ?? 'action',
+      diceDialogIronswornRollType:
+          json['diceDialogIronswornRollType'] as String? ?? 'action',
       diceDialogOracleDieType: json['diceDialogOracleDieType'] as int? ?? 100,
       maxRollsPerSession: json['maxRollsPerSession'] as int?,
       history: (json['history'] as List<dynamic>?)
-          ?.map((e) => Map<String, dynamic>.from(e as Map))
-          .toList() ?? [],
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
+              .toList() ??
+          [],
     );
   }
 
   /// Metadata-only JSON for session list (without full history)
   Map<String, dynamic> toMetadataJson() => {
-    'id': id,
-    'name': name,
-    'createdAt': createdAt.toIso8601String(),
-    'lastAccessedAt': lastAccessedAt.toIso8601String(),
-    'notes': notes,
-    'rollCount': rollCount,
-  };
+        'id': id,
+        'name': name,
+        'createdAt': createdAt.toIso8601String(),
+        'lastAccessedAt': lastAccessedAt.toIso8601String(),
+        'notes': notes,
+        'rollCount': rollCount,
+      };
 
   factory Session.fromMetadataJson(Map<String, dynamic> json) {
     return Session(
@@ -160,6 +175,7 @@ class Session {
       createdAt: DateTime.parse(json['createdAt'] as String),
       lastAccessedAt: DateTime.parse(json['lastAccessedAt'] as String),
       notes: json['notes'] as String?,
+      metadataRollCount: json['rollCount'] as int? ?? 0,
       // These will be loaded when full session is loaded
     );
   }
@@ -180,19 +196,19 @@ class Session {
     try {
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       if (data?.text == null || data!.text!.isEmpty) return null;
-      
+
       final json = jsonDecode(data.text!) as Map<String, dynamic>;
-      
+
       // Validate version
       final version = json['version'] as String?;
       if (version != '1.0') return null;
-      
+
       final type = json['type'] as String?;
       if (type != 'session') return null;
-      
+
       final sessionJson = json['session'] as Map<String, dynamic>?;
       if (sessionJson == null) return null;
-      
+
       // Generate new ID to avoid conflicts
       final imported = Session.fromJson(sessionJson);
       final now = DateTime.now();
@@ -239,18 +255,18 @@ class SessionExport {
     try {
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       if (data?.text == null || data!.text!.isEmpty) return null;
-      
+
       final json = jsonDecode(data.text!) as Map<String, dynamic>;
-      
+
       final version = json['version'] as String?;
       if (version != '1.0') return null;
-      
+
       final type = json['type'] as String?;
       if (type != 'all_sessions') return null;
-      
+
       final sessionsJson = json['sessions'] as List<dynamic>?;
       if (sessionsJson == null) return null;
-      
+
       final now = DateTime.now();
       return sessionsJson.asMap().entries.map((entry) {
         final sessionJson = Map<String, dynamic>.from(entry.value as Map);

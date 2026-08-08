@@ -26,6 +26,7 @@ class RollButton extends StatefulWidget {
 
 class _RollButtonState extends State<RollButton> {
   bool _isPressed = false;
+  bool _isFocused = false;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CACHED DECORATION VALUES
@@ -35,6 +36,7 @@ class _RollButtonState extends State<RollButton> {
 
   late BoxDecoration _normalDecoration;
   late BoxDecoration _pressedDecoration;
+  late BoxDecoration _focusedDecoration;
   late Color _brightIconColor;
   late List<Shadow> _iconShadows;
   late TextStyle _labelStyle;
@@ -121,6 +123,20 @@ class _RollButtonState extends State<RollButton> {
       boxShadow: _pressedShadows,
     );
 
+    _focusedDecoration = BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: normalGradientColors,
+      ),
+      borderRadius: _borderRadius,
+      border: Border.all(
+        color: JuiceTheme.gold90,
+        width: 2.0,
+      ),
+      boxShadow: _normalShadows,
+    );
+
     _iconShadows = [
       Shadow(
         color: widget.color.withOpacity(0.5),
@@ -150,32 +166,43 @@ class _RollButtonState extends State<RollButton> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onPressed();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        decoration: _isPressed ? _pressedDecoration : _normalDecoration,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              widget.icon,
-              size: 24,
-              color: _brightIconColor,
-              shadows: _iconShadows,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              widget.label,
-              style: _labelStyle,
-              textAlign: TextAlign.center,
-            ),
-          ],
+    final decoration = _isPressed
+        ? _pressedDecoration
+        : (_isFocused ? _focusedDecoration : _normalDecoration);
+
+    return Semantics(
+      button: true,
+      label: widget.label,
+      onTap: widget.onPressed,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: widget.onPressed,
+        excludeFromSemantics: true,
+        onHighlightChanged: (value) => setState(() => _isPressed = value),
+        onFocusChange: (value) => setState(() => _isFocused = value),
+        borderRadius: _borderRadius,
+        focusColor: Colors.transparent,
+        mouseCursor: SystemMouseCursors.click,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          decoration: decoration,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                widget.icon,
+                size: 24,
+                color: _brightIconColor,
+                shadows: _iconShadows,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.label,
+                style: _labelStyle,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

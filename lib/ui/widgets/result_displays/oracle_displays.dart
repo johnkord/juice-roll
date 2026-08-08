@@ -414,8 +414,6 @@ Widget _buildInvalidAssumptionGuidanceWidget(
 Widget _buildBecauseGuidanceWidget(FateCheckOutcome outcome, int intensity,
     String intensityDescription, ThemeData theme) {
   final isYes = outcome == FateCheckOutcome.yesBecause;
-  final guidance = outcome.contextualGuidance;
-  final examples = outcome.exampleInterpretations;
 
   // Color based on Yes/No
   final color = isYes ? JuiceTheme.success : JuiceTheme.danger;

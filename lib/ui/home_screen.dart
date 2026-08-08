@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../models/session.dart';
 import 'home_state.dart';
@@ -114,22 +116,22 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => SessionSelectorSheet(
         sessions: state.sessions,
         currentSession: state.currentSession,
-        onSelectSession: (session) {
-          _notifier.switchSession(session);
+        onSelectSession: (session) async {
+          await _notifier.switchSession(session);
         },
         onNewSession: () {
           _showNewSessionDialog();
         },
-        onShowDetails: (session) {
-          _showSessionDetailsDialog(session);
+        onShowDetails: (session) async {
+          await _showSessionDetailsDialog(session);
         },
-        onShowSettings: (session) {
-          _showSessionSettingsDialog(session);
+        onShowSettings: (session) async {
+          await _showSessionSettingsDialog(session);
         },
         onDeleteSession: (session) async {
-          await _notifier.deleteSession(session);
+          final deleted = await _notifier.deleteSession(session);
 
-          if (mounted) {
+          if (deleted && mounted) {
             ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(content: Text('Deleted session: ${session.name}')),
             );
@@ -138,6 +140,8 @@ class _HomeScreenState extends State<HomeScreen> {
         onImportSession: () async {
           await _importSession();
         },
+        onBackupAll: _backupAllSessions,
+        onImportBackup: _importSessionBackup,
       ),
     );
   }
@@ -184,14 +188,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Navigator.pop(context);
 
-              await _notifier.createSession(
+              final created = await _notifier.createSession(
                 name,
                 notes: notesController.text.trim().isEmpty
                     ? null
                     : notesController.text.trim(),
               );
 
-              if (mounted) {
+              if (created != null && mounted) {
                 ScaffoldMessenger.of(this.context).showSnackBar(
                   SnackBar(content: Text('Created session: $name')),
                 );
@@ -214,35 +218,47 @@ class _HomeScreenState extends State<HomeScreen> {
         session: fullSession,
         isCurrentSession: _notifier.state.currentSession?.id == session.id,
         onDelete: () async {
-          await _notifier.deleteSession(session);
+          final deleted = await _notifier.deleteSession(session);
 
-          if (mounted) {
+          if (deleted && mounted) {
             ScaffoldMessenger.of(this.context).showSnackBar(
               SnackBar(content: Text('Deleted session: ${session.name}')),
             );
           }
+          return deleted;
         },
         onExport: () async {
-          await fullSession.copyToClipboard();
-          if (mounted) {
-            ScaffoldMessenger.of(this.context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                    'Session copied to clipboard! Paste it somewhere safe to back up.'),
-                duration: Duration(seconds: 3),
-              ),
-            );
+          try {
+            await fullSession.copyToClipboard();
+            if (mounted) {
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Session copied to clipboard! Paste it somewhere safe to back up.'),
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                const SnackBar(
+                  content: Text('Session could not be copied'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           }
         },
         onUpdate: (updatedSession) async {
-          await _notifier.updateSession(
+          return _notifier.updateSession(
             session.id,
             name: updatedSession.name,
             notes: updatedSession.notes,
           );
         },
-        onShowSettings: () {
-          _showSessionSettingsDialog(session);
+        onShowSettings: () async {
+          await _showSessionSettingsDialog(session);
         },
       ),
     );
@@ -257,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => SessionSettingsDialog(
         session: fullSession,
         onUpdate: (updatedSession) async {
-          await _notifier.updateSessionSettings(
+          return _notifier.updateSessionSettings(
             session.id,
             maxRollsPerSession: updatedSession.maxRollsPerSession,
             clearMaxRollsPerSession: updatedSession.maxRollsPerSession == null,
@@ -280,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text('Imported session: ${session.name}'),
           action: SnackBarAction(
             label: 'Switch',
-            onPressed: () => _notifier.switchSession(session),
+            onPressed: () => unawaited(_notifier.switchSession(session)),
           ),
         ),
       );
@@ -292,6 +308,38 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _backupAllSessions() async {
+    final succeeded = await _notifier.exportAllSessions();
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          succeeded
+              ? 'All sessions copied to the clipboard'
+              : 'Sessions could not be copied',
+        ),
+        backgroundColor: succeeded ? null : Colors.red,
+      ),
+    );
+  }
+
+  Future<void> _importSessionBackup() async {
+    final importedCount = await _notifier.importAllSessions();
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          importedCount == null
+              ? 'No valid Juice Roll backup found in the clipboard'
+              : 'Imported $importedCount session${importedCount == 1 ? '' : 's'}',
+        ),
+        backgroundColor: importedCount == null ? Colors.red : null,
+      ),
+    );
   }
 
   // ========== About Dialog ==========
@@ -520,6 +568,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _showPersistenceError() async {
+    final shouldRetry = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Session Not Saved'),
+        content: Text(_notifier.state.persistenceError ?? ''),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Close'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldRetry == true) {
+      await _notifier.retryPersistence();
+    }
+  }
+
   // ========== Build Methods ==========
 
   @override
@@ -549,6 +621,47 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
+        if (_notifier.state.persistenceError != null &&
+            _notifier.state.currentSession == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('JuiceRoll'),
+              centerTitle: true,
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.storage_rounded, size: 48),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Session data is unavailable',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _notifier.state.persistenceError!,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: _notifier.retryPersistence,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
         // Once loaded, return the main UI which uses targeted rebuilds
         return _buildMainScreen();
       },
@@ -568,29 +681,41 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 36,
-        leading: GestureDetector(
+        excludeHeaderSemantics: true,
+        leading: Semantics(
+          button: true,
+          label: 'About Juice Roll',
           onTap: _showAboutDialog,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 14.0),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.local_drink,
-                  color: JuiceTheme.juiceOrange,
-                  size: 18,
-                ),
-                const SizedBox(width: 2),
-                const Text(
-                  'Juice',
-                  style: TextStyle(
-                    fontFamily: JuiceTheme.fontFamilySerif,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+          excludeSemantics: true,
+          child: InkWell(
+            onTap: _showAboutDialog,
+            excludeFromSemantics: true,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 14.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.local_drink,
                     color: JuiceTheme.juiceOrange,
+                    size: 18,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 2),
+                  const Flexible(
+                    child: Text(
+                      'Juice',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: JuiceTheme.fontFamilySerif,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: JuiceTheme.juiceOrange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -603,6 +728,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (_notifier.state.persistenceError != null)
+            IconButton(
+              onPressed: _showPersistenceError,
+              icon: const Icon(Icons.sync_problem),
+              tooltip: 'Session storage error',
+            ),
           // TARGETED REBUILD: Only rebuilds when history empty state changes
           ClearHistoryButton(
             notifier: _notifier,
